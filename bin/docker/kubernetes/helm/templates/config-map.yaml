@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: shopware-configmap-{{ .Release.Name }}
+  labels:
+    cd-hipay: cron-delete
+data:
+  # Shopware env var
+  TZ: Europe/Paris
+  APP_URL: http://{{ .Values.shopware_url }}

@@ -1,0 +1,23 @@
+version: '3'
+
+services:
+  shopware:
+    container_name: hipay-enterprise-shopware-6
+    build:
+      args:
+        - DOCKWARE_VERSION=latest
+      context: .
+      dockerfile: bin/docker/images/shopware/Dockerfile
+    ports:
+      - '8076:80'
+    env_file:
+      - ./bin/docker/conf/development/.env
+    volumes:
+      - 'shopware_data:/var/lib/mysql'
+      - 'shopware_src:/var/www/html'
+
+volumes:
+  shopware_data:
+    driver: local
+  shopware_src:
+    driver: local
