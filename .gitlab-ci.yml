@@ -1,0 +1,137 @@
+image: $REGISTRY_CI/gitlab-ci-base:buster
+
+variables:
+  DOCKWARE_VERSION: latest
+  GIT_DEPTH: 10
+  RELEASE_NAME: ${DOCKER_STACK}-${DOCKER_SERVICE}-${CI_COMMIT_REF_SLUG}
+
+stages:
+  - build-test
+  - test
+  - build
+  - deploy
+
+.login_to_registry:
+  before_script:
+    - 'mkdir /tmp'
+    - 'touch /tmp/credentials.json'
+    - 'echo ${SA_REGISTRY_CD} > /tmp/credentials.json'
+    - 'export GOOGLE_APPLICATION_CREDENTIALS=/tmp/credentials.json'
+
+.login_to_cd:
+  before_script:
+    # Connect GCP with deploy service account
+    - mkdir -p /tmp
+    - touch /tmp/credentials.json
+    - echo ${SA_DEPLOY_CD} > /tmp/credentials.json
+    - gcloud auth activate-service-account "${SA_DEPLOY_NAME}" --key-file="/tmp/credentials.json"
+    - gcloud config set project "${GCP_CD_PROJECT_ID}"
+    - gcloud config set compute/zone "${GCP_CD_CLUSTER_REGION}"
+    - gcloud container clusters get-credentials "${GCP_CD_CLUSTER_NAME}"
+
+#########################
+####      JOBS      ####
+########################
+
+build-test:
+  stage: build-test
+  image:
+    name: gcr.io/kaniko-project/executor:v1.6.0-debug
+  script:
+    - /kaniko/executor
+      --cache=true
+      --context "dir://${CI_PROJECT_DIR}"
+      --dockerfile "./bin/docker/images/shopware/Dockerfile"
+      --destination "$REGISTRY_CI/test-jobs-${DOCKER_STACK}-${DOCKER_SERVICE}_web:${CI_COMMIT_REF_SLUG}"
+  except:
+    variables:
+      - $ONLY_DEPLOY
+  tags:
+    - small
+
+start-test:
+  stage: test
+  variables:
+    TZ: Europe/Paris
+    APP_URL: http://web
+  services:
+    - name: $REGISTRY_CI/test-jobs-${DOCKER_STACK}-${DOCKER_SERVICE}_web:${CI_COMMIT_REF_SLUG}
+      alias: web
+  script:
+    - curl --retry 20 --retry-delay 10 --retry-connrefused --output /dev/null http://web
+  except:
+    variables:
+      - $ONLY_DEPLOY
+  tags:
+    - small
+
+build:
+  stage: build
+  image:
+    name: gcr.io/kaniko-project/executor:v1.6.0-debug
+  rules:
+    - if: $ONLY_DEPLOY
+      when: on_success
+    - if: $CI_PIPELINE_SOURCE == "push"
+      when: manual
+  extends: .login_to_registry
+  script:
+    - /kaniko/executor
+      --cache=true
+      --context "dir://${CI_PROJECT_DIR}"
+      --dockerfile "./bin/docker/images/shopware/Dockerfile"
+      --destination "${REGISTRY_CD}/${DOCKER_STACK}-${DOCKER_SERVICE}-web:${CI_COMMIT_REF_SLUG}"
+  tags:
+    - small
+
+deploy2recette:
+  stage: deploy
+  image: $REGISTRY_CI/gitlab-ci-base:deployment
+  needs:
+    - build
+  rules:
+    - if: $ONLY_DEPLOY
+      when: on_success
+    - if: $CI_PIPELINE_SOURCE == "push"
+      when: manual
+  variables:
+    GPC_ACCOUNT: ''
+  extends: .login_to_cd
+  script:
+    - echo $RELEASE_NAME
+    - >
+      helm install $RELEASE_NAME ./bin/docker/kubernetes/helm/
+      --namespace default
+      --set shopware_image="${REGISTRY_CD}/${DOCKER_STACK}-${DOCKER_SERVICE}-web"
+      --set shopware_tag="${CI_COMMIT_REF_SLUG}"
+      --set shopware_url="${DOCKER_STACK}-${DOCKER_SERVICE}-${CI_COMMIT_REF_SLUG}.${URL_CD}"
+      --set branch="$CI_COMMIT_REF_NAME"
+  allow_failure: true
+  environment:
+    name: review/${CI_COMMIT_REF_SLUG}
+    url: https://${DOCKER_STACK}-${DOCKER_SERVICE}-${CI_COMMIT_REF_SLUG}.${URL_CD}
+    on_stop: stop_review
+  tags:
+    - small
+
+stop_review:
+  stage: deploy
+  image: $REGISTRY_CI/gitlab-ci-base:deployment
+  needs:
+    - deploy2recette
+  rules:
+    - if: $ONLY_DEPLOY
+      when: manual
+    - if: $CI_PIPELINE_SOURCE == "push"
+      when: manual
+  variables:
+    GIT_STRATEGY: none
+  extends: .login_to_cd
+  script:
+    - helm uninstall $RELEASE_NAME --namespace=default
+  allow_failure: true
+  environment:
+    name: review/${CI_COMMIT_REF_SLUG}
+    action: stop
+  tags:
+    - small

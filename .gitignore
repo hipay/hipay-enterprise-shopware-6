@@ -1,0 +1,12 @@
+# IDE
+.buildpath
+.settings
+.project
+.idea/*
+.vscode
+
+# Third party
+web/
+.env
+vendor/
+composer.lock
