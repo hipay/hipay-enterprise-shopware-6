@@ -1,0 +1,58 @@
+{
+  "name": "hipay/hipay-enterprise-shopware-6",
+  "description": "HiPay enterprise module for Shopware",
+  "license": "Apache-2.0",
+  "version": "1.0.0",
+  "authors": [
+    {
+      "email": "support.tpp@hipay.com",
+      "homepage": "http://www.hipay.com",
+      "name": "HiPay"
+    }
+  ],
+  "keywords": [
+    "HiPay",
+    "payment",
+    "php",
+    "shopware"
+  ],
+  "type": "shopware-platform-plugin",  
+  "extra": {
+    "shopware-plugin-class": "HiPay\\Payment\\HiPayPaymentPlugin",
+    "plugin-icon" : "src/Resources/config/hipay.png",
+    "author" : "HiPay",
+    "label": {
+      "en-GB": "HiPay Payment",
+      "de-DE": "HiPay Payment"
+    },
+    "description": {
+      "en-GB": "Hipay enterprise module for Shopware",
+      "de-DE": "Hipay Enterprise-Modul f\u00fcr Shopware"
+    },
+    "manufacturerLink": {
+      "en-GB": "#",
+      "de-DE": "#"
+    },
+    "supportLink": {
+      "en-GB": "#",
+      "de-DE": "#"
+    }
+  },
+  "autoload": {
+    "psr-4": {
+      "HiPay\\Payment\\": "src/"
+    }
+  },
+  "require": {
+    "shopware/core": "6.4.*",
+    "hipay/hipay-fullservice-sdk-php": "^2.10"
+  },
+  "archive": {
+    "exclude" : [
+      "/bin",
+      "./\\.*", 
+      "docker-compose.yaml",
+      "shopeware.sh"
+    ]
+  }
+}

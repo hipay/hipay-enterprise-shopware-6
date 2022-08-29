@@ -10,14 +10,19 @@ services:
       dockerfile: bin/docker/images/shopware/Dockerfile
     ports:
       - '8076:80'
+      - '3306:3306'
+    networks:
+      - shopware
     env_file:
       - ./bin/docker/conf/development/.env
     volumes:
       - 'shopware_data:/var/lib/mysql'
-      - 'shopware_src:/var/www/html'
+      - '.:/var/www/html/custom/plugins/HiPayPaymentPlugin/'
 
 volumes:
   shopware_data:
     driver: local
-  shopware_src:
-    driver: local
+
+networks:
+  shopware:
+    external: false

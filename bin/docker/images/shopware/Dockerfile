@@ -5,6 +5,8 @@ FROM dockware/dev:$DOCKWARE_VERSION
 LABEL maintainer="PI-Ecommerce"
 LABEL maintainer_email="pi-ecommerce@hipay.com"
 
+COPY . /var/www/html/custom/plugins/HiPayPaymentPlugin/
+
 ADD --chown=root:root bin/docker/images/shopware/entrypoint.sh /post-entrypoint.sh
 RUN sudo chmod a+x /post-entrypoint.sh
 

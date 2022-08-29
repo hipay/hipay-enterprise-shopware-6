@@ -11,7 +11,7 @@ echo "SETTING ACTUAL URL...."
 
 sudo mysql -u root --password=root -D shopware -e "update sales_channel_domain set url='$APP_URL' where url='http://localhost';"
 bin/console app:url-change:resolve reinstall-apps
-bin/console cache:clear
+bin/console cache:clear --quiet
 
 echo "-----------------------------------------------------"
 echo "SHOP URL: $APP_URL"
