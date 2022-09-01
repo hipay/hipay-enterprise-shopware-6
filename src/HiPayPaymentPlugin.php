@@ -6,4 +6,13 @@ use Shopware\Core\Framework\Plugin;
 
 class HiPayPaymentPlugin extends Plugin
 {
+    /**
+     * Get the plugin name
+     * 
+     * @return string 
+     */
+    public static function getModuleName(): string {
+        $path = explode('\\', __CLASS__);
+        return array_pop($path);
+    }
 }

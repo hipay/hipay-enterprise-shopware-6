@@ -1,9 +1,379 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/shopware/platform/master/src/Core/System/SystemConfig/Schema/config.xsd">
-    
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/shopware/platform/master/src/Core/System/SystemConfig/Schema/config.xsd">
+
+    <!-- help bloc -->
     <card>
+        <title>How can we help you ?</title>
+        <title lang="de-DE">Wie können wir Ihnen helfen ? </title>
+
+        <component name="hipay-help-bloc">
+            <name>help</name>
+        </component>
+    </card>
+
+    <!-- Environnment selector -->
+    <card>
+        <title>General Settings</title>
+        <title lang="de-DE">Allgemeine Einstellungen</title>
+
+        <input-field type="single-select">
+            <name>environnement</name>
+            <label>Choose test or environnement</label>
+            <label lang="de-DE">Wählen Sie Test oder Umgebung</label>
+            <required>true</required>
+            <options>
+                <option>
+                    <id>test</id>
+                    <name>Stage</name>
+                    <name lang="de-DE">Stage</name>
+                </option>
+                <option>
+                    <id>prod</id>
+                    <name>Production</name>
+                    <name lang="de-DE">Produktion</name>
+                </option>
+            </options>
+        </input-field>
+    </card>
+
+    <!-- live credentials -->
+    <card>
+        <title>Live configuration</title>
+        <title lang="de-DE">Live-Konfiguration</title>  
+
+        <component name="hipay-html-bloc">
+            <name>h3</name>
+            <value>hipay.config.title.privateKey</value>
+        </component>
+
+        <input-field type="text">
+            <name>privateLoginProduction</name>
+            <label>Username</label>
+            <label lang="de-DE">Benutzername</label>
+            <required>true</required>
+        </input-field>
+
+        <input-field type="password">
+            <name>privatePasswordProduction</name>
+            <label>Password</label>
+            <label lang="de-DE">Passwort</label>
+            <required>true</required>
+        </input-field>       
+
+        <component name="hipay-html-bloc">
+            <name>h3</name>            
+            <value>hipay.config.title.publicKey</value>
+        </component>
+
+        <input-field type="text">
+            <name>publicLoginProduction</name>
+            <label>Username</label>
+            <label lang="de-DE">Benutzername</label>
+            <required>true</required>
+        </input-field>
+
+        <input-field type="password">
+            <name>publicPasswordProduction</name>
+            <label>Password</label>
+            <label lang="de-DE">Passwort</label>
+            <required>true</required>
+        </input-field>        
+
+        <component name="hipay-html-bloc">
+            <name>h3</name>            
+            <value>hipay.config.title.notification</value>
+        </component>        
+
+        <input-field type="password">
+            <name>passphraseProduction</name>
+            <label>Passphrase</label>
+            <required>true</required>
+        </input-field>
+
+        <input-field type="single-select">
+            <name>hashProduction</name>
+            <label>Algorithm</label>
+            <label lang="de-DE">Algorithmus</label>
+            <required>true</required>
+            <options>
+                <option>
+                    <id>sha256</id>
+                    <name>SHA-256</name>
+                </option>
+                <option>
+                    <id>sha512</id>
+                    <name>SHA-512</name>
+                </option>
+            </options>
+        </input-field>
+
+        <component name="hipay-html-bloc">
+            <name>paragraph</name>
+            <value>hipay.config.info</value>
+        </component>
+
+        <component name="hipay-check-server-access">
+            <name>checkServerAccess</name>
+            <value>Production</value>
+        </component>
+    </card>
+
+    <!-- test credentials -->
+    <card>
+
+        <title>Test configuration</title>
+        <title lang="de-DE">Testkonfiguration</title>
+
+        <component name="hipay-html-bloc">
+            <name>h3</name>
+            <value>hipay.config.title.privateKey</value>
+        </component>
+
+        <input-field type="text">
+            <name>privateLoginStage</name>
+            <label>Username</label>
+            <label lang="de-DE">Benutzername</label>
+            <required>true</required>
+        </input-field>
+
+        <input-field type="password">
+            <name>privatePasswordStage</name>
+            <label>Password</label>
+            <label lang="de-DE">Passwort</label>
+            <required>true</required>
+        </input-field>
+
+        <component name="hipay-html-bloc">
+            <name>h3</name>
+            <value>hipay.config.title.publicKey</value>
+        </component>
+
+        <input-field type="text">
+            <name>publicLoginStage</name>
+            <label>Username</label>
+            <label lang="de-DE">Benutzername</label>
+            <required>true</required>
+        </input-field>
+
+        <input-field type="password">
+            <name>publicPasswordStage</name>
+            <label>Password</label>
+            <label lang="de-DE">Passwort</label>
+            <required>true</required>
+        </input-field>
+
+        <component name="hipay-html-bloc">
+            <name>h3</name>            
+            <value>hipay.config.title.notification</value>
+        </component>
+
+        <input-field type="password">
+            <name>passphraseStage</name>
+            <label>Passphrase</label>
+            <required>true</required>
+        </input-field>
+
+        <input-field type="single-select">
+            <name>hashStage</name>
+            <label>Passphrase</label>
+            <required>true</required>
+            <options>
+                <option>
+                    <id>sha256</id>
+                    <name>SHA-256</name>
+                </option>
+                <option>
+                    <id>sha512</id>
+                    <name>SHA-512</name>
+                </option>
+            </options>
+        </input-field>
+
+        <component name="hipay-html-bloc">
+            <name>paragraph</name>
+            <value>hipay.config.info</value>
+        </component>
+
+        <component name="hipay-check-server-access">
+            <name>checkServerAccess</name>
+            <value>Stage</value>
+        </component>
 
     </card>
 
+    <!-- configuration transaction -->
+    <card>
+        <title>Configuration mode Transaction </title>
+        <title lang="de-DE">Transaktion im Konfigurationsmodus</title>
+
+        <input-field type="single-select">
+            <name>captureMode</name>
+            <label>Method of capture</label>
+            <label lang="de-DE">Verfahren zur Erfassung</label>
+            <required>true</required>
+            <options>
+                <option>
+                    <id>automatic</id>
+                    <name>Automatic (by default)</name>
+                    <name lang="de-DE">Automatisch (standardmäßig) </name>
+                </option>
+                <option>
+                    <id>manuel</id>
+                    <name>Manuel</name>
+                    <name lang="de-DE">Manuel</name>
+                </option>
+            </options>
+            <defaultValue>automatic</defaultValue>
+
+            <helpText>                
+                Automatic: All transactions will be automatically captured.
+                Manual: All transactions will be captured manually in your HiPay or Shopware back office.
+             </helpText>
+            <helpText lang="de-DE">
+                Automatich: Alle Transaktionen werden automatisch erfasst.
+                Manual: Alle Transaktionen werden manuell in Ihrem HiPay- oder PrestaShop-Backoffice erfasst.
+            </helpText>
+        </input-field>
+
+
+        <input-field type="single-select">
+            <name>operationMode</name>
+            <label>Operation mode</label>
+            <label lang="de-DE">Betriebsart</label>
+            <required>true</required>
+            <options>
+                <option>
+                    <id>hostedFields</id>
+                    <name>Hosted fields</name>
+                    <name lang="de-DE">Zahlungsseite</name>
+                </option>
+                <option>
+                    <id>HostedPage</id>
+                    <name>Hosted page</name>
+                    <name lang="de-DE">Gehostete Felder</name>
+                </option>
+            </options>
+            <defaultValue>HostedPage</defaultValue>
+            <helpText>                
+                Hosted page: The customer is redirected to a secure payment page hosted by HiPay. 
+                Hosted fields: The customer will fill in their banking information directly on the merchant's website but the form fields will be hosted by HiPay. This mode is only valid for credit cards
+             </helpText>
+            <helpText lang="de-DE">                
+                Gehostete Seite : Der Kunde wird zu einer sicheren, von HiPay gehosteten Zahlungsseite weitergeleitet.
+                Heruntergeladene Felder: Der Kunde gibt seine Bankdaten direkt auf der Website des Händlers ein, die Felder des Formulars werden jedoch von HiPay gehostet. Dieser Modus ist nur für Kreditkarten gülti
+            </helpText>
+        </input-field>
+
+        <input-field type="bool">
+            <name>oneClickPayment</name>
+            <label>Using One-click payment</label>
+            <label lang="de-DE">One-Click-Zahlung verwenden</label>
+        </input-field>
+        
+        <input-field type="bool">
+            <name>rememberCart</name>
+            <label>Retain cart if payment fails</label>
+            <label lang="de-DE">Bewahren Sie den Warenkorb auf, wenn die Zahlung fehlschlägt</label>
+        </input-field>
+        
+        <input-field type="bool">
+            <name>debugMode</name>
+            <label>Activate technical logs</label>
+            <label lang="de-DE">Technische Logs aktivieren</label>
+        </input-field>
+
+        <input-field type="single-select">
+            <name>authFlag3DS</name>
+            <label>Authentication Indicator</label>
+            <label lang="de-DE">Authentifizierungsindikator</label>
+            <required>true</required>
+            <options>
+                <option>
+                    <id>1</id>
+                    <name>3-D Secure authentication if available</name>
+                    <name lang="de-DE">3-D Secure-Authentifizierung, falls verfügbar</name>
+                </option>
+                <option>
+                    <id>2</id>
+                    <name>3-D Secure authentication mandator</name>
+                    <name lang="de-DE">3-D Secure-Authentifizierungsmandat</name>
+                </option>
+            </options>
+        </input-field>
+    </card>
+
+    <!-- hosted fields style -->
+    <card> 
+        <title>Customizing Hosted Fields</title>
+        <title lang="de-DE">Anpassen von gehosteten Feldern</title>
+
+        <input-field type="colorpicker">
+            <name>hostedFieldsTextColor</name>
+            <label>Text Color</label>
+            <label lang="de-DE">Textfarbe</label>
+        </input-field>
+
+        <input-field>
+            <name>hostedFieldsFontFamilly</name>
+            <label>Font familly</label>
+            <label lang="de-DE">Schriftfamilie</label>
+        </input-field>
+
+        <input-field type="int">
+            <name>hostedFieldsFontSize</name>
+            <label>Font size</label>
+            <label lang="de-DE">Schriftgröße</label>
+        </input-field>
+
+        <input-field type="single-select">
+            <name>hostedFieldsFontWeight</name>
+            <label>Font weight</label>
+            <label lang="de-DE">Schriftgewicht</label>
+            <options>
+                <option>
+                    <id>bolder</id>
+                    <name>Bolder</name>
+                    <name lang="de-DE">Bolder</name>
+                </option>
+                <option>
+                    <id>bold</id>
+                    <name>Bold</name>
+                    <name lang="de-DE">Bold</name>
+                </option>
+                <option>
+                    <id>normal</id>
+                    <name>normal</name>
+                    <name lang="de-DE">normal</name>
+                </option>
+                <option>
+                    <id>light</id>
+                    <name>light</name>
+                    <name lang="de-DE">light</name>
+                </option>                
+                <option>
+                    <id>lighter</id>
+                    <name>lighter</name>
+                    <name lang="de-DE">lighter</name>
+                </option>
+            </options>
+        </input-field>
+
+        <input-field type="colorpicker">
+            <name>hostedFieldsPlaceholderColor</name>
+            <label>Placeholder Color</label>
+            <label lang="de-DE">Platzhalterfarbe</label>
+        </input-field>
+
+        <input-field type="colorpicker">
+            <name>hostedFieldsCaretColor</name>
+            <label>Caret Color</label>
+            <label lang="de-DE">Caret-Farbe</label>
+        </input-field>
+
+        <input-field type="colorpicker">
+            <name>hostedFieldsIconColor</name>
+            <label>Icon Color</label>
+            <label lang="de-DE">Symbol Farbe</label>
+        </input-field>
+    </card>
 </config>

@@ -1,0 +1,23 @@
+{
+    "hipay" : {
+        "config": {
+            "help": {
+                "manual": "Online manual",
+                "github": "Report Errors on github",
+                "version": "version"
+            },
+            "checkAccess" : {
+                "title" : "Hipay Configuration",
+                "success" : "Your configuration is valid.",
+                "failure" : "There's an issue in your configuration.",
+                "button": "Test API Credentials"
+            },
+            "title" : {
+                "privateKey": "Private key",
+                "publicKey": "Public key",
+                "notification" : "Notification setting"
+            },
+            "info" : "In order to inform you of events related to your payment system, such as a new transaction or a 3-D Secure transaction, the HiPay Enterprise platform can send your application a server-to-server notification. Log in to the Hipay Back Office, go to the Integration > Security Setting module to retrieve the passphrase of your HiPay merchant account"
+        }
+    }
+}

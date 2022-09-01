@@ -21,32 +21,32 @@ if [ "$1" = 'init' ]; then
     rm -rf web/
     COMPOSE_HTTP_TIMEOUT=200
     docker-compose up -d --build
-    docker cp $container:/var/www/html/ web/
 
     # Activate custom module
     docker exec hipay-enterprise-shopware-6 bash -c "
-        composer req hipay/hipay-fullservice-sdk-php;
-        bin/console plugin:refresh --quiet;
-        bin/console plugin:install --activate HiPayPaymentPlugin;
-        bin/console cache:clear --quiet;
+        composer req hipay/hipay-fullservice-sdk-php; \
+        bin/console plugin:refresh; \
+        bin/console plugin:install --activate HiPayPaymentPlugin; \
+        bin/console cache:clear; \
     "
-if [ "$1" = 'init-without-sources' ]; then
+    docker cp $container:/var/www/html/ web/
+elif [ "$1" = 'init-without-sources' ]; then
     docker-compose down -v
     COMPOSE_HTTP_TIMEOUT=200
     docker-compose up -d --build
 
     # Activate custom module
     docker exec hipay-enterprise-shopware-6 bash -c "
-        composer req hipay/hipay-fullservice-sdk-php;
-        bin/console plugin:refresh --quiet;
-        bin/console plugin:install --activate HiPayPaymentPlugin;
-        bin/console cache:clear --quiet;
+        composer req hipay/hipay-fullservice-sdk-php; \
+        bin/console plugin:refresh --quiet; \
+        bin/console plugin:install --activate HiPayPaymentPlugin; \
+        bin/console cache:clear --quiet; \
     "
 elif [ "$1" = 'restart' ]; then
     docker-compose stop
     docker-compose up -d
 elif [ "$1" = 'command' ]; then
     docker exec $container $2
-elif [ "$1" = 'l' ]; then
+elif [ "$1" = 'l' ]; then  
     docker compose logs -f
 fi

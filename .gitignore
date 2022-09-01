@@ -10,3 +10,4 @@ web/
 .env
 vendor/
 composer.lock
+report
