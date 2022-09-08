@@ -1,6 +1,4 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 namespace HiPay\Payment\Controller;
 
@@ -8,27 +6,24 @@ use HiPay\Fullservice\Exception\ApiErrorException;
 use HiPay\Fullservice\HTTP\Configuration\Configuration;
 use HiPay\Payment\HiPayPaymentPlugin;
 use HiPay\Payment\Service\HiPayHttpClientService;
-use Psr\Log\LoggerAwareInterface;
-use Psr\Log\LoggerAwareTrait;
+use Psr\Log\LoggerInterface;
 use Shopware\Core\Framework\Validation\DataBag\RequestDataBag;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Routing\Annotation\Route;
-use Shopware\Core\Framework\Routing\Annotation\RouteScope;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Annotation\Route;
 
 /**
- * @RouteScope(scopes={"administration"})
+ * @Route(defaults={"_routeScope"={"administration"}})
  *
  * Class AdminController
  */
-class AdminController implements LoggerAwareInterface
+class AdminController
 {
+    protected LoggerInterface $logger;
 
-    use LoggerAwareTrait;
-
-    public function __construct()
-    {
+    public function __construct(LoggerInterface $hipayApiLogger) {
+        $this->logger = $hipayApiLogger;
     }
 
     /**
@@ -50,8 +45,10 @@ class AdminController implements LoggerAwareInterface
                     throw new ApiErrorException($response->getBody());
                 }
 
-            } catch (\Exception $e) {
-                return new JsonResponse(['success' => false, 'message' => 'Error on ' . $scope . ' key : ' . $e->getMessage()]);
+            } catch (\Throwable $e) {
+                $message = 'Error on ' . $scope . ' key : ' . $e->getMessage();
+                $this->logger->error($message);
+                return new JsonResponse(['success' => false, 'message' => $message]);
             }
         }
 

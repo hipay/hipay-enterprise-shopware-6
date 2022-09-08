@@ -8,6 +8,7 @@ use HiPay\Payment\HiPayPaymentPlugin;
 use HiPay\Payment\Service\HiPayHttpClientService;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\NullLogger;
 use Shopware\Core\Framework\Validation\DataBag\RequestDataBag;
 
 class AdminControllerTest extends TestCase{
@@ -64,7 +65,7 @@ class AdminControllerTest extends TestCase{
             new Response('', 200, []),
         ];
 
-        $service = new AdminController();
+        $service = new AdminController(new NullLogger);
 
         $jsonResponse = json_decode(            
             $service->checkAccess(
@@ -85,7 +86,7 @@ class AdminControllerTest extends TestCase{
             new Response('', 200, []),
         ];
 
-        $service = new AdminController();
+        $service = new AdminController(new NullLogger);
 
         $jsonResponse = json_decode(            
             $service->checkAccess(
@@ -106,7 +107,7 @@ class AdminControllerTest extends TestCase{
             new Response('Bar', 404, []),
         ];
 
-        $service = new AdminController();
+        $service = new AdminController(new NullLogger);
 
         $jsonResponse = json_decode(            
             $service->checkAccess(
@@ -124,7 +125,7 @@ class AdminControllerTest extends TestCase{
     public function testCheckAccessInvalidConfig() {
         $responses = [null];
 
-        $service = new AdminController();
+        $service = new AdminController(new NullLogger);
 
         $jsonResponse = json_decode(            
             $service->checkAccess(

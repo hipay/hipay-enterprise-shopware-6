@@ -7,6 +7,33 @@
         https://symfony.com/schema/dic/monolog/monolog-1.0.xsd">
 
     <monolog:config>
-        <monolog:channel>HiPay</monolog:channel>
+        <monolog:channel>hipay_api</monolog:channel>
+        <monolog:channel>hipay_notification</monolog:channel>
+        <monolog:channel>hipay_debug</monolog:channel>
+        
+        <monolog:handler name="hipay_api"
+                        type="stream"
+                        path="%kernel.logs_dir%/hipay/api.log">
+            <monolog:channels>
+                <monolog:channel>hipay_api</monolog:channel>
+            </monolog:channels>
+        </monolog:handler>
+
+        <monolog:handler name="hipay_notification"
+                        type="stream"
+                        path="%kernel.logs_dir%/hipay/notifications.log">
+            <monolog:channels>
+                <monolog:channel>hipay_notification</monolog:channel>
+            </monolog:channels>
+        </monolog:handler>
+
+        <monolog:handler name="hipay_debug"
+                        type="stream"
+                        path="%kernel.logs_dir%/hipay/debug.log">
+            <monolog:channels>
+                <monolog:channel>hipay_debug</monolog:channel>
+            </monolog:channels>
+        </monolog:handler>
+        
     </monolog:config>
 </container>

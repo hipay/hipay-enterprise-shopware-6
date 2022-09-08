@@ -4,7 +4,16 @@
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
            xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
 
+    <imports>
+        <import resource="packages/*"/>
+    </imports>
+
     <services>
+        <defaults autowire="true" autoconfigure="true"/>
+        <prototype namespace="HiPay\Payment\Service\" resource="../../Service/*Service.php"></prototype>
+        <prototype namespace="HiPay\Payment\Controller\" resource="../../Controller/*Controller.php">
+            <tag>controller.service_arguments</tag>
+        </prototype>
 
     </services>
 </container>
