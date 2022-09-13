@@ -1,7 +1,4 @@
-<container xmlns="http://symfony.com/schema/dic/services"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xmlns:monolog="http://symfony.com/schema/dic/monolog"
-    xsi:schemaLocation="http://symfony.com/schema/dic/services
+<container xmlns="http://symfony.com/schema/dic/services" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:monolog="http://symfony.com/schema/dic/monolog" xsi:schemaLocation="http://symfony.com/schema/dic/services
         https://symfony.com/schema/dic/services/services-1.0.xsd
         http://symfony.com/schema/dic/monolog
         https://symfony.com/schema/dic/monolog/monolog-1.0.xsd">
@@ -10,30 +7,24 @@
         <monolog:channel>hipay_api</monolog:channel>
         <monolog:channel>hipay_notification</monolog:channel>
         <monolog:channel>hipay_debug</monolog:channel>
-        
-        <monolog:handler name="hipay_api"
-                        type="stream"
-                        path="%kernel.logs_dir%/hipay/api.log">
+
+        <monolog:handler name="hipay_api" type="stream" path="%kernel.logs_dir%/hipay/api.log">
             <monolog:channels>
                 <monolog:channel>hipay_api</monolog:channel>
             </monolog:channels>
         </monolog:handler>
 
-        <monolog:handler name="hipay_notification"
-                        type="stream"
-                        path="%kernel.logs_dir%/hipay/notifications.log">
+        <monolog:handler name="hipay_notification" type="stream" path="%kernel.logs_dir%/hipay/notifications.log">
             <monolog:channels>
                 <monolog:channel>hipay_notification</monolog:channel>
             </monolog:channels>
         </monolog:handler>
 
-        <monolog:handler name="hipay_debug"
-                        type="stream"
-                        path="%kernel.logs_dir%/hipay/debug.log">
+        <monolog:handler name="hipay_debug" type="stream" path="%kernel.logs_dir%/hipay/debug.log">
             <monolog:channels>
                 <monolog:channel>hipay_debug</monolog:channel>
             </monolog:channels>
         </monolog:handler>
-        
+
     </monolog:config>
 </container>

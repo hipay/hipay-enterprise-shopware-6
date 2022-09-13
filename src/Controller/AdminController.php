@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace HiPay\Payment\Controller;
 
@@ -22,15 +24,13 @@ class AdminController
 {
     protected LoggerInterface $logger;
 
-    public function __construct(LoggerInterface $hipayApiLogger) {
+    public function __construct(LoggerInterface $hipayApiLogger)
+    {
         $this->logger = $hipayApiLogger;
     }
 
     /**
      * @Route(path="/api/_action/hipay/checkAccess")
-     *
-     * @param RequestDataBag $dataBag
-     * @return JsonResponse
      */
     public function checkAccess(RequestDataBag $params, HiPayHttpClientService $clientService): JsonResponse
     {
@@ -41,13 +41,13 @@ class AdminController
                 $client = $clientService->getClient($conf);
                 $response = $client->request(Request::METHOD_GET, HiPayHttpClientService::URL_SECURITY_SETTINGS);
 
-                if($response->getStatusCode() !== Response::HTTP_OK) {
+                if (Response::HTTP_OK !== $response->getStatusCode()) {
                     throw new ApiErrorException($response->getBody());
                 }
-
-            } catch (\Throwable $e) {
-                $message = 'Error on ' . $scope . ' key : ' . $e->getMessage();
+            } catch (\Exception $e) {
+                $message = 'Error on '.$scope.' key : '.$e->getMessage();
                 $this->logger->error($message);
+
                 return new JsonResponse(['success' => false, 'message' => $message]);
             }
         }
@@ -56,21 +56,16 @@ class AdminController
     }
 
     /**
-     * Etract Configuration for SimpleHTTPClient from the plugin config data
-     * 
-     * @param RequestDataBag $params 
-     * @param string $scope 
-     * 
-     * @return Configuration 
+     * Etract Configuration for SimpleHTTPClient from the plugin config data.
      */
     private function extractConfigurationFromPluginConfig(RequestDataBag $params, string $scope): Configuration
     {
-        $environement = ucFirst($params->get('environment'));
+        $environement = ucfirst($params->getAlpha('environment'));
 
         return new Configuration([
-            'apiUsername' => $params->get(HiPayPaymentPlugin::getModuleName() . '.config.' . $scope . 'Login' . $environement),
-            'apiPassword' => $params->get(HiPayPaymentPlugin::getModuleName() . '.config.' . $scope . 'Password' . $environement),
-            'apiEnv' => strtolower($environement)
+            'apiUsername' => $params->getAlpha(HiPayPaymentPlugin::getModuleName().'.config.'.$scope.'Login'.$environement),
+            'apiPassword' => $params->getAlpha(HiPayPaymentPlugin::getModuleName().'.config.'.$scope.'Password'.$environement),
+            'apiEnv' => strtolower($environement),
         ]);
     }
 }

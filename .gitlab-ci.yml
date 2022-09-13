@@ -19,10 +19,10 @@ stages:
 
 .login_to_registry:
   before_script:
-    - 'mkdir /tmp'
-    - 'touch /tmp/credentials.json'
-    - 'echo ${SA_REGISTRY_CD} > /tmp/credentials.json'
-    - 'export GOOGLE_APPLICATION_CREDENTIALS=/tmp/credentials.json'
+    - "mkdir /tmp"
+    - "touch /tmp/credentials.json"
+    - "echo ${SA_REGISTRY_CD} > /tmp/credentials.json"
+    - "export GOOGLE_APPLICATION_CREDENTIALS=/tmp/credentials.json"
 
 .login_to_cd:
   before_script:
@@ -39,34 +39,34 @@ stages:
 # policy: push on composer install only
 .test-dependencies:
   variables:
-      PATH_VENDOR: vendor
+    PATH_VENDOR: vendor
   cache:
     key: ${CI_COMMIT_REF_SLUG}-vendor-test
     paths:
-    - $PATH_VENDOR
+      - $PATH_VENDOR
     policy: pull
 
 # For job with report
 # set artifact lifetime
 # set $PATH_REPORTS, where reports are generate
 .reportable:
-  variables: 
+  variables:
     PATH_REPORTS: reports
   artifacts:
     expire_in: 1 day
 
-# For job with phpunit 
+# For job with phpunit
 # set PATH_REPORTS_PHPUNIT, folder where phpunit report are saved
 .phpunit-conf:
-  extends: 
+  extends:
     - .reportable
   variables:
     PATH_REPORTS_PHPUNIT: $PATH_REPORTS/phpunit
 
-# For job with phpstan 
+# For job with phpstan
 # set PATH_REPORTS_PHPUNIT, folder where phpstan report are saved
 .phpstan-conf:
-  extends: 
+  extends:
     - .reportable
   variables:
     PATH_REPORTS_PHPSTAN: $PATH_REPORTS/phpstan
@@ -109,12 +109,12 @@ build-test:
 # Install dependencies for test
 install-test:
   stage: test-init
-  needs: 
+  needs:
     - build-test
-  image:   
+  image:
     name: $REGISTRY_CI/test-jobs-${DOCKER_STACK}-${DOCKER_SERVICE}_web:${CI_COMMIT_REF_SLUG}
     entrypoint: [""]
-  extends :
+  extends:
     - .test-dependencies
   cache:
     policy: push
@@ -133,9 +133,9 @@ code-style:
   stage: test
   extends:
     - .test-dependencies
-  needs: 
+  needs:
     - install-test
-  image:   
+  image:
     name: $REGISTRY_CI/test-jobs-${DOCKER_STACK}-${DOCKER_SERVICE}_web:${CI_COMMIT_REF_SLUG}
     entrypoint: [""]
   script:
@@ -148,7 +148,7 @@ code-style:
 # Smoke test
 smoke-test:
   stage: test
-  needs: 
+  needs:
     - build-test
   variables:
     TZ: Europe/Paris
@@ -171,13 +171,13 @@ phpunit:
     - .test-dependencies
     - .phpunit-conf
     - .xdebug
-  needs: 
+  needs:
     - install-test
-  image:   
+  image:
     name: $REGISTRY_CI/test-jobs-${DOCKER_STACK}-${DOCKER_SERVICE}_web:${CI_COMMIT_REF_SLUG}
     entrypoint: [""]
   script:
-    - php -d xdebug.mode=coverage $PATH_VENDOR/bin/phpunit 
+    - php -d xdebug.mode=coverage $PATH_VENDOR/bin/phpunit
       --coverage-clover $PATH_REPORTS_PHPUNIT/coverage-clover.xml
       --log-junit $PATH_REPORTS_PHPUNIT/phpunit-junit.xml
   except:
@@ -185,61 +185,61 @@ phpunit:
       - $ONLY_DEPLOY
   artifacts:
     paths:
-    - $PATH_REPORTS_PHPUNIT
+      - $PATH_REPORTS_PHPUNIT
 
 # Check Code
 phpstan:
   stage: test
-  extends: 
+  extends:
     - .test-dependencies
     - .phpstan-conf
     - .xdebug
-  needs: 
+  needs:
     - install-test
-  image:   
+  image:
     name: $REGISTRY_CI/test-jobs-${DOCKER_STACK}-${DOCKER_SERVICE}_web:${CI_COMMIT_REF_SLUG}
     entrypoint: [""]
   script:
     - mkdir -p $PATH_REPORTS_PHPSTAN
-    - $PATH_VENDOR/bin/phpstan analyse src 
-        --level 9 
-        --xdebug 
-        --no-progress
-        -vvv
-        --error-format=json > $PATH_REPORTS_PHPSTAN/phpstan-junit.xml
+    - $PATH_VENDOR/bin/phpstan analyse src
+      --level 9
+      --xdebug
+      --no-progress
+      -vvv
+      --error-format=json > $PATH_REPORTS_PHPSTAN/phpstan-junit.xml
   allow_failure: true
   except:
     variables:
-    - $ONLY_DEPLOY
+      - $ONLY_DEPLOY
   artifacts:
     paths:
-    - $PATH_REPORTS_PHPSTAN
+      - $PATH_REPORTS_PHPSTAN
     when: always
 
 # Mutation test
 infection:
   stage: test
-  extends: 
+  extends:
     - .test-dependencies
     - .xdebug
     - .reportable
-  needs: 
+  needs:
     - install-test
-  image:   
+  image:
     name: $REGISTRY_CI/test-jobs-${DOCKER_STACK}-${DOCKER_SERVICE}_web:${CI_COMMIT_REF_SLUG}
     entrypoint: [""]
   script:
-    - $PATH_VENDOR/bin/infection 
+    - $PATH_VENDOR/bin/infection
       --logger-html=$PATH_REPORTS/infection.html
       --min-msi=90
   artifacts:
     paths:
       - $PATH_REPORTS/infection.html
-  cache: 
+  cache:
     policy: pull
   except:
     variables:
-     - $ONLY_DEPLOY
+      - $ONLY_DEPLOY
 
 # Sonar
 sonarqube:
@@ -254,9 +254,9 @@ sonarqube:
     name: sonarsource/sonar-scanner-cli:latest
     entrypoint: [""]
   variables:
-    SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"  # Defines the location of the analysis task cache
-    GIT_DEPTH: "0"  # Tells git to fetch all the branches of the project, required by the analysis task
-  cache: 
+    SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar" # Defines the location of the analysis task cache
+    GIT_DEPTH: "0" # Tells git to fetch all the branches of the project, required by the analysis task
+  cache:
     policy: pull
   except:
     variables:
@@ -267,13 +267,11 @@ sonarqube:
       -Dsonar.login=${NEW_SONAR_AUTH_TOKEN}
       -Dsonar.projectVersion=$CI_BUILD_ID
       -Dsonar.gitlab.project_id=$CI_PROJECT_ID
-      -Dsonar.gitlab.commit_sha=$CI_BUILD_REF 
-      -Dsonar.php.coverage.reportPaths=$PATH_REPORTS_PHPUNIT/coverage-clover.xml 
+      -Dsonar.gitlab.commit_sha=$CI_BUILD_REF
+      -Dsonar.php.coverage.reportPaths=$PATH_REPORTS_PHPUNIT/coverage-clover.xml
       -Dsonar.php.test.reportPath=$PATH_REPORTS_PHPUNIT/phpunit-junit.xml
       -Dsonar.php.phpstan.reportPaths=$PATH_REPORTS_PHPSTAN/phpstan-junit.xml
       -Dsonar.qualitygate.wait=true
-
-
 
 #### BUILD ####
 
@@ -309,7 +307,7 @@ deploy2recette:
     - if: $CI_PIPELINE_SOURCE == "push"
       when: manual
   variables:
-    GPC_ACCOUNT: ''
+    GPC_ACCOUNT: ""
   extends: .login_to_cd
   script:
     - echo $RELEASE_NAME

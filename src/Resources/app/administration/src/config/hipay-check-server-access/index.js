@@ -39,7 +39,7 @@ Component.register("hipay-check-server-access", {
           if (!response.success) {
             throw new Error(response.message);
           }
-          
+
           this.createNotificationSuccess({
             title,
             message: this.$tc("hipay.config.checkAccess.success"),
@@ -51,7 +51,7 @@ Component.register("hipay-check-server-access", {
           this.createNotificationError({
             title,
             message: error.message || this.$tc("hipay.config.checkAccess.failure"),
-          }); 
+          });
         })
         .finally(() => (this.isLoading = false));
     },
@@ -68,7 +68,7 @@ Component.register("hipay-check-server-access", {
         {},
         config.null,
         config[selectedSalesChannelId],
-        {environment: this.$parent.bind.value}
+        { environment: this.$parent.bind.value }
       );
     },
   },

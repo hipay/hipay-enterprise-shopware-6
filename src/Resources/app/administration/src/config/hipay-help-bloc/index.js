@@ -14,8 +14,5 @@ Shopware.Component.register('hipay-help-bloc', {
         return {
             version: composerFile.version
         }
-    },
-    mounted() {
-        console.log(composerFile.version);
     }
 });

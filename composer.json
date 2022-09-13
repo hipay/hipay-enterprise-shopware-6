@@ -16,18 +16,18 @@
     "php",
     "shopware"
   ],
-  "type": "shopware-platform-plugin",  
+  "type": "shopware-platform-plugin",
   "extra": {
     "shopware-plugin-class": "HiPay\\Payment\\HiPayPaymentPlugin",
-    "plugin-icon" : "src/Resources/config/hipay.png",
-    "author" : "HiPay",
+    "plugin-icon": "src/Resources/config/hipay.png",
+    "author": "HiPay",
     "label": {
       "en-GB": "HiPay Payment",
       "de-DE": "HiPay Payment"
     },
     "description": {
       "en-GB": "Hipay enterprise module for Shopware",
-      "de-DE": "Hipay Enterprise-Modul f\u00fcr Shopware"
+      "de-DE": "Hipay Enterprise-Modul für Shopware"
     },
     "manufacturerLink": {
       "en-GB": "#",
@@ -44,7 +44,7 @@
     }
   },
   "autoload-dev": {
-    "psr-4": {  
+    "psr-4": {
       "HiPay\\Payment\\Tests\\": "tests/"
     }
   },
@@ -54,16 +54,16 @@
   },
   "require-dev": {
     "phpunit/php-code-coverage": "~9.2.14",
-    "phpunit/phpunit": "~9.5.17",       
+    "phpunit/phpunit": "~9.5.17",
     "symfony/phpunit-bridge": "~4.4 || ~5.2.3 || ~5.3.0 || ~5.4.0",
     "infection/infection": "^0.26.6",
     "phpstan/phpstan": "^1.8",
     "friendsofphp/php-cs-fixer": "*"
   },
   "archive": {
-    "exclude" : [
+    "exclude": [
       "/bin",
-      "./\\.*", 
+      "./\\.*",
       "docker-compose.yaml",
       "shopware.sh"
     ]

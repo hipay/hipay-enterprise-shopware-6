@@ -1,26 +1,27 @@
-.hipay-help{
-  .hipay-help-bloc{
+.hipay-help {
+  .hipay-help-bloc {
     display: flex;
     justify-content: space-around;
     margin-bottom: 20px;
 
-    .hipay-help-bloc-item{
+    .hipay-help-bloc-item {
       width: 50%;
       display: flex;
-      flex-direction : column;
+      flex-direction: column;
       align-items: center;
       border-left: 1px solid #d1d9e0;
-      &:first-child{ border: none; }    
+      &:first-child {
+        border: none;
+      }
 
-      .sw-icon{
+      .sw-icon {
         height: 64px;
         width: 64px;
         margin-bottom: 30px;
       }
-    }    
+    }
   }
   p {
     text-align: right;
   }
 }
-

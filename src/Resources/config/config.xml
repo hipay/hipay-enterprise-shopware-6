@@ -39,7 +39,7 @@
     <!-- live credentials -->
     <card>
         <title>Live configuration</title>
-        <title lang="de-DE">Live-Konfiguration</title>  
+        <title lang="de-DE">Live-Konfiguration</title>
 
         <component name="hipay-html-bloc">
             <name>h3</name>
@@ -58,10 +58,10 @@
             <label>Password</label>
             <label lang="de-DE">Passwort</label>
             <required>true</required>
-        </input-field>       
+        </input-field>
 
         <component name="hipay-html-bloc">
-            <name>h3</name>            
+            <name>h3</name>
             <value>hipay.config.title.publicKey</value>
         </component>
 
@@ -77,12 +77,12 @@
             <label>Password</label>
             <label lang="de-DE">Passwort</label>
             <required>true</required>
-        </input-field>        
+        </input-field>
 
         <component name="hipay-html-bloc">
-            <name>h3</name>            
+            <name>h3</name>
             <value>hipay.config.title.notification</value>
-        </component>        
+        </component>
 
         <input-field type="password">
             <name>passphraseProduction</name>
@@ -163,7 +163,7 @@
         </input-field>
 
         <component name="hipay-html-bloc">
-            <name>h3</name>            
+            <name>h3</name>
             <value>hipay.config.title.notification</value>
         </component>
 
@@ -219,9 +219,9 @@
                     <name lang="de-DE">Automatisch (standardmäßig) </name>
                 </option>
                 <option>
-                    <id>manuel</id>
-                    <name>Manuel</name>
-                    <name lang="de-DE">Manuel</name>
+                    <id>manual</id>
+                    <name>Manual</name>
+                    <name lang="de-DE">Manual</name>
                 </option>
             </options>
             <defaultValue>automatic</defaultValue>
@@ -270,13 +270,13 @@
             <label>Using One-click payment</label>
             <label lang="de-DE">One-Click-Zahlung verwenden</label>
         </input-field>
-        
+
         <input-field type="bool">
             <name>rememberCart</name>
             <label>Retain cart if payment fails</label>
             <label lang="de-DE">Bewahren Sie den Warenkorb auf, wenn die Zahlung fehlschlägt</label>
         </input-field>
-        
+
         <input-field type="bool">
             <name>debugMode</name>
             <label>Activate technical logs</label>
@@ -292,19 +292,23 @@
                 <option>
                     <id>1</id>
                     <name>3-D Secure authentication if available</name>
-                    <name lang="de-DE">3-D Secure-Authentifizierung, falls verfügbar</name>
+                    <name lang="de-DE">
+                        3-D Secure-Authentifizierung, falls verfügbar
+                    </name>
                 </option>
                 <option>
                     <id>2</id>
                     <name>3-D Secure authentication mandator</name>
-                    <name lang="de-DE">3-D Secure-Authentifizierungsmandat</name>
+                    <name lang="de-DE">
+                        3-D Secure-Authentifizierungsmandat
+                    </name>
                 </option>
             </options>
         </input-field>
     </card>
 
     <!-- hosted fields style -->
-    <card> 
+    <card>
         <title>Customizing Hosted Fields</title>
         <title lang="de-DE">Anpassen von gehosteten Feldern</title>
 
@@ -350,7 +354,7 @@
                     <id>light</id>
                     <name>light</name>
                     <name lang="de-DE">light</name>
-                </option>                
+                </option>
                 <option>
                     <id>lighter</id>
                     <name>lighter</name>

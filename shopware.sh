@@ -22,17 +22,17 @@ if [ "$1" = 'init' ] || [ "$1" = 'init-without-sources' ]; then
     rm -rf web/
 
     COMPOSE_HTTP_TIMEOUT=200
-    docker-compose up -d --build   
+    docker-compose up -d --build
 fi
 
 if [ "$1" = 'init' ]; then
-     docker cp $container:/var/www/html/ web/
+    docker cp $container:/var/www/html/ web/
 elif [ "$1" = 'restart' ]; then
     docker-compose stop
     docker-compose up -d
 elif [ "$1" = 'command' ]; then
     docker exec $container $2
-elif [ "$1" = 'l' ]; then  
+elif [ "$1" = 'l' ]; then
     docker compose logs -f
 elif [ "$1" = 'test' ]; then
 
@@ -42,7 +42,7 @@ elif [ "$1" = 'test' ]; then
         composer install -q
     "
 
-    if [ "$2" = '' ] || [ "$2" = "phpunit" ]; then  
+    if [ "$2" = '' ] || [ "$2" = "phpunit" ]; then
         echo "----- PHPUNIT -----"
         docker exec hipay-enterprise-shopware-6 bash -c "
             cd custom/plugins/HiPayPaymentPlugin

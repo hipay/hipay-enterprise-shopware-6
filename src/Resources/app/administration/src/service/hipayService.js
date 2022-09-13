@@ -14,7 +14,7 @@ class ApiHiPay extends ApiService {
     validateConfig(values) {
         const headers = this.getBasicHeaders({});
 
-        return this.httpClient.post(`/api/_action/${this.getApiBasePath()}/checkAccess`, values, {headers})
+        return this.httpClient.post(`/api/_action/${this.getApiBasePath()}/checkAccess`, values, { headers })
             .then((response) => {
                 return ApiService.handleResponse(response);
             });

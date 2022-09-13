@@ -1,4 +1,5 @@
 <?php
+
 namespace Hipay\Payment\Tests\Unit\Service;
 
 use HiPay\Payment\HiPayPaymentPlugin;
@@ -7,29 +8,31 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Shopware\Core\System\SystemConfig\SystemConfigService;
 
-class ReadHipayConfigServiceTest extends TestCase{
-
-    private function generateService(array $params) {
-
+class ReadHipayConfigServiceTest extends TestCase
+{
+    private function generateService(array $params)
+    {
         /** @var SystemConfigService&MockObject */
         $systemConfigService = $this->getMockBuilder(SystemConfigService::class)
             ->disableOriginalConstructor()
             ->getMock();
 
-        $params[HiPayPaymentPlugin::getModuleName() . '.config'] = $systemConfigService;       
+        $params[HiPayPaymentPlugin::getModuleName().'.config'] = $systemConfigService;
 
-        $systemConfigService->method('get')->willReturnCallback(
-            function($key) use ($params) { 
-                return $params[$key]; 
-            }
-        );
+        foreach (['get', 'getString', 'getBool', 'getInt'] as $method) {
+            $systemConfigService->method($method)->willReturnCallback(
+                function ($key) use ($params) {
+                    return $params[$key];
+                }
+            );
+        }
 
         return new ReadHipayConfigService($systemConfigService);
     }
 
-    public function testGetEnvironmentStage() {
-
-        $environement = 'stage';        
+    public function testGetEnvironmentStage()
+    {
+        $environement = 'stage';
         $mock = $this->generateService(['environment' => $environement]);
 
         $this->assertSame(
@@ -46,9 +49,9 @@ class ReadHipayConfigServiceTest extends TestCase{
         );
     }
 
-    public function testGetEnvironmentProduction() {
-
-        $environement = 'production';        
+    public function testGetEnvironmentProduction()
+    {
+        $environement = 'production';
         $mock = $this->generateService(['environment' => $environement]);
 
         $this->assertSame(
@@ -65,7 +68,8 @@ class ReadHipayConfigServiceTest extends TestCase{
         );
     }
 
-    public function provideCredentials() {
+    public function provideCredentials()
+    {
         return [
             [
                 [
@@ -80,17 +84,17 @@ class ReadHipayConfigServiceTest extends TestCase{
                     'publicLoginProduction' => 'publicLoginProduction',
                     'publicPasswordProduction' => 'publicPasswordProduction',
                     'hashProduction' => 'hashProduction',
-                    'passphraseProduction' => 'passphraseProduction'
-                ]
-            ]
+                    'passphraseProduction' => 'passphraseProduction',
+                ],
+            ],
         ];
     }
 
-     /**
+    /**
      * @dataProvider provideCredentials
      */
-    public function testGetStageCredentials($config) {
-
+    public function testGetStageCredentials($config)
+    {
         $mock = $this->generateService($config + ['environment' => 'stage']);
 
         $this->assertSame(
@@ -127,8 +131,8 @@ class ReadHipayConfigServiceTest extends TestCase{
     /**
      * @dataProvider provideCredentials
      */
-    public function testGetProductionCredentials($config) {
-
+    public function testGetProductionCredentials($config)
+    {
         $mock = $this->generateService($config + ['environment' => 'production']);
 
         $this->assertSame(
@@ -162,8 +166,8 @@ class ReadHipayConfigServiceTest extends TestCase{
         );
     }
 
-    public function testCaptureModeAuto() {
-
+    public function testCaptureModeAuto()
+    {
         $captureMode = 'auto';
         $mock = $this->generateService(['captureMode' => $captureMode]);
 
@@ -173,7 +177,7 @@ class ReadHipayConfigServiceTest extends TestCase{
         );
 
         $this->assertFalse(
-            $mock->isCaptureManuel()
+            $mock->isCaptureManual()
         );
 
         $this->assertTrue(
@@ -181,9 +185,9 @@ class ReadHipayConfigServiceTest extends TestCase{
         );
     }
 
-    public function testCaptureModeManuel() {
-
-        $captureMode = 'manuel';
+    public function testCaptureModeManual()
+    {
+        $captureMode = 'manual';
         $mock = $this->generateService(['captureMode' => $captureMode]);
 
         $this->assertSame(
@@ -192,7 +196,7 @@ class ReadHipayConfigServiceTest extends TestCase{
         );
 
         $this->assertTrue(
-            $mock->isCaptureManuel()
+            $mock->isCaptureManual()
         );
 
         $this->assertFalse(
@@ -200,8 +204,8 @@ class ReadHipayConfigServiceTest extends TestCase{
         );
     }
 
-    public function testOperationModeHostedPage() {
-
+    public function testOperationModeHostedPage()
+    {
         $operationMode = 'hostedPage';
         $mock = $this->generateService(['operationMode' => $operationMode]);
 
@@ -219,8 +223,8 @@ class ReadHipayConfigServiceTest extends TestCase{
         );
     }
 
-    public function testOperationModeHostedFields() {
-
+    public function testOperationModeHostedFields()
+    {
         $operationMode = 'hostedFields';
         $mock = $this->generateService(['operationMode' => $operationMode]);
 
@@ -238,8 +242,9 @@ class ReadHipayConfigServiceTest extends TestCase{
         );
     }
 
-    public function testIsOneClickPayment() {
-        $oneClickPayment = random_int(0, 1) === 0;
+    public function testIsOneClickPayment()
+    {
+        $oneClickPayment = 0 === random_int(0, 1);
         $mock = $this->generateService(['oneClickPayment' => $oneClickPayment]);
 
         $this->assertEquals(
@@ -248,8 +253,9 @@ class ReadHipayConfigServiceTest extends TestCase{
         );
     }
 
-    public function testIsRememberCart() {
-        $rembemberCart = random_int(0, 1) === 0;
+    public function testIsRememberCart()
+    {
+        $rembemberCart = 0 === random_int(0, 1);
         $mock = $this->generateService(['rememberCart' => $rembemberCart]);
 
         $this->assertEquals(
@@ -258,8 +264,9 @@ class ReadHipayConfigServiceTest extends TestCase{
         );
     }
 
-    public function testIsDebugMode() {
-        $debugMode = random_int(0, 1) === 0;
+    public function testIsDebugMode()
+    {
+        $debugMode = 0 === random_int(0, 1);
         $mock = $this->generateService(['debugMode' => $debugMode]);
 
         $this->assertEquals(
@@ -268,19 +275,20 @@ class ReadHipayConfigServiceTest extends TestCase{
         );
     }
 
-    public function provideTestGet3DSAuthenticator() {
+    public function provideTestGet3DSAuthenticator()
+    {
         return [
             [null, 0],
             [1, 1],
-            [2, 2]
+            [2, 2],
         ];
     }
 
     /**
      * @dataProvider provideTestGet3DSAuthenticator
      */
-    public function testGet3DSAuthenticator($auth3DS, $expected) {
-        
+    public function testGet3DSAuthenticator($auth3DS, $expected)
+    {
         $mock = $this->generateService(['authFlag3DS' => $auth3DS]);
 
         $this->assertEquals(
@@ -289,8 +297,8 @@ class ReadHipayConfigServiceTest extends TestCase{
         );
     }
 
-
-    public function testGetCustomStyleHostedFields() {
+    public function testGetCustomStyleHostedFields()
+    {
         $config = [
             'hostedFieldsTextColor' => 'hostedFieldsTextColor',
             'hostedFieldsFontFamilly' => 'hostedFieldsFontFamilly',
@@ -299,7 +307,7 @@ class ReadHipayConfigServiceTest extends TestCase{
             'hostedFieldsPlaceholderColor' => 'hostedFieldsPlaceholderColor',
             'hostedFieldsCaretColor' => 'hostedFieldsCaretColor',
             'hostedFieldsIconColor' => 'hostedFieldsIconColor',
-            'operationMode' => 'hostedFields'
+            'operationMode' => 'hostedFields',
         ];
 
         $mock = $this->generateService($config);
@@ -312,7 +320,8 @@ class ReadHipayConfigServiceTest extends TestCase{
         );
     }
 
-    public function testGetCustomStyleHostedPage() {
+    public function testGetCustomStyleHostedPage()
+    {
         $config = [
             'hostedFieldsTextColor' => 'hostedFieldsTextColor',
             'hostedFieldsFontFamilly' => 'hostedFieldsFontFamilly',
@@ -321,7 +330,7 @@ class ReadHipayConfigServiceTest extends TestCase{
             'hostedFieldsPlaceholderColor' => 'hostedFieldsPlaceholderColor',
             'hostedFieldsCaretColor' => 'hostedFieldsCaretColor',
             'hostedFieldsIconColor' => 'hostedFieldsIconColor',
-            'operationMode' => 'hostedPage'
+            'operationMode' => 'hostedPage',
         ];
 
         $mock = $this->generateService($config);
@@ -330,6 +339,4 @@ class ReadHipayConfigServiceTest extends TestCase{
 
         $this->assertEmpty($mock->getCustomStyle());
     }
-
-
 }
