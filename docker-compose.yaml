@@ -17,7 +17,9 @@ services:
       - ./bin/docker/conf/development/.env
     volumes:
       - 'shopware_data:/var/lib/mysql'
-      - '.:/var/www/html/custom/plugins/HiPayPaymentPlugin/'
+      - './src:/var/www/html/custom/plugins/HiPayPaymentPlugin/src'
+      - './tests:/var/www/html/custom/plugins/HiPayPaymentPlugin/tests'
+      - './composer.json:/var/www/html/custom/plugins/HiPayPaymentPlugin/composer.json'
 
 volumes:
   shopware_data:

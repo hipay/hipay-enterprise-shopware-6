@@ -55,14 +55,22 @@
   "require-dev": {
     "phpunit/php-code-coverage": "~9.2.14",
     "phpunit/phpunit": "~9.5.17",       
-    "symfony/phpunit-bridge": "~4.4 || ~5.2.3 || ~5.3.0 || ~5.4.0"
+    "symfony/phpunit-bridge": "~4.4 || ~5.2.3 || ~5.3.0 || ~5.4.0",
+    "infection/infection": "^0.26.6",
+    "phpstan/phpstan": "^1.8",
+    "friendsofphp/php-cs-fixer": "*"
   },
   "archive": {
     "exclude" : [
       "/bin",
       "./\\.*", 
       "docker-compose.yaml",
-      "shopeware.sh"
+      "shopware.sh"
     ]
+  },
+  "config": {
+    "allow-plugins": {
+      "infection/extension-installer": true
+    }
   }
 }

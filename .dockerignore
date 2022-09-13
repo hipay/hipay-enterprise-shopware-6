@@ -1,1 +1,15 @@
-shopeware.sh
+# IDE
+.buildpath
+.settings
+.project
+.idea/*
+.vscode
+
+bin/
+!bin/docker/images/shopware/entrypoint.sh
+web/
+.gitlab-ci.yml
+.gitignore
+.dockerignore
+docker-compose.yaml
+shopware.sh

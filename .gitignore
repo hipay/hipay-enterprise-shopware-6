@@ -10,4 +10,5 @@ web/
 .env
 vendor/
 composer.lock
-report
+reports/
+.php-cs-fixer.cache

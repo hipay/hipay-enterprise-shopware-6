@@ -175,7 +175,8 @@
 
         <input-field type="single-select">
             <name>hashStage</name>
-            <label>Passphrase</label>
+            <label>Algorithm</label>
+            <label lang="de-DE">Algorithmus</label>
             <required>true</required>
             <options>
                 <option>

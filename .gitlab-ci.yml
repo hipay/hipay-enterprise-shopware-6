@@ -1,13 +1,19 @@
 image: $REGISTRY_CI/gitlab-ci-base:buster
 
+# Static Application Security Testing (SAST)
+include:
+  - template: Security/SAST.gitlab-ci.yml
+
 variables:
+  SAST_EXCLUDED_ANALYZERS: "eslint,semgrep"
   DOCKWARE_VERSION: latest
   GIT_DEPTH: 10
   RELEASE_NAME: ${DOCKER_STACK}-${DOCKER_SERVICE}-${CI_COMMIT_REF_SLUG}
 
 stages:
-  - build-test
+  - test-init
   - test
+  - analyse
   - build
   - deploy
 
@@ -29,14 +35,65 @@ stages:
     - gcloud config set compute/zone "${GCP_CD_CLUSTER_REGION}"
     - gcloud container clusters get-credentials "${GCP_CD_CLUSTER_NAME}"
 
-#########################
+# Configure vendors cache
+# policy: push on composer install only
+.test-dependencies:
+  variables:
+      PATH_VENDOR: vendor
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}-vendor-test
+    paths:
+    - $PATH_VENDOR
+    policy: pull
+
+# For job with report
+# set artifact lifetime
+# set $PATH_REPORTS, where reports are generate
+.reportable:
+  variables: 
+    PATH_REPORTS: reports
+  artifacts:
+    expire_in: 1 day
+
+# For job with phpunit 
+# set PATH_REPORTS_PHPUNIT, folder where phpunit report are saved
+.phpunit-conf:
+  extends: 
+    - .reportable
+  variables:
+    PATH_REPORTS_PHPUNIT: $PATH_REPORTS/phpunit
+
+# For job with phpstan 
+# set PATH_REPORTS_PHPUNIT, folder where phpstan report are saved
+.phpstan-conf:
+  extends: 
+    - .reportable
+  variables:
+    PATH_REPORTS_PHPSTAN: $PATH_REPORTS/phpstan
+
+# Activate Xdebug
+# set XDEBUG_MODE to coverage
+.xdebug:
+  variables:
+    XDEBUG_MODE: coverage
+  before_script:
+    - chmod 755 /var/www/scripts/bin/xdebug_enable.sh
+    - /var/www/scripts/bin/xdebug_enable.sh
+
+########################
 ####      JOBS      ####
 ########################
 
+#### TEST INIT ####
+
+# Build image
 build-test:
-  stage: build-test
+  stage: test-init
   image:
     name: gcr.io/kaniko-project/executor:v1.6.0-debug
+  variables:
+    TZ: Europe/Paris
+    APP_URL: http://web
   script:
     - /kaniko/executor
       --cache=true
@@ -49,8 +106,50 @@ build-test:
   tags:
     - small
 
-start-test:
+# Install dependencies for test
+install-test:
+  stage: test-init
+  needs: 
+    - build-test
+  image:   
+    name: $REGISTRY_CI/test-jobs-${DOCKER_STACK}-${DOCKER_SERVICE}_web:${CI_COMMIT_REF_SLUG}
+    entrypoint: [""]
+  extends :
+    - .test-dependencies
+  cache:
+    policy: push
+  script:
+    - composer install
+  except:
+    variables:
+      - $ONLY_DEPLOY
+  tags:
+    - small
+
+#### TEST ####
+
+# Code style
+code-style:
   stage: test
+  extends:
+    - .test-dependencies
+  needs: 
+    - install-test
+  image:   
+    name: $REGISTRY_CI/test-jobs-${DOCKER_STACK}-${DOCKER_SERVICE}_web:${CI_COMMIT_REF_SLUG}
+    entrypoint: [""]
+  script:
+    - $PATH_VENDOR/bin/php-cs-fixer fix src --dry-run --rules=@Symfony
+  allow_failure: true
+  except:
+    variables:
+      - $ONLY_DEPLOY
+
+# Smoke test
+smoke-test:
+  stage: test
+  needs: 
+    - build-test
   variables:
     TZ: Europe/Paris
     APP_URL: http://web
@@ -64,6 +163,119 @@ start-test:
       - $ONLY_DEPLOY
   tags:
     - small
+
+# Unit test and coverage
+phpunit:
+  stage: test
+  extends:
+    - .test-dependencies
+    - .phpunit-conf
+    - .xdebug
+  needs: 
+    - install-test
+  image:   
+    name: $REGISTRY_CI/test-jobs-${DOCKER_STACK}-${DOCKER_SERVICE}_web:${CI_COMMIT_REF_SLUG}
+    entrypoint: [""]
+  script:
+    - php -d xdebug.mode=coverage $PATH_VENDOR/bin/phpunit 
+      --coverage-clover $PATH_REPORTS_PHPUNIT/coverage-clover.xml
+      --log-junit $PATH_REPORTS_PHPUNIT/phpunit-junit.xml
+  except:
+    variables:
+      - $ONLY_DEPLOY
+  artifacts:
+    paths:
+    - $PATH_REPORTS_PHPUNIT
+
+# Check Code
+phpstan:
+  stage: test
+  extends: 
+    - .test-dependencies
+    - .phpstan-conf
+    - .xdebug
+  needs: 
+    - install-test
+  image:   
+    name: $REGISTRY_CI/test-jobs-${DOCKER_STACK}-${DOCKER_SERVICE}_web:${CI_COMMIT_REF_SLUG}
+    entrypoint: [""]
+  script:
+    - mkdir -p $PATH_REPORTS_PHPSTAN
+    - $PATH_VENDOR/bin/phpstan analyse src 
+        --level 9 
+        --xdebug 
+        --no-progress
+        -vvv
+        --error-format=json > $PATH_REPORTS_PHPSTAN/phpstan-junit.xml
+  allow_failure: true
+  except:
+    variables:
+    - $ONLY_DEPLOY
+  artifacts:
+    paths:
+    - $PATH_REPORTS_PHPSTAN
+    when: always
+
+# Mutation test
+infection:
+  stage: test
+  extends: 
+    - .test-dependencies
+    - .xdebug
+    - .reportable
+  needs: 
+    - install-test
+  image:   
+    name: $REGISTRY_CI/test-jobs-${DOCKER_STACK}-${DOCKER_SERVICE}_web:${CI_COMMIT_REF_SLUG}
+    entrypoint: [""]
+  script:
+    - $PATH_VENDOR/bin/infection 
+      --logger-html=$PATH_REPORTS/infection.html
+      --min-msi=90
+  artifacts:
+    paths:
+      - $PATH_REPORTS/infection.html
+  cache: 
+    policy: pull
+  except:
+    variables:
+     - $ONLY_DEPLOY
+
+# Sonar
+sonarqube:
+  stage: analyse
+  extends:
+    - .phpstan-conf
+    - .phpunit-conf
+  needs:
+    - phpunit
+    - phpstan
+  image:
+    name: sonarsource/sonar-scanner-cli:latest
+    entrypoint: [""]
+  variables:
+    SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"  # Defines the location of the analysis task cache
+    GIT_DEPTH: "0"  # Tells git to fetch all the branches of the project, required by the analysis task
+  cache: 
+    policy: pull
+  except:
+    variables:
+      - $ONLY_DEPLOY
+  script:
+    - sonar-scanner
+      -Dsonar.host.url=$SONAR_URL
+      -Dsonar.login=${NEW_SONAR_AUTH_TOKEN}
+      -Dsonar.projectVersion=$CI_BUILD_ID
+      -Dsonar.gitlab.project_id=$CI_PROJECT_ID
+      -Dsonar.gitlab.commit_sha=$CI_BUILD_REF 
+      -Dsonar.php.coverage.reportPaths=$PATH_REPORTS_PHPUNIT/coverage-clover.xml 
+      -Dsonar.php.test.reportPath=$PATH_REPORTS_PHPUNIT/phpunit-junit.xml
+      -Dsonar.php.phpstan.reportPaths=$PATH_REPORTS_PHPSTAN/phpstan-junit.xml
+      -Dsonar.qualitygate.wait=true
+
+
+
+#### BUILD ####
 
 build:
   stage: build
@@ -83,6 +295,8 @@ build:
       --destination "${REGISTRY_CD}/${DOCKER_STACK}-${DOCKER_SERVICE}-web:${CI_COMMIT_REF_SLUG}"
   tags:
     - small
+
+#### DEPLOY ####
 
 deploy2recette:
   stage: deploy

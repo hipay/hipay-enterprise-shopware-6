@@ -1,0 +1,14 @@
+{
+    "source": {
+        "directories": [
+           "src"
+        ]
+    },
+    "timeout": 10,
+    "logs": {
+        "html": "reports/infection.html"
+    },
+    "phpUnit": {
+        "configDir": "."
+    }
+}
