@@ -34,19 +34,19 @@ class HiPayPaymentPlugin extends Plugin
     private const PARAMS = [
         'CAPTURE_MODE' => 'HiPayPaymentPlugin.config.captureMode',
         'HIPAY_ENVIRONMENT' => 'HiPayPaymentPlugin.config.environment',
-        'OPERATION_MODE' => 'HiPayPaymentPlugin.config.hashProduction',
-        'PRIVATE_LOGIN_PRODUCTION' => 'HiPayPaymentPlugin.config.hashStage',
-        'PRIVATE_PASSWORD_PRODUCTION' => 'HiPayPaymentPlugin.config.operationMode',
-        'PUBLIC_LOGIN_PRODUCTION' => 'HiPayPaymentPlugin.config.passphraseProduction',
-        'PUBLIC_PASSWORD_PRODUCTION' => 'HiPayPaymentPlugin.config.passphraseStage',
-        'PASSPHRASE_PRODUCTION' => 'HiPayPaymentPlugin.config.privateLoginProduction',
-        'HASH_PRODUCTION' => 'HiPayPaymentPlugin.config.privateLoginStage',
-        'PRIVATE_LOGIN_STAGE' => 'HiPayPaymentPlugin.config.privatePasswordProduction',
+        'OPERATION_MODE' => 'HiPayPaymentPlugin.config.operationMode',
+        'PRIVATE_LOGIN_PRODUCTION' => 'HiPayPaymentPlugin.config.publicLoginProduction',
+        'PRIVATE_PASSWORD_PRODUCTION' => 'HiPayPaymentPlugin.config.privatePasswordProduction',
+        'PUBLIC_LOGIN_PRODUCTION' => 'HiPayPaymentPlugin.config.privateLoginProduction',
+        'PUBLIC_PASSWORD_PRODUCTION' => 'HiPayPaymentPlugin.config.publicPasswordProduction',
+        'PASSPHRASE_PRODUCTION' => 'HiPayPaymentPlugin.config.passphraseProduction',
+        'HASH_PRODUCTION' => 'HiPayPaymentPlugin.config.hashProduction',
+        'PRIVATE_LOGIN_STAGE' => 'HiPayPaymentPlugin.config.privateLoginStage',
         'PRIVATE_PASSWORD_STAGE' => 'HiPayPaymentPlugin.config.privatePasswordStage',
-        'PUBLIC_LOGIN_STAGE' => 'HiPayPaymentPlugin.config.publicLoginProduction',
-        'PUBLIC_PASSWORD_STAGE' => 'HiPayPaymentPlugin.config.publicLoginStage',
-        'PASSPHRASE_STAGE' => 'HiPayPaymentPlugin.config.publicPasswordProduction',
-        'HASH_STAGE' => 'HiPayPaymentPlugin.config.publicPasswordStage',
+        'PUBLIC_LOGIN_STAGE' => 'HiPayPaymentPlugin.config.publicLoginStage',
+        'PUBLIC_PASSWORD_STAGE' => 'HiPayPaymentPlugin.config.publicPasswordStage',
+        'PASSPHRASE_STAGE' => 'HiPayPaymentPlugin.config.passphraseStage',
+        'HASH_STAGE' => 'HiPayPaymentPlugin.config.hashStage',
     ];
 
     /**
@@ -215,7 +215,7 @@ class HiPayPaymentPlugin extends Plugin
             if ($value = $_ENV[$envName] ?? null) {
                 $validParams[] = [
                     'configurationKey' => $paramName,
-                    'configurationValue' => json_encode(['_value' => $value]),
+                    'configurationValue' => $value,
                 ];
             }
         }

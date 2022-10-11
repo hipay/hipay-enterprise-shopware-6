@@ -18,18 +18,18 @@ if [ "$1" = '' ] || [ "$1" = '--help' ]; then
 fi
 
 if [ "$1" = 'init' ] || [ "$1" = 'init-without-sources' ]; then
-    docker-compose down -v
+    docker compose down -v
     rm -rf web/
 
     COMPOSE_HTTP_TIMEOUT=200
-    docker-compose up -d --build
+    docker compose up -d --build
 fi
 
 if [ "$1" = 'init' ]; then
     docker cp $container:/var/www/html/ web/
 elif [ "$1" = 'restart' ]; then
-    docker-compose stop
-    docker-compose up -d
+    docker compose stop
+    docker compose up -d
 elif [ "$1" = 'command' ]; then
     docker exec $container $2
 elif [ "$1" = 'l' ]; then
