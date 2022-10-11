@@ -10,6 +10,7 @@ use HiPay\Payment\PaymentMethod\PaymentMethodInterface;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
+use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsAnyFilter;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
 use Shopware\Core\Framework\Plugin;
 use Shopware\Core\Framework\Plugin\Context\ActivateContext;
@@ -129,7 +130,9 @@ class HiPayPaymentPlugin extends Plugin
         $paymentMethod = [
             'handlerIdentifier' => $paymentClassname,
             'translations' => $translations,
+            'afterOrderEnabled' => true,
             'pluginId' => $this->pluginId,
+            'salesChannels' => $this->getSalesChannelIds(),
         ];
 
         /** @var EntityRepository $paymentRepository */
@@ -181,6 +184,19 @@ class HiPayPaymentPlugin extends Plugin
     }
 
     /**
+     * Get all sales channel id.
+     *
+     * @return array<string,array<string,string>>
+     */
+    private function getSalesChannelIds(): array
+    {
+        /** @var EntityRepository $paymentRepository */
+        $paymentRepository = $this->container->get('sales_channel.repository');
+
+        return $paymentRepository->searchIds(new Criteria(), Context::createDefaultContext())->getData();
+    }
+
+    /**
      * Get All installed language with locale code.
      *
      * @return array<string,array<string,mixed>>
@@ -211,8 +227,10 @@ class HiPayPaymentPlugin extends Plugin
     private function addDefaultParameters(Context $context): void
     {
         $validParams = [];
+        $deleteKeys = [];
         foreach (self::PARAMS as $envName => $paramName) {
             if ($value = $_ENV[$envName] ?? null) {
+                $deleteKeys[] = $paramName;
                 $validParams[] = [
                     'configurationKey' => $paramName,
                     'configurationValue' => $value,
@@ -222,6 +240,16 @@ class HiPayPaymentPlugin extends Plugin
 
         /** @var EntityRepository $systemConfigRepository */
         $systemConfigRepository = $this->container->get('system_config.repository');
-        $systemConfigRepository->upsert($validParams, $context);
+
+        // Delete default fields when set bey env vars
+        $critera = new Criteria();
+        $critera->addFilter(new EqualsAnyFilter('configurationKey', $deleteKeys));
+        $ids = $systemConfigRepository->searchIds($critera, $context);
+
+        if ($ids->getTotal()) {
+            $systemConfigRepository->delete(array_values($ids->getData()), $context);
+        }
+
+        $systemConfigRepository->create($validParams, $context);
     }
 }
