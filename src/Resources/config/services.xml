@@ -8,8 +8,18 @@
     <services>
         <defaults autowire="true" autoconfigure="true" />
         <prototype namespace="HiPay\Payment\Service\" resource="../../Service/*Service.php" />
+        <service id="HiPay\Payment\Service\ReadHipayConfigService">
+            <argument type="service" id="Shopware\Core\System\SystemConfig\SystemConfigService" />
+        </service>
+
+
         <prototype namespace="HiPay\Payment\Controller\" resource="../../Controller/*Controller.php">
             <tag>controller.service_arguments</tag>
+        </prototype>
+
+
+        <prototype namespace="HiPay\Payment\PaymentMethod\" resource="../../PaymentMethod/*.php" exclude="../../PaymentMethod/*Interface.php">
+            <tag>shopware.payment.method.async</tag>
         </prototype>
 
     </services>

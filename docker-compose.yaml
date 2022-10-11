@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 
 services:
   shopware:
@@ -9,17 +9,21 @@ services:
       context: .
       dockerfile: bin/docker/images/shopware/Dockerfile
     ports:
-      - '8076:80'
-      - '3306:3306'
+      - "80:80"
+      - "3306:3306"
+      - "8888:8888"
+      - "9999:9999"
+      - "9998:9998"
     networks:
       - shopware
     env_file:
       - ./bin/docker/conf/development/.env
     volumes:
-      - 'shopware_data:/var/lib/mysql'
-      - './src:/var/www/html/custom/plugins/HiPayPaymentPlugin/src'
-      - './tests:/var/www/html/custom/plugins/HiPayPaymentPlugin/tests'
-      - './composer.json:/var/www/html/custom/plugins/HiPayPaymentPlugin/composer.json'
+      - "shopware_data:/var/lib/mysql"
+      - "./src:/var/www/html/custom/plugins/HiPayPaymentPlugin/src"
+      - "./tests:/var/www/html/custom/plugins/HiPayPaymentPlugin/tests"
+      - "./reports:/var/www/html/custom/plugins/HiPayPaymentPlugin/reports"
+      - "./composer.json:/var/www/html/custom/plugins/HiPayPaymentPlugin/composer.json"
 
 volumes:
   shopware_data:

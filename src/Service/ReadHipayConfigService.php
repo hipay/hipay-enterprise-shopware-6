@@ -12,8 +12,7 @@ class ReadHipayConfigService
 
     public function __construct(SystemConfigService $systemConfigService)
     {
-        // @phpstan-ignore-next-line
-        $this->configHipay = $systemConfigService->get(HiPayPaymentPlugin::getModuleName().'.config');
+        $this->configHipay = $systemConfigService;
     }
 
     /**
@@ -21,7 +20,7 @@ class ReadHipayConfigService
      */
     public function getEnvironment(): string
     {
-        return (string) $this->configHipay->getString('environment');
+        return (string) $this->configHipay->getString(HiPayPaymentPlugin::getModuleName().'.config.environment');
     }
 
     /**
@@ -45,7 +44,9 @@ class ReadHipayConfigService
      */
     public function getPrivateLogin(): string
     {
-        return $this->configHipay->getString($this->isProdActivated() ? 'privateLoginProduction' : 'privateLoginStage');
+        $key = $this->isProdActivated() ? 'privateLoginProduction' : 'privateLoginStage';
+
+        return $this->configHipay->getString($this->getConfigPrefix().$key);
     }
 
     /**
@@ -53,7 +54,9 @@ class ReadHipayConfigService
      */
     public function getPrivatePassword(): string
     {
-        return $this->configHipay->getString($this->isProdActivated() ? 'privatePasswordProduction' : 'privatePasswordStage');
+        $key = $this->isProdActivated() ? 'privatePasswordProduction' : 'privatePasswordStage';
+
+        return $this->configHipay->getString($this->getConfigPrefix().$key);
     }
 
     /**
@@ -61,7 +64,9 @@ class ReadHipayConfigService
      */
     public function getPublicLogin(): string
     {
-        return $this->configHipay->getString($this->isProdActivated() ? 'publicLoginProduction' : 'publicLoginStage');
+        $key = $this->isProdActivated() ? 'publicLoginProduction' : 'publicLoginStage';
+
+        return $this->configHipay->getString($this->getConfigPrefix().$key);
     }
 
     /**
@@ -69,7 +74,9 @@ class ReadHipayConfigService
      */
     public function getPublicPassword(): string
     {
-        return $this->configHipay->getString($this->isProdActivated() ? 'publicPasswordProduction' : 'publicPasswordStage');
+        $key = $this->isProdActivated() ? 'publicPasswordProduction' : 'publicPasswordStage';
+
+        return $this->configHipay->getString($this->getConfigPrefix().$key);
     }
 
     /**
@@ -77,7 +84,9 @@ class ReadHipayConfigService
      */
     public function getHash(): string
     {
-        return $this->configHipay->getString($this->isProdActivated() ? 'hashProduction' : 'hashStage');
+        $key = $this->isProdActivated() ? 'hashProduction' : 'hashStage';
+
+        return $this->configHipay->getString($this->getConfigPrefix().$key);
     }
 
     /**
@@ -85,7 +94,9 @@ class ReadHipayConfigService
      */
     public function getPassphrase(): string
     {
-        return $this->configHipay->getString($this->isProdActivated() ? 'passphraseProduction' : 'passphraseStage');
+        $key = $this->isProdActivated() ? 'passphraseProduction' : 'passphraseStage';
+
+        return $this->configHipay->getString($this->getConfigPrefix().$key);
     }
 
     /**
@@ -93,7 +104,7 @@ class ReadHipayConfigService
      */
     public function getCaptureMode(): string
     {
-        return $this->configHipay->getString('captureMode');
+        return $this->configHipay->getString(HiPayPaymentPlugin::getModuleName().'.config.captureMode');
     }
 
     /**
@@ -117,7 +128,7 @@ class ReadHipayConfigService
      */
     public function getOperationMode(): string
     {
-        return $this->configHipay->getString('operationMode');
+        return $this->configHipay->getString(HiPayPaymentPlugin::getModuleName().'.config.operationMode');
     }
 
     /**
@@ -133,7 +144,7 @@ class ReadHipayConfigService
      */
     public function isHostedPage(): bool
     {
-        return !$this->isHostedFields();
+        return 'hostedPage' === $this->getOperationMode();
     }
 
     /**
@@ -141,7 +152,7 @@ class ReadHipayConfigService
      */
     public function isOneClickPayment(): bool
     {
-        return $this->configHipay->getBool('oneClickPayment');
+        return $this->configHipay->getBool(HiPayPaymentPlugin::getModuleName().'.config.oneClickPayment');
     }
 
     /**
@@ -149,7 +160,7 @@ class ReadHipayConfigService
      */
     public function isRememberCart(): bool
     {
-        return $this->configHipay->getBool('rememberCart');
+        return $this->configHipay->getBool(HiPayPaymentPlugin::getModuleName().'.config.rememberCart');
     }
 
     /**
@@ -157,7 +168,7 @@ class ReadHipayConfigService
      */
     public function isDebugMode(): bool
     {
-        return $this->configHipay->getBool('debugMode');
+        return $this->configHipay->getBool(HiPayPaymentPlugin::getModuleName().'.config.debugMode');
     }
 
     /**
@@ -166,7 +177,7 @@ class ReadHipayConfigService
     public function get3DSAuthenticator(): int
     {
         try {
-            return $this->configHipay->getInt('authFlag3DS');
+            return $this->configHipay->getInt(HiPayPaymentPlugin::getModuleName().'.config.authFlag3DS');
         } catch (\Throwable $e) {
             return 0;
         }
@@ -193,12 +204,20 @@ class ReadHipayConfigService
             ];
 
             foreach ($fields as $field) {
-                if ($this->configHipay->get($field)) {
-                    $styles[$field] = $this->configHipay->get($field);
+                if ($value = $this->configHipay->get($this->getConfigPrefix().$field)) {
+                    $styles[$field] = $value;
                 }
             }
         }
 
         return $styles;
+    }
+
+    /**
+     * Get the prefix key of plugin configuration.
+     */
+    private function getConfigPrefix(): string
+    {
+        return HiPayPaymentPlugin::getModuleName().'.config.';
     }
 }

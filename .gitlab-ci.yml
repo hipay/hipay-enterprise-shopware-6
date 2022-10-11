@@ -202,7 +202,7 @@ phpstan:
   script:
     - mkdir -p $PATH_REPORTS_PHPSTAN
     - $PATH_VENDOR/bin/phpstan analyse src
-      --level 9
+      --level 7
       --xdebug
       --no-progress
       -vvv

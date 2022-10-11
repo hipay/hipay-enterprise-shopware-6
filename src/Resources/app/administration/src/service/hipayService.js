@@ -3,7 +3,7 @@ const ApiService = Shopware.Classes.ApiService;
 const { Application } = Shopware;
 
 /**
- * Service witj HiPay endpoint calls
+ * Service with HiPay endpoint calls
  */
 class ApiHiPay extends ApiService {
     constructor(httpClient, loginService, apiEndpoint = 'hipay') {
@@ -14,7 +14,7 @@ class ApiHiPay extends ApiService {
     validateConfig(values) {
         const headers = this.getBasicHeaders({});
 
-        return this.httpClient.post(`/api/_action/${this.getApiBasePath()}/checkAccess`, values, { headers })
+        return this.httpClient.post(`/_action/${this.getApiBasePath()}/checkAccess`, values, { headers })
             .then((response) => {
                 return ApiService.handleResponse(response);
             });

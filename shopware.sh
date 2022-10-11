@@ -55,7 +55,7 @@ elif [ "$1" = 'test' ]; then
         echo "----- PHPSTAN -----"
         docker exec hipay-enterprise-shopware-6 bash -c "
             cd custom/plugins/HiPayPaymentPlugin
-            vendor/bin/phpstan analyse src --level 9 --xdebug --no-progress -vvv
+            vendor/bin/phpstan analyse src --level 7 --xdebug --no-progress -vvv
         "
         find=true
     fi

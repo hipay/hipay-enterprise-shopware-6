@@ -2,27 +2,53 @@
 
 namespace HiPay\Payment\Service;
 
-use HiPay\Fullservice\HTTP\Client;
+use HiPay\Fullservice\Gateway\Client\GatewayClient;
 use HiPay\Fullservice\HTTP\Configuration\Configuration;
 use HiPay\Fullservice\HTTP\SimpleHTTPClient;
+use Shopware\Core\System\SystemConfig\Exception\InvalidSettingValueException;
 
 class HiPayHttpClientService
 {
-    public const URL_SECURITY_SETTINGS = 'v2/security-settings';
+    /* configuration keys */
+    public const API_USERNAME = 'apiUsername';
+    public const API_PASSWORD = 'apiPassword';
+    public const API_ENV = 'apiEnv';
+
+    private ReadHipayConfigService $config;
+
+    public function __construct(ReadHipayConfigService $config)
+    {
+        $this->config = $config;
+    }
 
     /**
-     * Create a SimpleHTTPClient with connfiguration.
+     * Create a SimpleHTTPClient with configuration.
      *
      * @param string[]|Configuration $config the configuration
      *
      * @see https://github.com/hipay/hipay-fullservice-sdk-php/blob/master/lib/HiPay/Fullservice/HTTP/Configuration/Configuration.php#L164 when array
      */
-    public function getClient($config): Client
+    public function getClient($config): GatewayClient
     {
         if (is_array($config)) {
             $config = new Configuration($config);
         }
+        $config->setHostedPageV2(true);
 
-        return new SimpleHTTPClient($config);
+        return new GatewayClient(new SimpleHTTPClient($config));
+    }
+
+    /**
+     * Create a configured SimpleHttpClient.
+     *
+     * @throws InvalidSettingValueException
+     */
+    public function getConfiguredClient(): GatewayClient
+    {
+        return $this->getClient([
+            static::API_USERNAME => $this->config->getPrivateLogin(),
+            static::API_PASSWORD => $this->config->getPrivatePassword(),
+            static::API_ENV => strtolower($this->config->getEnvironment()),
+        ]);
     }
 }

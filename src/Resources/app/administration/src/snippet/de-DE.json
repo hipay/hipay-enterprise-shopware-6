@@ -1,0 +1,35 @@
+{
+  "hipay": {
+    "config": {
+      "help": {
+        "manual": "Online manual",
+        "github": "Report Errors on github",
+        "version": "version"
+      },
+      "checkAccess": {
+        "title": "Hipay Configuration",
+        "success": "Your configuration is valid.",
+        "failure": "There's an issue in your configuration.",
+        "button": "API-Anmeldedaten testen"
+      },
+      "title": {
+        "privateKey": "Private key",
+        "publicKey": "Public key",
+        "notification": "Benachrichtigungseinstellungen"
+      },
+      "info": "Um Sie über Ereignisse im Zusammenhang mit Ihrem Zahlungssystem zu informieren, z. B. über eine neue Transaktion oder eine 3-D Secure-Transaktion, kann die HiPay Enterprise-Plattform Ihrer Anwendung eine Server-zu-Server-Benachrichtigung senden. Loggen Sie sich in das Hipay Back Office ein, gehen Sie zum Modul Integration > Sicherheitseinstellungen und rufen Sie die Passphrase Ihres HiPay-Händlerkontos ab",
+      "creditCards": {
+        "choice": "Kreditkarte auswählen"
+      }
+    },
+    "hosted-page": {
+      "redirect-message": "Sie werden auf eine externe Zahlungsseite weitergeleitet. Bitte aktualisieren Sie die Seite während des Vorgangs nicht"
+    },
+    "hosted-fields": {
+      "fullname": "Vollständiger Name",
+      "card-number": "Kartennummer",
+      "expiry-date": "Verfallsdatum",
+      "cvc": "CVC"
+    }
+  }
+}

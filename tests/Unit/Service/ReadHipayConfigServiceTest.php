@@ -12,17 +12,20 @@ class ReadHipayConfigServiceTest extends TestCase
 {
     private function generateService(array $params)
     {
+        $fullPathParams = [];
+        foreach ($params as $key => &$value) {
+            $fullPathParams[HiPayPaymentPlugin::getModuleName().'.config.'.$key] = $value;
+        }
+
         /** @var SystemConfigService&MockObject */
         $systemConfigService = $this->getMockBuilder(SystemConfigService::class)
             ->disableOriginalConstructor()
             ->getMock();
 
-        $params[HiPayPaymentPlugin::getModuleName().'.config'] = $systemConfigService;
-
         foreach (['get', 'getString', 'getBool', 'getInt'] as $method) {
             $systemConfigService->method($method)->willReturnCallback(
-                function ($key) use ($params) {
-                    return $params[$key];
+                function ($key) use ($fullPathParams) {
+                    return $fullPathParams[$key];
                 }
             );
         }

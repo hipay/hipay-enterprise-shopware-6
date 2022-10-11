@@ -2,7 +2,9 @@
 
 namespace Hipay\Payment\Tests\Unit\Controller;
 
-use HiPay\Fullservice\HTTP\Response\Response;
+use Exception;
+use HiPay\Fullservice\Gateway\Client\GatewayClient;
+use HiPay\Fullservice\Gateway\Model\SecuritySettings;
 use HiPay\Fullservice\HTTP\SimpleHTTPClient;
 use HiPay\Payment\Controller\AdminController;
 use HiPay\Payment\HiPayPaymentPlugin;
@@ -11,6 +13,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use Shopware\Core\Framework\Validation\DataBag\RequestDataBag;
+use Throwable;
 
 class AdminControllerTest extends TestCase
 {
@@ -31,11 +34,13 @@ class AdminControllerTest extends TestCase
 
         /** @var RequestDataBag&MockObject */
         $bag = $this->createMock(RequestDataBag::class);
-        $bag->method('getAlpha')->willReturnCallback(
-            function ($key, $default = null) use ($params) {
-                return $params[$key] ?? $default;
-            }
-        );
+        foreach (['get', 'getAlpha'] as $method) {
+            $bag->method($method)->willReturnCallback(
+                function ($key, $default = null) use ($params) {
+                    return $params[$key] ?? $default;
+                }
+            );
+        }
 
         return $bag;
     }
@@ -46,8 +51,12 @@ class AdminControllerTest extends TestCase
 
         foreach ($responses as $response) {
             /** @var SimpleHTTPClient&MockObject */
-            $client = $this->createMock(SimpleHTTPClient::class);
-            $client->method('request')->willReturn($response);
+            $client = $this->createMock(GatewayClient::class);
+            if ($response instanceof Throwable) {
+                $client->method('requestSecuritySettings')->willThrowException($response);
+            } else {
+                $client->method('requestSecuritySettings')->willReturn($response);
+            }
 
             $clients[] = $client;
         }
@@ -62,8 +71,8 @@ class AdminControllerTest extends TestCase
     public function testCheckAccessValid()
     {
         $responses = [
-            new Response('', 200, []),
-            new Response('', 200, []),
+            new SecuritySettings(''),
+            new SecuritySettings(''),
         ];
 
         $service = new AdminController(new NullLogger());
@@ -85,8 +94,8 @@ class AdminControllerTest extends TestCase
     public function testCheckAccessInvalidPublic()
     {
         $responses = [
-            new Response('Foo', 500, []),
-            new Response('', 200, []),
+            new Exception('Foo'),
+            new SecuritySettings(''),
         ];
 
         $service = new AdminController(new NullLogger());
@@ -100,7 +109,7 @@ class AdminControllerTest extends TestCase
         );
 
         $this->assertSame(
-            ['success' => false, 'message' => 'Error on public key : Foo'.PHP_EOL],
+            ['success' => false, 'message' => 'Error on public key : Foo'],
             $jsonResponse
         );
     }
@@ -108,8 +117,8 @@ class AdminControllerTest extends TestCase
     public function testCheckAccessInvalidPrivate()
     {
         $responses = [
-            new Response('', 200, []),
-            new Response('Bar', 404, []),
+            new SecuritySettings(''),
+            new Exception('Bar'),
         ];
 
         $service = new AdminController(new NullLogger());
@@ -123,7 +132,7 @@ class AdminControllerTest extends TestCase
         );
 
         $this->assertSame(
-            ['success' => false, 'message' => 'Error on private key : Bar'.PHP_EOL],
+            ['success' => false, 'message' => 'Error on private key : Bar'],
             $jsonResponse
         );
     }
