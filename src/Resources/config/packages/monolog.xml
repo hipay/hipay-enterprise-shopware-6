@@ -1,26 +1,24 @@
-<container xmlns="http://symfony.com/schema/dic/services" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:monolog="http://symfony.com/schema/dic/monolog" xsi:schemaLocation="http://symfony.com/schema/dic/services
-        https://symfony.com/schema/dic/services/services-1.0.xsd
-        http://symfony.com/schema/dic/monolog
-        https://symfony.com/schema/dic/monolog/monolog-1.0.xsd">
+<container xmlns="http://symfony.com/schema/dic/services" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:monolog="http://symfony.com/schema/dic/monolog" xsi:schemaLocation="http://symfony.com/schema/dic/services https://symfony.com/schema/dic/services/services-1.0.xsd
+                                                                                                                                                                                          http://symfony.com/schema/dic/monolog https://symfony.com/schema/dic/monolog/monolog-1.0.xsd">
 
     <monolog:config>
         <monolog:channel>hipay_api</monolog:channel>
         <monolog:channel>hipay_notification</monolog:channel>
         <monolog:channel>hipay_debug</monolog:channel>
 
-        <monolog:handler name="hipay_api" type="stream" path="%kernel.logs_dir%/hipay/api.log">
+        <monolog:handler name="hipay_api" type="rotating_file" path="%kernel.logs_dir%/hipay/api.log" max-files="10">
             <monolog:channels>
                 <monolog:channel>hipay_api</monolog:channel>
             </monolog:channels>
         </monolog:handler>
 
-        <monolog:handler name="hipay_notification" type="stream" path="%kernel.logs_dir%/hipay/notifications.log">
+        <monolog:handler name="hipay_notification" type="rotating_file" path="%kernel.logs_dir%/hipay/notifications.log" max-files="10">
             <monolog:channels>
                 <monolog:channel>hipay_notification</monolog:channel>
             </monolog:channels>
         </monolog:handler>
 
-        <monolog:handler name="hipay_debug" type="stream" path="%kernel.logs_dir%/hipay/debug.log">
+        <monolog:handler name="hipay_debug" type="rotating_file" path="%kernel.logs_dir%/hipay/debug.log" max-files="10">
             <monolog:channels>
                 <monolog:channel>hipay_debug</monolog:channel>
             </monolog:channels>

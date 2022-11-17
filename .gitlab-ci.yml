@@ -201,6 +201,7 @@ phpstan:
     entrypoint: [""]
   script:
     - mkdir -p $PATH_REPORTS_PHPSTAN
+    - $PATH_VENDOR/bin/phpstan --version
     - $PATH_VENDOR/bin/phpstan analyse src
       --level 7
       --xdebug
@@ -231,7 +232,7 @@ infection:
   script:
     - $PATH_VENDOR/bin/infection
       --logger-html=$PATH_REPORTS/infection.html
-      --min-msi=90
+      --min-covered-msi=90
   artifacts:
     paths:
       - $PATH_REPORTS/infection.html

@@ -55,6 +55,7 @@ elif [ "$1" = 'test' ]; then
         echo "----- PHPSTAN -----"
         docker exec hipay-enterprise-shopware-6 bash -c "
             cd custom/plugins/HiPayPaymentPlugin
+            vendor/bin/phpstan --version
             vendor/bin/phpstan analyse src --level 7 --xdebug --no-progress -vvv
         "
         find=true
@@ -65,7 +66,7 @@ elif [ "$1" = 'test' ]; then
         docker exec hipay-enterprise-shopware-6 bash -c "
             export XDEBUG_MODE=coverage
             cd custom/plugins/HiPayPaymentPlugin
-            php -d xdebug.mode=coverage vendor/bin/infection --logger-html=reports/infection.html --min-msi=90 --threads=4
+            php -d xdebug.mode=coverage vendor/bin/infection --logger-html=reports/infection.html --min-covered-msi=90 --threads=4
         "
         find=true
     fi
@@ -79,7 +80,7 @@ elif [ "$1" = 'test' ]; then
         find=true
     fi
 
-    if [ ! $find ]; then
+    if ! $find; then
         echo "Test option \"$2\" doesn't exist. Please use \"./shopware test [<phpunit|phpstan|infection|lint>]\""
     fi
 fi

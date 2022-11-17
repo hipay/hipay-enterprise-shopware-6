@@ -50,7 +50,7 @@
   },
   "require": {
     "shopware/core": "6.4.*",
-    "hipay/hipay-fullservice-sdk-php": "^2.10"
+    "hipay/hipay-fullservice-sdk-php": "^2.11"
   },
   "require-dev": {
     "phpunit/php-code-coverage": "~9.2.14",

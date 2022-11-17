@@ -21,15 +21,6 @@
       "creditCards": {
         "choice": "Kreditkarte auswählen"
       }
-    },
-    "hosted-page": {
-      "redirect-message": "Sie werden auf eine externe Zahlungsseite weitergeleitet. Bitte aktualisieren Sie die Seite während des Vorgangs nicht"
-    },
-    "hosted-fields": {
-      "fullname": "Vollständiger Name",
-      "card-number": "Kartennummer",
-      "expiry-date": "Verfallsdatum",
-      "cvc": "CVC"
     }
   }
 }

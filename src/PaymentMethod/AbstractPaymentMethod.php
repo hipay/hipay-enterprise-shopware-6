@@ -10,6 +10,7 @@ use HiPay\Fullservice\Gateway\Request\Order\HostedPaymentPageRequest;
 use HiPay\Fullservice\Gateway\Request\Order\OrderRequest;
 use HiPay\Payment\Service\HiPayHttpClientService;
 use HiPay\Payment\Service\ReadHipayConfigService;
+use Ramsey\Uuid\Uuid;
 use Shopware\Core\Checkout\Order\Aggregate\OrderLineItem\OrderLineItemCollection;
 use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStateHandler;
 use Shopware\Core\Checkout\Order\OrderEntity;
@@ -149,7 +150,7 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
         $orderRequest->tax = $order->getAmountTotal() - $order->getAmountNet();
 
         // Client Data
-        $orderRequest->language = $locale;
+        $orderRequest->language = str_replace('-', '_', $locale);
         $orderRequest->ipaddr = $order->getOrderCustomer()->getRemoteAddress();
         $orderRequest->http_user_agent = $this->request->headers->get('User-Agent');
         $orderRequest->http_accept = 'application/json';
@@ -160,13 +161,17 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
         $orderRequest->customerBillingInfo = $this->generateCustomerBillingInfo($order);
         $orderRequest->customerShippingInfo = $this->generateCustomerShippingInfo($order);
 
+        $orderRequest->custom_data = [
+            'operation_id' => Uuid::uuid4()->toString(),
+        ];
+
         // TODO: redirect url
         $orderRequest->accept_url = $transaction->getReturnUrl();
         $orderRequest->decline_url = $transaction->getReturnUrl();
         $orderRequest->pending_url = $transaction->getReturnUrl();
         $orderRequest->exception_url = $transaction->getReturnUrl();
         $orderRequest->cancel_url = $transaction->getReturnUrl();
-        $orderRequest->notify_url = $transaction->getReturnUrl();
+        $orderRequest->notify_url = $this->request->getSchemeAndHttpHost().'/api/hipay/notify';
 
         return $orderRequest;
     }

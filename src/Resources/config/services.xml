@@ -7,19 +7,44 @@
 
     <services>
         <defaults autowire="true" autoconfigure="true" />
+        <!-- Services -->
         <prototype namespace="HiPay\Payment\Service\" resource="../../Service/*Service.php" />
         <service id="HiPay\Payment\Service\ReadHipayConfigService">
             <argument type="service" id="Shopware\Core\System\SystemConfig\SystemConfigService" />
         </service>
 
+        <service id="HiPay\Payment\Service\NotificationService">
+            <argument type="service" id="hipay_notification.repository" />
+            <argument type="service" id="order_transaction.repository" />
+            <argument type="service" id="order_transaction_capture.repository" />
+            <argument type="service" id="order_transaction_capture_refund.repository" />
+            <argument type="service" id="state_machine_state.repository" />
+        </service>
 
+        <!-- Entity -->
+        <service id="HiPay\Payment\Core\Checkout\Payment\HipayNotificationDefinition">
+            <tag name="shopware.entity.definition" entity="hipay_notification" />
+        </service>
+
+        <!-- Controller-->
         <prototype namespace="HiPay\Payment\Controller\" resource="../../Controller/*Controller.php">
             <tag>controller.service_arguments</tag>
         </prototype>
 
-
+        <!-- PaymentMethod -->
         <prototype namespace="HiPay\Payment\PaymentMethod\" resource="../../PaymentMethod/*.php" exclude="../../PaymentMethod/*Interface.php">
             <tag>shopware.payment.method.async</tag>
+        </prototype>
+
+        <!-- Scheduled task -->
+        <prototype namespace="HiPay\Payment\ScheduledTask\" resource="../../ScheduledTask/**/*Task.php">
+            <tag>shopware.scheduled.task</tag>
+        </prototype>
+
+        <!-- Scheduled task handler -->
+        <prototype namespace="HiPay\Payment\ScheduledTask\" resource="../../ScheduledTask/**/*TaskHandler.php">
+            <argument type="service" id="scheduled_task.repository" />
+            <tag>name="messenger.message_handler</tag>
         </prototype>
 
     </services>

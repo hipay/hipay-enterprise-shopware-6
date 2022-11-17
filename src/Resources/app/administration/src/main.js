@@ -1,4 +1,3 @@
-
 import './service/hipayService';
 
 import './config/hipay-html-bloc';

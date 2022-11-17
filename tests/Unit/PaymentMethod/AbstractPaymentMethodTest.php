@@ -138,7 +138,7 @@ class AbstractPaymentMethodTest extends TestCase
             },
         ];
 
-        $locale = 'ab-CD';
+        $locale = 'ab_CD';
 
         $paymentMethod = $this->generateSubClass(
             $this->createMock(OrderTransactionStateHandler::class),
@@ -280,7 +280,7 @@ class AbstractPaymentMethodTest extends TestCase
         );
 
         $this->assertEquals(
-            'en-GB',
+            'en_GB',
             $hostedPaymentPageRequest->language,
             'language missmatch'
         );
