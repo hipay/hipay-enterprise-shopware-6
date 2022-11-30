@@ -1,3 +1,9 @@
-shopware_image: ""
-shopware_tag: ""
-shopware_url: ""
+shopware_image: ''
+shopware_tag: ''
+shopware_url: ''
+
+private_login_stage: ''
+private_password_stage: ''
+public_login_stage: ''
+public_password_stage: ''
+passphrase_stage: ''

@@ -50,6 +50,8 @@ class HiPayPaymentPlugin extends Plugin
         'HASH_STAGE' => 'HiPayPaymentPlugin.config.hashStage',
     ];
 
+    private string $paymentMethodRepoName = 'payment_method.repository';
+
     /**
      * Get the plugin name.
      */
@@ -136,7 +138,7 @@ class HiPayPaymentPlugin extends Plugin
         ];
 
         /** @var EntityRepository $paymentRepository */
-        $paymentRepository = $this->container->get('payment_method.repository');
+        $paymentRepository = $this->container->get($this->paymentMethodRepoName);
         $paymentRepository->create([$paymentMethod], $context);
     }
 
@@ -149,7 +151,7 @@ class HiPayPaymentPlugin extends Plugin
     private function setPaymentMethodIsActive(bool $active, string $paymentClassname, Context $context): void
     {
         /** @var EntityRepository $paymentRepository */
-        $paymentRepository = $this->container->get('payment_method.repository');
+        $paymentRepository = $this->container->get($this->paymentMethodRepoName);
 
         $paymentMethodId = $this->getPaymentMethodId($paymentClassname);
 
@@ -175,7 +177,7 @@ class HiPayPaymentPlugin extends Plugin
     private function getPaymentMethodId(string $paymentClassname): ?string
     {
         /** @var EntityRepository $paymentRepository */
-        $paymentRepository = $this->container->get('payment_method.repository');
+        $paymentRepository = $this->container->get($this->paymentMethodRepoName);
 
         // Fetch ID for update
         $paymentCriteria = (new Criteria())->addFilter(new EqualsFilter('handlerIdentifier', $paymentClassname));

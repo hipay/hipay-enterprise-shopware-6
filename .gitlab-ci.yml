@@ -4,8 +4,8 @@ image: $REGISTRY_CI/gitlab-ci-base:buster
 include:
   - template: Security/SAST.gitlab-ci.yml
 
-variables:
-  SAST_EXCLUDED_ANALYZERS: "eslint,semgrep"
+variables:  
+  SAST_EXCLUDED_ANALYZERS: 'eslint,semgrep'
   DOCKWARE_VERSION: latest
   GIT_DEPTH: 10
   RELEASE_NAME: ${DOCKER_STACK}-${DOCKER_SERVICE}-${CI_COMMIT_REF_SLUG}
@@ -19,10 +19,10 @@ stages:
 
 .login_to_registry:
   before_script:
-    - "mkdir /tmp"
-    - "touch /tmp/credentials.json"
-    - "echo ${SA_REGISTRY_CD} > /tmp/credentials.json"
-    - "export GOOGLE_APPLICATION_CREDENTIALS=/tmp/credentials.json"
+    - 'mkdir /tmp'
+    - 'touch /tmp/credentials.json'
+    - 'echo ${SA_REGISTRY_CD} > /tmp/credentials.json'
+    - 'export GOOGLE_APPLICATION_CREDENTIALS=/tmp/credentials.json'
 
 .login_to_cd:
   before_script:
@@ -93,6 +93,8 @@ build-test:
     name: gcr.io/kaniko-project/executor:v1.6.0-debug
   variables:
     TZ: Europe/Paris
+    NODE_VERSION: 16
+    COMPOSER_HOME: /var/www/html/var/cache/composer
     APP_URL: http://web
   script:
     - /kaniko/executor
@@ -113,7 +115,7 @@ install-test:
     - build-test
   image:
     name: $REGISTRY_CI/test-jobs-${DOCKER_STACK}-${DOCKER_SERVICE}_web:${CI_COMMIT_REF_SLUG}
-    entrypoint: [""]
+    entrypoint: ['']
   extends:
     - .test-dependencies
   cache:
@@ -127,7 +129,9 @@ install-test:
     - small
 
 #### TEST ####
-
+sast:
+  rules:
+    - if: ! $ONLY_DEPLOY
 # Code style
 code-style:
   stage: test
@@ -137,7 +141,7 @@ code-style:
     - install-test
   image:
     name: $REGISTRY_CI/test-jobs-${DOCKER_STACK}-${DOCKER_SERVICE}_web:${CI_COMMIT_REF_SLUG}
-    entrypoint: [""]
+    entrypoint: ['']
   script:
     - $PATH_VENDOR/bin/php-cs-fixer fix src --dry-run --rules=@Symfony
   allow_failure: true
@@ -175,7 +179,7 @@ phpunit:
     - install-test
   image:
     name: $REGISTRY_CI/test-jobs-${DOCKER_STACK}-${DOCKER_SERVICE}_web:${CI_COMMIT_REF_SLUG}
-    entrypoint: [""]
+    entrypoint: ['']
   script:
     - php -d xdebug.mode=coverage $PATH_VENDOR/bin/phpunit
       --coverage-clover $PATH_REPORTS_PHPUNIT/coverage-clover.xml
@@ -198,7 +202,7 @@ phpstan:
     - install-test
   image:
     name: $REGISTRY_CI/test-jobs-${DOCKER_STACK}-${DOCKER_SERVICE}_web:${CI_COMMIT_REF_SLUG}
-    entrypoint: [""]
+    entrypoint: ['']
   script:
     - mkdir -p $PATH_REPORTS_PHPSTAN
     - $PATH_VENDOR/bin/phpstan --version
@@ -228,7 +232,7 @@ infection:
     - install-test
   image:
     name: $REGISTRY_CI/test-jobs-${DOCKER_STACK}-${DOCKER_SERVICE}_web:${CI_COMMIT_REF_SLUG}
-    entrypoint: [""]
+    entrypoint: ['']
   script:
     - $PATH_VENDOR/bin/infection
       --logger-html=$PATH_REPORTS/infection.html
@@ -253,10 +257,10 @@ sonarqube:
     - phpstan
   image:
     name: sonarsource/sonar-scanner-cli:latest
-    entrypoint: [""]
+    entrypoint: ['']
   variables:
-    SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar" # Defines the location of the analysis task cache
-    GIT_DEPTH: "0" # Tells git to fetch all the branches of the project, required by the analysis task
+    SONAR_USER_HOME: '${CI_PROJECT_DIR}/.sonar' # Defines the location of the analysis task cache
+    GIT_DEPTH: '0' # Tells git to fetch all the branches of the project, required by the analysis task
   cache:
     policy: pull
   except:
@@ -308,7 +312,7 @@ deploy2recette:
     - if: $CI_PIPELINE_SOURCE == "push"
       when: manual
   variables:
-    GPC_ACCOUNT: ""
+    GPC_ACCOUNT: ''
   extends: .login_to_cd
   script:
     - echo $RELEASE_NAME
@@ -318,6 +322,11 @@ deploy2recette:
       --set shopware_image="${REGISTRY_CD}/${DOCKER_STACK}-${DOCKER_SERVICE}-web"
       --set shopware_tag="${CI_COMMIT_REF_SLUG}"
       --set shopware_url="${DOCKER_STACK}-${DOCKER_SERVICE}-${CI_COMMIT_REF_SLUG}.${URL_CD}"
+      --set private_login_stage="$HIPAY_API_USER_RE7"
+      --set private_password_stage="$HIPAY_API_PASSWORD_RE7"
+      --set public_login_stage="$HIPAY_TOKENJS_USERNAME_RE7"
+      --set public_password_stage="$HIPAY_TOKENJS_PUBLICKEY_RE7"
+      --set passphrase_stage="$HIPAY_SECRET_PASSPHRASE_RE7"
       --set branch="$CI_COMMIT_REF_NAME"
   allow_failure: true
   environment:

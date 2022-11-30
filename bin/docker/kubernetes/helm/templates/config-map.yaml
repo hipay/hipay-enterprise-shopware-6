@@ -8,3 +8,15 @@ data:
   # Shopware env var
   TZ: Europe/Paris
   APP_URL: http://{{ .Values.shopware_url }}
+  NODE_VERSION: '16'
+  COMPOSER_HOME: /var/www/html/var/cache/composer
+  # HiPay env var
+  CAPTURE_MODE: automatic
+  HIPAY_ENVIRONMENT: Stage
+  OPERATION_MODE: hostedFields
+  PRIVATE_LOGIN_STAGE: '{{ .Values.private_login_stage  }}'
+  PRIVATE_PASSWORD_STAGE: '{{ .Values.private_password_stage  }}'
+  PUBLIC_LOGIN_STAGE: '{{ .Values.public_login_stage  }}'
+  PUBLIC_PASSWORD_STAGE: '{{ .Values.public_password_stage  }}'
+  PASSPHRASE_STAGE: '{{ .Values.passphrase_stage  }}'
+  HASH_STAGE: sha512

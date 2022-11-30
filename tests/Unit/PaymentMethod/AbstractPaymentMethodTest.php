@@ -2,7 +2,11 @@
 
 namespace Hipay\Payment\Tests\Unit\PaymentMethod;
 
+use HiPay\Fullservice\Enum\ThreeDSTwo\DeliveryTimeFrame;
 use HiPay\Fullservice\Enum\ThreeDSTwo\DeviceChannel;
+use HiPay\Fullservice\Enum\ThreeDSTwo\PurchaseIndicator;
+use HiPay\Fullservice\Enum\ThreeDSTwo\ReorderIndicator;
+use HiPay\Fullservice\Enum\ThreeDSTwo\ShippingIndicator;
 use HiPay\Fullservice\Gateway\Mapper\HostedPaymentPageMapper;
 use HiPay\Fullservice\Gateway\Mapper\TransactionMapper;
 use HiPay\Fullservice\Gateway\Request\Order\HostedPaymentPageRequest;
@@ -16,6 +20,7 @@ use PHPUnit\Framework\TestCase;
 use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStateHandler;
 use Shopware\Core\Checkout\Payment\Cart\AsyncPaymentTransactionStruct;
 use Shopware\Core\Checkout\Payment\Exception\AsyncPaymentProcessException;
+use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\Store\Authentication\LocaleProvider;
 use Shopware\Core\Framework\Validation\DataBag\RequestDataBag;
 use Shopware\Core\System\SalesChannel\SalesChannelContext;
@@ -30,7 +35,8 @@ class AbstractPaymentMethodTest extends TestCase
         ReadHipayConfigService $config,
         HiPayHttpClientService $clientService,
         RequestStack $requestStack,
-        LocaleProvider $localeProvider
+        LocaleProvider $localeProvider,
+        EntityRepository $orderCustomerRepository
     ) {
         return $subClass = new class(...func_get_args()) extends AbstractPaymentMethod {
             public static function getName(string $code): string
@@ -59,8 +65,10 @@ class AbstractPaymentMethodTest extends TestCase
 
     public function testPayValidWithHostedFields()
     {
+        $returnUrl = 'foo.bar';
+
         $configTransaction = [
-            'return_url' => 'foo.bar',
+            'return_url' => $returnUrl,
             'order' => [
                 'shipping_total' => 1.34,
                 'amount_total' => 123.4,
@@ -129,11 +137,11 @@ class AbstractPaymentMethodTest extends TestCase
 
         $orderRequest = new OrderRequest();
         $responses = [
-            'requestNewOrder' => function (OrderRequest $argument) use (&$orderRequest) {
+            'requestNewOrder' => function (OrderRequest $argument) use (&$orderRequest, $returnUrl) {
                 $orderRequest = $argument;
 
                 return (new TransactionMapper([
-                    'foo' => 'bar',
+                    'forward_url' => $returnUrl,
                 ]))->getModelObjectMapped();
             },
         ];
@@ -145,7 +153,8 @@ class AbstractPaymentMethodTest extends TestCase
             $this->getReadHipayConfig($config),
             $this->getClientService($responses),
             $this->getRequestStack(),
-            $this->getLocaleProvider($locale)
+            $this->getLocaleProvider($locale),
+            $this->generateOrderCustomerRepo()
         );
 
         $redirectRequest = $paymentMethod->pay(
@@ -158,6 +167,11 @@ class AbstractPaymentMethodTest extends TestCase
             $configTransaction['return_url'],
             $redirectRequest->getTargetUrl(),
             'return_url missmatch'
+        );
+
+        $this->assertNotNull(
+            $orderRequest->custom_data['operation_id'],
+            'custom field operation_id is empty'
         );
 
         $this->assertEquals(
@@ -259,7 +273,8 @@ class AbstractPaymentMethodTest extends TestCase
             $this->getReadHipayConfig($config),
             $this->getClientService($responses),
             $this->getRequestStack(),
-            $this->getLocaleProvider()
+            $this->getLocaleProvider(),
+            $this->generateOrderCustomerRepo()
         );
 
         /** @var RequestDataBag&MockObject */
@@ -306,7 +321,8 @@ class AbstractPaymentMethodTest extends TestCase
             $this->getReadHipayConfig($config),
             $this->getClientService($responses),
             $this->getRequestStack(),
-            $this->getLocaleProvider()
+            $this->getLocaleProvider(),
+            $this->generateOrderCustomerRepo()
         );
 
         $this->expectException(AsyncPaymentProcessException::class);
@@ -337,7 +353,8 @@ class AbstractPaymentMethodTest extends TestCase
             $this->getReadHipayConfig($config),
             $this->getClientService(),
             $this->getRequestStack(),
-            $this->getLocaleProvider()
+            $this->getLocaleProvider(),
+            $this->generateOrderCustomerRepo()
         );
 
         $this->expectException(AsyncPaymentProcessException::class);
@@ -548,6 +565,381 @@ class AbstractPaymentMethodTest extends TestCase
             $configTransaction['order']['shipping']['state_expected'],
             $orderRequest->customerShippingInfo->shipto_state,
             'state shipping info missmatch'
+        );
+
+        $this->assertEquals(
+            ShippingIndicator::SHIP_TO_DIFFERENT_ADDRESS,
+            $orderRequest->merchant_risk_statement->shipping_indicator
+        );
+
+        $this->assertIsInt($orderRequest->account_info->customer->account_change);
+        $this->assertIsInt($orderRequest->account_info->customer->opening_account_date);
+    }
+
+    public function provideTestDeliveryTimeFrame()
+    {
+        return [
+            ['5 days', DeliveryTimeFrame::TWO_DAY_OR_MORE_SHIPPING],
+            ['2 days', DeliveryTimeFrame::TWO_DAY_OR_MORE_SHIPPING],
+            ['3 hours', DeliveryTimeFrame::OVERNIGHT_SHIPPING],
+            ['1 day', DeliveryTimeFrame::SAME_DAY_SHIPPING],
+        ];
+    }
+
+    /**
+     * @dataProvider provideTestDeliveryTimeFrame
+     */
+    public function testDeliveryTimeFrame($delayFromToday, $expect)
+    {
+        $configTransaction = [
+            'order' => [
+                'shipping' => [
+                    'date_earliest' => (new \DateTime())->sub(\DateInterval::createFromDateString('+ '.$delayFromToday)),
+                ],
+            ],
+        ];
+
+        $config = [
+            'operationMode' => 'hostedFields',
+            'captureMode' => 'automatic',
+        ];
+
+        $request = new OrderRequest();
+        $responses = [
+            'requestNewOrder' => function (OrderRequest $argument) use (&$request) {
+                $request = $argument;
+
+                return (new TransactionMapper([
+                    'forward_url' => 'url',
+                ]))->getModelObjectMapped();
+            },
+        ];
+
+        $paymentMethod = $this->generateSubClass(
+            $this->createMock(OrderTransactionStateHandler::class),
+            $this->getReadHipayConfig($config),
+            $this->getClientService($responses),
+            $this->getRequestStack(),
+            $this->getLocaleProvider(),
+            $this->generateOrderCustomerRepo()
+        );
+
+        /** @var RequestDataBag&MockObject */
+        $dataBag = $this->createMock(RequestDataBag::class);
+
+        /** @var SalesChannelContext&MockObject */
+        $salesChannelContext = $this->createMock(SalesChannelContext::class);
+
+        $paymentMethod->pay(
+            $this->generateTransaction($configTransaction),
+            $dataBag,
+            $salesChannelContext
+        );
+
+        $this->assertEquals(
+            $expect,
+            $request->merchant_risk_statement->delivery_time_frame
+        );
+    }
+
+    public function provideTestPurchaseIndicator()
+    {
+        return [
+            [10, PurchaseIndicator::MERCHANDISE_AVAILABLE],
+            [0, PurchaseIndicator::FUTURE_AVAILABILITY],
+        ];
+    }
+
+    /**
+     * @dataProvider provideTestPurchaseIndicator
+     */
+    public function testPurchaseIndicator($stock, $expect)
+    {
+        $configTransaction = [
+            'order' => [
+                'line_items' => [
+                    [
+                        'payload' => ['stock' => $stock],
+                    ],
+                ],
+            ],
+        ];
+
+        $config = [
+            'operationMode' => 'hostedFields',
+            'captureMode' => 'automatic',
+        ];
+
+        $request = new OrderRequest();
+        $responses = [
+            'requestNewOrder' => function (OrderRequest $argument) use (&$request) {
+                $request = $argument;
+
+                return (new TransactionMapper([
+                    'forward_url' => 'url',
+                ]))->getModelObjectMapped();
+            },
+        ];
+
+        $paymentMethod = $this->generateSubClass(
+            $this->createMock(OrderTransactionStateHandler::class),
+            $this->getReadHipayConfig($config),
+            $this->getClientService($responses),
+            $this->getRequestStack(),
+            $this->getLocaleProvider(),
+            $this->generateOrderCustomerRepo()
+        );
+
+        /** @var RequestDataBag&MockObject */
+        $dataBag = $this->createMock(RequestDataBag::class);
+
+        /** @var SalesChannelContext&MockObject */
+        $salesChannelContext = $this->createMock(SalesChannelContext::class);
+
+        $paymentMethod->pay(
+            $this->generateTransaction($configTransaction),
+            $dataBag,
+            $salesChannelContext
+        );
+
+        $this->assertEquals(
+            $expect,
+            $request->merchant_risk_statement->purchase_indicator
+        );
+    }
+
+    public function provideTestReorderIndicator()
+    {
+        return [
+            [true, ReorderIndicator::REORDERED],
+            [false, ReorderIndicator::FIRST_TIME_ORDERED],
+        ];
+    }
+
+    /**
+     * @dataProvider provideTestReorderIndicator
+     */
+    public function testReorderIndicator($reordered, $expect)
+    {
+        $configTransaction = [
+            'return_url' => 'foo.bar',
+            'order' => [
+                'line_items' => [
+                    [
+                        'product_id' => 'FGH',
+                        'quantity' => 9,
+                    ],
+                    [
+                        'product_id' => 'ABC',
+                        'quantity' => 10,
+                    ],
+                ],
+            ],
+        ];
+
+        $orderCutomerConfig = [];
+        if ($reordered) {
+            $orderCutomerConfig = [
+                'order_customer' => [
+                    [
+                        'order' => [
+                            'id' => 'FOO',
+                            'line_items' => [
+                                $configTransaction['order']['line_items'][1],
+                                $configTransaction['order']['line_items'][0],
+                            ],
+                        ],
+                    ],
+                ],
+            ];
+        }
+
+        $config = [
+            'operationMode' => 'hostedFields',
+            'captureMode' => 'automatic',
+        ];
+
+        $request = new OrderRequest();
+        $responses = [
+            'requestNewOrder' => function (OrderRequest $argument) use (&$request) {
+                $request = $argument;
+
+                return (new TransactionMapper([
+                    'forward_url' => 'url',
+                ]))->getModelObjectMapped();
+            },
+        ];
+
+        $paymentMethod = $this->generateSubClass(
+            $this->createMock(OrderTransactionStateHandler::class),
+            $this->getReadHipayConfig($config),
+            $this->getClientService($responses),
+            $this->getRequestStack(),
+            $this->getLocaleProvider(),
+            $this->generateOrderCustomerRepo($orderCutomerConfig)
+        );
+
+        /** @var RequestDataBag&MockObject */
+        $dataBag = $this->createMock(RequestDataBag::class);
+
+        /** @var SalesChannelContext&MockObject */
+        $salesChannelContext = $this->createMock(SalesChannelContext::class);
+
+        $paymentMethod->pay(
+            $this->generateTransaction($configTransaction),
+            $dataBag,
+            $salesChannelContext
+        );
+
+        $this->assertEquals(
+            $expect,
+            $request->merchant_risk_statement->reorder_indicator
+        );
+    }
+
+    public function testShippingIndicatorShipToCardHolderBillingAddress()
+    {
+        $configTransaction = [
+            'return_url' => 'foo.bar',
+            'order' => [
+                'billing' => [
+                    'first_name' => 'Donald',
+                    'last_name' => 'Duck',
+                    'phone_number' => '+C01N C01N',
+                    'company' => 'compagny_donald',
+                    'street' => '23 rue des canards',
+                    'additional_address_line1' => ' dans les roseaux ',
+                    'additional_address_line2' => ' près du lac ',
+                    'zip_code' => '12345',
+                    'city' => 'CANARDVILLE',
+                    'salutation.salutation_key' => 'mr',
+                    'salutation.id' => md5('salutation.id'),
+                    'country.iso' => 'DY',
+                    'country.id' => md5('country.id'),
+                    'state.name' => 'MikeyState',
+                ],
+            ],
+        ];
+
+        $configTransaction['order']['shipping'] = $configTransaction['order']['billing'];
+
+        $config = [
+            'operationMode' => 'hostedFields',
+            'captureMode' => 'automatic',
+        ];
+
+        $request = new OrderRequest();
+        $responses = [
+            'requestNewOrder' => function (OrderRequest $argument) use (&$request) {
+                $request = $argument;
+
+                return (new TransactionMapper([
+                    'forward_url' => 'url',
+                ]))->getModelObjectMapped();
+            },
+        ];
+
+        $paymentMethod = $this->generateSubClass(
+            $this->createMock(OrderTransactionStateHandler::class),
+            $this->getReadHipayConfig($config),
+            $this->getClientService($responses),
+            $this->getRequestStack(),
+            $this->getLocaleProvider(),
+            $this->generateOrderCustomerRepo()
+        );
+
+        /** @var RequestDataBag&MockObject */
+        $dataBag = $this->createMock(RequestDataBag::class);
+
+        /** @var SalesChannelContext&MockObject */
+        $salesChannelContext = $this->createMock(SalesChannelContext::class);
+
+        $paymentMethod->pay(
+            $this->generateTransaction($configTransaction),
+            $dataBag,
+            $salesChannelContext
+        );
+
+        $this->assertEquals(
+            ShippingIndicator::SHIP_TO_CARDHOLDER_BILLING_ADDRESS,
+            $request->merchant_risk_statement->shipping_indicator
+        );
+    }
+
+    public function testShippingIndicatorShipToVerifiedAddress()
+    {
+        $configTransaction = [
+            'return_url' => 'foo.bar',
+            'order' => [
+                'shipping' => [
+                    'first_name' => 'Donald',
+                    'last_name' => 'Duck',
+                    'phone_number' => '+C01N C01N',
+                    'company' => 'compagny_donald',
+                    'street' => '23 rue des canards',
+                    'additional_address_line1' => ' dans les roseaux ',
+                    'additional_address_line2' => ' près du lac ',
+                    'zip_code' => '12345',
+                    'city' => 'CANARDVILLE',
+                    'salutation.salutation_key' => 'mr',
+                    'salutation.id' => md5('salutation.id'),
+                    'country.iso' => 'DY',
+                    'country.id' => md5('country.id'),
+                    'state.name' => 'MikeyState',
+                ],
+            ],
+        ];
+
+        $config = [
+            'operationMode' => 'hostedFields',
+            'captureMode' => 'automatic',
+        ];
+
+        $request = new OrderRequest();
+        $responses = [
+            'requestNewOrder' => function (OrderRequest $argument) use (&$request) {
+                $request = $argument;
+
+                return (new TransactionMapper([
+                    'forward_url' => 'url',
+                ]))->getModelObjectMapped();
+            },
+        ];
+
+        $orderCutomerConfig = [
+            'order_customer' => [
+                [
+                    'order' => [
+                        'shipping' => $configTransaction['order']['shipping'],
+                    ],
+                ],
+            ],
+        ];
+
+        $paymentMethod = $this->generateSubClass(
+            $this->createMock(OrderTransactionStateHandler::class),
+            $this->getReadHipayConfig($config),
+            $this->getClientService($responses),
+            $this->getRequestStack(),
+            $this->getLocaleProvider(),
+            $this->generateOrderCustomerRepo($orderCutomerConfig)
+        );
+
+        /** @var RequestDataBag&MockObject */
+        $dataBag = $this->createMock(RequestDataBag::class);
+
+        /** @var SalesChannelContext&MockObject */
+        $salesChannelContext = $this->createMock(SalesChannelContext::class);
+
+        $paymentMethod->pay(
+            $this->generateTransaction($configTransaction),
+            $dataBag,
+            $salesChannelContext
+        );
+
+        $this->assertEquals(
+            ShippingIndicator::SHIP_TO_VERIFIED_ADDRESS,
+            $request->merchant_risk_statement->shipping_indicator
         );
     }
 }

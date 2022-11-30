@@ -33,6 +33,7 @@
 
         <!-- PaymentMethod -->
         <prototype namespace="HiPay\Payment\PaymentMethod\" resource="../../PaymentMethod/*.php" exclude="../../PaymentMethod/*Interface.php">
+            <argument key="$orderCustomerRepository" id="order_customer.repository" type="service"></argument>
             <tag>shopware.payment.method.async</tag>
         </prototype>
 

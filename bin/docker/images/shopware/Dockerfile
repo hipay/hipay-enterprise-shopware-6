@@ -5,11 +5,6 @@ FROM dockware/dev:$DOCKWARE_VERSION
 LABEL maintainer="PI-Ecommerce"
 LABEL maintainer_email="pi-ecommerce@hipay.com"
 
-COPY . /var/www/html/custom/plugins/HiPayPaymentPlugin/
-
-ADD --chown=root:root bin/docker/images/shopware/entrypoint.sh /post-entrypoint.sh
-RUN sudo chmod a+x /post-entrypoint.sh
-
 RUN echo '\
 CAPTURE_MODE=$CAPTURE_MODE \n\
 HIPAY_ENVIRONMENT=$HIPAY_ENVIRONMENT \n\
@@ -27,5 +22,10 @@ PUBLIC_PASSWORD_STAGE=$PUBLIC_PASSWORD_STAGE \n\
 PASSPHRASE_STAGE=$PASSPHRASE_STAGE \n\
 HASH_STAGE=$HASH_STAGE \
 ' >>.env
+
+COPY . /var/www/html/custom/plugins/HiPayPaymentPlugin/
+
+ADD --chown=root:root bin/docker/images/shopware/entrypoint.sh /post-entrypoint.sh
+RUN sudo chmod a+x /post-entrypoint.sh
 
 CMD [ "/post-entrypoint.sh" ]

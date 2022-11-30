@@ -2,8 +2,19 @@
 
 namespace HiPay\Payment\PaymentMethod;
 
+use HiPay\Fullservice\Enum\ThreeDSTwo\DeliveryTimeFrame;
 use HiPay\Fullservice\Enum\ThreeDSTwo\DeviceChannel;
+use HiPay\Fullservice\Enum\ThreeDSTwo\PurchaseIndicator;
+use HiPay\Fullservice\Enum\ThreeDSTwo\ReorderIndicator;
+use HiPay\Fullservice\Enum\ThreeDSTwo\ShippingIndicator;
 use HiPay\Fullservice\Exception\UnexpectedValueException;
+use HiPay\Fullservice\Gateway\Model\Request\ThreeDSTwo\AccountInfo;
+use HiPay\Fullservice\Gateway\Model\Request\ThreeDSTwo\AccountInfo\Customer;
+use HiPay\Fullservice\Gateway\Model\Request\ThreeDSTwo\AccountInfo\Payment;
+use HiPay\Fullservice\Gateway\Model\Request\ThreeDSTwo\AccountInfo\Purchase;
+use HiPay\Fullservice\Gateway\Model\Request\ThreeDSTwo\AccountInfo\Shipping;
+use HiPay\Fullservice\Gateway\Model\Request\ThreeDSTwo\MerchantRiskStatement;
+use HiPay\Fullservice\Gateway\Model\Request\ThreeDSTwo\MerchantRiskStatement\GiftCard;
 use HiPay\Fullservice\Gateway\Request\Info\CustomerBillingInfoRequest;
 use HiPay\Fullservice\Gateway\Request\Info\CustomerShippingInfoRequest;
 use HiPay\Fullservice\Gateway\Request\Order\HostedPaymentPageRequest;
@@ -11,12 +22,22 @@ use HiPay\Fullservice\Gateway\Request\Order\OrderRequest;
 use HiPay\Payment\Service\HiPayHttpClientService;
 use HiPay\Payment\Service\ReadHipayConfigService;
 use Ramsey\Uuid\Uuid;
+use Shopware\Core\Checkout\Order\Aggregate\OrderAddress\OrderAddressEntity;
+use Shopware\Core\Checkout\Order\Aggregate\OrderCustomer\OrderCustomerCollection;
+use Shopware\Core\Checkout\Order\Aggregate\OrderCustomer\OrderCustomerEntity;
 use Shopware\Core\Checkout\Order\Aggregate\OrderLineItem\OrderLineItemCollection;
+use Shopware\Core\Checkout\Order\Aggregate\OrderLineItem\OrderLineItemEntity;
+use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionEntity;
 use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStateHandler;
 use Shopware\Core\Checkout\Order\OrderEntity;
 use Shopware\Core\Checkout\Payment\Cart\AsyncPaymentTransactionStruct;
 use Shopware\Core\Checkout\Payment\Cart\PaymentHandler\AsynchronousPaymentHandlerInterface;
 use Shopware\Core\Checkout\Payment\Exception\AsyncPaymentProcessException;
+use Shopware\Core\Framework\Context;
+use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
+use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
+use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
+use Shopware\Core\Framework\DataAbstractionLayer\Search\Sorting\FieldSorting;
 use Shopware\Core\Framework\Store\Authentication\LocaleProvider;
 use Shopware\Core\Framework\Validation\DataBag\RequestDataBag;
 use Shopware\Core\System\Country\Aggregate\CountryState\CountryStateEntity;
@@ -41,18 +62,22 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
 
     protected LocaleProvider $localeProvider;
 
+    private EntityRepository $orderCustomerRepo;
+
     public function __construct(
         OrderTransactionStateHandler $transactionStateHandler,
         ReadHipayConfigService $config,
         HiPayHttpClientService $clientService,
         RequestStack $requestStack,
-        LocaleProvider $localeProvider
+        LocaleProvider $localeProvider,
+        EntityRepository $orderCustomerRepository
     ) {
         $this->transactionStateHandler = $transactionStateHandler;
         $this->config = $config;
         $this->clientService = $clientService;
         $this->request = $requestStack->getCurrentRequest();
         $this->localeProvider = $localeProvider;
+        $this->orderCustomerRepo = $orderCustomerRepository;
     }
 
     /**
@@ -87,11 +112,11 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
 
         if ($this->config->isHostedFields()) {
             // hosted fields
-            $client->requestNewOrder(
+            $response = $client->requestNewOrder(
                 $this->generateRequestHostedFields($transaction, $locale)
             );
 
-            return $transaction->getReturnUrl();
+            return $response->getForwardUrl() ?: $transaction->getReturnUrl();
         }
 
         if ($this->config->isHostedPage()) {
@@ -160,10 +185,12 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
         $orderRequest->cid = $order->getOrderCustomer()->getId();
         $orderRequest->customerBillingInfo = $this->generateCustomerBillingInfo($order);
         $orderRequest->customerShippingInfo = $this->generateCustomerShippingInfo($order);
-
         $orderRequest->custom_data = [
             'operation_id' => Uuid::uuid4()->toString(),
         ];
+
+        $orderRequest->merchant_risk_statement = $this->generateMerchantRiskStatement($order);
+        $orderRequest->account_info = $this->generateAccountInfo($order);
 
         // TODO: redirect url
         $orderRequest->accept_url = $transaction->getReturnUrl();
@@ -256,30 +283,149 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
      */
     private function generateCustomerShippingInfo(OrderEntity $order): CustomerShippingInfoRequest
     {
-        $shippingOrder = $order->getDeliveries()->first()->getShippingOrderAddress();
-
         $shippingInfo = new CustomerShippingInfoRequest();
-        // Identity
-        $shippingInfo->shipto_firstname = $shippingOrder->getFirstName();
-        $shippingInfo->shipto_lastname = $shippingOrder->getLastName();
-        $shippingInfo->shipto_gender = $this->generateGender($shippingOrder->getSalutation());
-        $shippingInfo->shipto_phone = $shippingOrder->getPhoneNumber();
 
-        // Postal data
-        $shippingInfo->shipto_recipientinfo = $shippingOrder->getCompany();
-        $shippingInfo->shipto_streetaddress = $shippingOrder->getStreet();
-        $shippingInfo->shipto_streetaddress2 = trim(
-            trim($shippingOrder->getAdditionalAddressLine1()).' '.trim($shippingOrder->getAdditionalAddressLine2())
-        );
-        $shippingInfo->shipto_city = $shippingOrder->getCity();
-        $shippingInfo->shipto_zipcode = $shippingOrder->getZipcode();
-        $shippingInfo->shipto_country = $shippingOrder->getCountry()->getIso();
-        $shippingInfo->shipto_state = $this->generateState(
-            $shippingInfo->shipto_country,
-            $shippingOrder->getCountryState()
-        );
+        if ($shippingAddress = $order->getDeliveries()->getShippingAddress()->first()) {
+            // Identity
+            $shippingInfo->shipto_firstname = $shippingAddress->getFirstName();
+            $shippingInfo->shipto_lastname = $shippingAddress->getLastName();
+            $shippingInfo->shipto_gender = $this->generateGender($shippingAddress->getSalutation());
+            $shippingInfo->shipto_phone = $shippingAddress->getPhoneNumber();
+
+            // Postal data
+            $shippingInfo->shipto_recipientinfo = $shippingAddress->getCompany();
+            $shippingInfo->shipto_streetaddress = $shippingAddress->getStreet();
+            $shippingInfo->shipto_streetaddress2 = trim(
+                trim($shippingAddress->getAdditionalAddressLine1()).' '.trim($shippingAddress->getAdditionalAddressLine2())
+            );
+            $shippingInfo->shipto_city = $shippingAddress->getCity();
+            $shippingInfo->shipto_zipcode = $shippingAddress->getZipcode();
+            $shippingInfo->shipto_country = $shippingAddress->getCountry()->getIso();
+            $shippingInfo->shipto_state = $this->generateState(
+                $shippingInfo->shipto_country,
+                $shippingAddress->getCountryState()
+            );
+        }
 
         return $shippingInfo;
+    }
+
+    /**
+     * Generate Merchant risk statement.
+     */
+    private function generateMerchantRiskStatement(OrderEntity $order): MerchantRiskStatement
+    {
+        $statement = new MerchantRiskStatement();
+
+        // Delivery time frame
+        if ($shippingAddress = $order->getDeliveries()->first()) {
+            $deliveryDelay = $shippingAddress->getShippingDateEarliest()->diff(new \DateTime());
+
+            $statement->delivery_time_frame = DeliveryTimeFrame::TWO_DAY_OR_MORE_SHIPPING;
+            if ($deliveryDelay->days < 1) {
+                $statement->delivery_time_frame = DeliveryTimeFrame::OVERNIGHT_SHIPPING;
+            } elseif ($deliveryDelay->days < 2) {
+                $statement->delivery_time_frame = DeliveryTimeFrame::SAME_DAY_SHIPPING;
+            }
+        }
+
+        // Purchase Indicator
+        $statement->purchase_indicator = PurchaseIndicator::FUTURE_AVAILABILITY;
+        foreach ($order->getLineItems() as $lineItem) {
+            if (($payload = $lineItem->getPayload()) && $payload['stock'] > 0) {
+                $statement->purchase_indicator = PurchaseIndicator::MERCHANDISE_AVAILABLE;
+                break;
+            }
+        }
+
+        // Reorder indicator
+        $statement->reorder_indicator = ReorderIndicator::FIRST_TIME_ORDERED;
+
+        $orderCustomers = $this->getOrderCustomers($order->getOrderCustomer()->getCustomer()->getId());
+
+        $sameOrders = $orderCustomers->filter(
+            function (OrderCustomerEntity $orderCustomer) use ($order) {
+                $mapLineItemsCallback = function (OrderLineItemCollection $lineItems) {
+                    /* @infection-ignore-all */
+                    $lineItemsHashs = $lineItems->map(
+                        fn (OrderLineItemEntity $lineItem) => $lineItem->getQuantity().$lineItem->getProductId()
+                    );
+                    sort($lineItemsHashs);
+
+                    return $lineItemsHashs;
+                };
+
+                return $order->getId() !== $orderCustomer->getOrderId()
+                && $mapLineItemsCallback($order->getLineItems()) === $mapLineItemsCallback($orderCustomer->getOrder()->getLineItems());
+            }
+        );
+
+        if (count($sameOrders)) {
+            $statement->reorder_indicator = ReorderIndicator::REORDERED;
+        }
+
+        // Shipping indicator
+        $statement->shipping_indicator = $this->generateShippingIndicator($order);
+
+        // Gift card
+        $statement->gift_card = new GiftCard();
+
+        return $statement;
+    }
+
+    /**
+     * Generate Account Info.
+     */
+    private function generateAccountInfo(OrderEntity $order): AccountInfo
+    {
+        $customer = $order->getOrderCustomer()->getCustomer();
+        $accountInfo = new AccountInfo();
+
+        $accountInfo->customer = new Customer();
+
+        $accountChange = ($customer->getUpdatedAt() ?? $customer->getCreatedAt());
+        $accountInfo->customer->account_change = (int) $accountChange->format('Ymd');
+
+        $accountInfo->customer->opening_account_date = (int) $customer->getCreatedAt()->format('Ymd');
+
+        $accountInfo->purchase = new Purchase();
+        $accountInfo->purchase->count = count(
+            $this->getOrderCustomers($customer->getId())->filter(
+                fn (OrderCustomerEntity $oc) => $oc->getOrderId() !== $order->getId()
+                    && $oc->getOrder()->getCreatedAt() >= (new \DateTime())->modify('-6 months')
+            )
+        );
+
+        $countPaymentAttemptFn = fn (OrderCustomerCollection $occ, $delay) => (int) array_sum(
+            $occ->map(
+                fn (OrderCustomerEntity $oc) => count(
+                    $oc->getOrder()->getTransactions()->filter(
+                        fn (OrderTransactionEntity $ot) => $ot->getOrderId() !== $order->getId()
+                            && CreditCard::class === $ot->getPaymentMethod()->getHandlerIdentifier()
+                            && $ot->getCreatedAt() >= (new \DateTime())->modify($delay)
+                    )
+                )
+            )
+        );
+
+        $orderCustomers = $this->getOrderCustomers($customer->getId());
+
+        $accountInfo->purchase->payment_attempts_24h = $countPaymentAttemptFn($orderCustomers, '-1 day');
+        $accountInfo->purchase->payment_attempts_1y = $countPaymentAttemptFn($orderCustomers, '-1 year');
+
+        $accountInfo->shipping = new Shipping();
+
+        if ($shippingAddress = $order->getDeliveries()->getShippingAddress()->first()) {
+            $hashAddress = $this->getAddressHash($shippingAddress);
+            foreach ($orderCustomers as $oc) {
+                if ($oc->getOrderId() !== $order->getId() && $hashAddress === $this->getAddressHash($shippingAddress)) {
+                    $accountInfo->shipping->shipping_used_date = (int) $oc->getOrder()->getCreatedAt()->format('Ymd');
+                    break;
+                }
+            }
+        }
+
+        return $accountInfo;
     }
 
     /**
@@ -312,6 +458,79 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
         }
 
         return $state;
+    }
+
+    /**
+     * Determinate the shipping indicator.
+     */
+    private function generateShippingIndicator(OrderEntity $order): int
+    {
+        if ($shippingAddress = $order->getDeliveries()->getShippingAddress()->first()) {
+            $shippingHash = $this->getAddressHash($shippingAddress);
+
+            if ($this->getAddressHash($order->getBillingAddress()) === $shippingHash) {
+                return ShippingIndicator::SHIP_TO_CARDHOLDER_BILLING_ADDRESS;
+            }
+
+            if ($customer = $order->getOrderCustomer()->getCustomer()) {
+                foreach ($this->getOrderCustomers($customer->getId()) as $orderCustomer) {
+                    $shipping = $orderCustomer->getOrder()->getDeliveries()->getShippingAddress()->first();
+                    if (
+                        $shipping
+                        && $orderCustomer->getOrderId() !== $order->getId()
+                        && $shippingHash == $this->getAddressHash($shipping)
+                    ) {
+                        return ShippingIndicator::SHIP_TO_VERIFIED_ADDRESS;
+                    }
+                }
+            }
+        }
+
+        return ShippingIndicator::SHIP_TO_DIFFERENT_ADDRESS;
+    }
+
+    /**
+     * Generate an hash for an address.
+     *
+     * @infection-ignore-all
+     */
+    private function getAddressHash(OrderAddressEntity $address): string
+    {
+        return $address->getSalutationId()
+        .$address->getFirstName()
+        .$address->getLastName()
+        .$address->getStreet()
+        .$address->getZipcode()
+        .$address->getCity()
+        .$address->getCompany()
+        .$address->getTitle()
+        .$address->getPhoneNumber()
+        .$address->getAdditionalAddressLine1()
+        .$address->getAdditionalAddressLine2()
+        .$address->getCountryId()
+        .$address->getCountryStateId();
+    }
+
+    /**
+     * Get the OrderCustomers from a customer Id.
+     */
+    private function getOrderCustomers(string $customerId): OrderCustomerCollection
+    {
+        return new OrderCustomerCollection(
+            // @phpstan-ignore-next-line
+            $this->orderCustomerRepo->search(
+                (new Criteria())
+                    ->addFilter(new EqualsFilter('customerId', $customerId))
+                    ->addAssociation('order')
+                    ->addAssociation('order.deliveries')
+                    ->addAssociation('order.transactions')
+                    ->addAssociation('order.transactions.paymentMethod')
+                    ->addAssociation('order.lineItems')
+                    ->addSorting(new FieldSorting('order.createdAt', FieldSorting::DESCENDING))
+                    ->setLimit(5),
+                Context::createDefaultContext()
+            )->getEntities()
+        );
     }
 
     /**
