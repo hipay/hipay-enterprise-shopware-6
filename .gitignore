@@ -6,6 +6,7 @@
 .vscode
 
 # Third party
+log
 web/
 .env
 vendor/

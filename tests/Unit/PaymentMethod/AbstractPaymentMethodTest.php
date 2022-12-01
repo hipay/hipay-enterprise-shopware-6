@@ -7,6 +7,7 @@ use HiPay\Fullservice\Enum\ThreeDSTwo\DeviceChannel;
 use HiPay\Fullservice\Enum\ThreeDSTwo\PurchaseIndicator;
 use HiPay\Fullservice\Enum\ThreeDSTwo\ReorderIndicator;
 use HiPay\Fullservice\Enum\ThreeDSTwo\ShippingIndicator;
+use HiPay\Fullservice\Enum\Transaction\TransactionState;
 use HiPay\Fullservice\Gateway\Mapper\HostedPaymentPageMapper;
 use HiPay\Fullservice\Gateway\Mapper\TransactionMapper;
 use HiPay\Fullservice\Gateway\Request\Order\HostedPaymentPageRequest;
@@ -19,11 +20,13 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStateHandler;
 use Shopware\Core\Checkout\Payment\Cart\AsyncPaymentTransactionStruct;
+use Shopware\Core\Checkout\Payment\Exception\AsyncPaymentFinalizeException;
 use Shopware\Core\Checkout\Payment\Exception\AsyncPaymentProcessException;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\Store\Authentication\LocaleProvider;
 use Shopware\Core\Framework\Validation\DataBag\RequestDataBag;
 use Shopware\Core\System\SalesChannel\SalesChannelContext;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 class AbstractPaymentMethodTest extends TestCase
@@ -141,15 +144,18 @@ class AbstractPaymentMethodTest extends TestCase
                 $orderRequest = $argument;
 
                 return (new TransactionMapper([
-                    'forward_url' => $returnUrl,
+                    'state' => TransactionState::PENDING,
                 ]))->getModelObjectMapped();
             },
         ];
 
         $locale = 'ab_CD';
 
+        /** @var OrderTransactionStateHandler&MockObject $handler */
+        $handler = $this->createMock(OrderTransactionStateHandler::class);
+
         $paymentMethod = $this->generateSubClass(
-            $this->createMock(OrderTransactionStateHandler::class),
+            $handler,
             $this->getReadHipayConfig($config),
             $this->getClientService($responses),
             $this->getRequestStack(),
@@ -157,15 +163,17 @@ class AbstractPaymentMethodTest extends TestCase
             $this->generateOrderCustomerRepo()
         );
 
-        $redirectRequest = $paymentMethod->pay(
-            $this->generateTransaction($configTransaction),
+        $transaction = $this->generateTransaction($configTransaction);
+
+        $redirectResponse = $paymentMethod->pay(
+            $transaction,
             $this->createMock(RequestDataBag::class),
             $this->createMock(SalesChannelContext::class)
         );
 
         $this->assertEquals(
             $configTransaction['return_url'],
-            $redirectRequest->getTargetUrl(),
+            $redirectResponse->getTargetUrl(),
             'return_url missmatch'
         );
 
@@ -187,6 +195,140 @@ class AbstractPaymentMethodTest extends TestCase
         );
 
         $this->orderRequestTesting($orderRequest, $configTransaction);
+
+        $handler->expects($this->once())
+            ->method('process')
+            ->with($this->equalTo($transaction->getOrderTransaction()->getId()));
+
+        $paymentMethod->finalize(
+            $transaction,
+            new Request(),
+            $this->createMock(SalesChannelContext::class)
+        );
+    }
+
+    public function testForwardedWithHostedFields()
+    {
+        $forwardUrl = 'foo.bar';
+
+        $config = [
+            'operationMode' => 'hostedFields',
+            'captureMode' => 'automatic',
+        ];
+
+        $orderRequest = new OrderRequest();
+        $responses = [
+            'requestNewOrder' => function (OrderRequest $argument) use (&$orderRequest, $forwardUrl) {
+                $orderRequest = $argument;
+
+                return (new TransactionMapper([
+                    'state' => TransactionState::FORWARDING,
+                    'forward_url' => $forwardUrl,
+                ]))->getModelObjectMapped();
+            },
+        ];
+
+        $locale = 'ab_CD';
+
+        /** @var OrderTransactionStateHandler&MockObject $handler */
+        $handler = $this->createMock(OrderTransactionStateHandler::class);
+
+        $paymentMethod = $this->generateSubClass(
+            $handler,
+            $this->getReadHipayConfig($config),
+            $this->getClientService($responses),
+            $this->getRequestStack(),
+            $this->getLocaleProvider($locale),
+            $this->generateOrderCustomerRepo()
+        );
+
+        $transaction = $this->generateTransaction();
+
+        $redirectResponse = $paymentMethod->pay(
+            $transaction,
+            $this->createMock(RequestDataBag::class),
+            $this->createMock(SalesChannelContext::class)
+        );
+
+        $this->assertSame(
+            $forwardUrl,
+            $redirectResponse->getTargetUrl()
+        );
+    }
+
+    public function provideTestFailWithHostedFields()
+    {
+        return [
+            [TransactionState::ERROR],
+            [TransactionState::DECLINED],
+        ];
+    }
+
+    /**
+     * @dataProvider provideTestFailWithHostedFields
+     */
+    public function testFailWithHostedFields($state)
+    {
+        $redirectUri = 'foo.bar';
+
+        $configTransaction = [
+            'return_url' => $redirectUri,
+            'transaction' => [
+                'id' => 'azertyuiop',
+            ],
+        ];
+
+        $config = [
+            'operationMode' => 'hostedFields',
+            'captureMode' => 'automatic',
+        ];
+
+        $orderRequest = new OrderRequest();
+        $responses = [
+            'requestNewOrder' => function (OrderRequest $argument) use (&$orderRequest, $state) {
+                $orderRequest = $argument;
+
+                return (new TransactionMapper([
+                    'state' => $state,
+                ]))->getModelObjectMapped();
+            },
+        ];
+
+        $locale = 'ab_CD';
+
+        /** @var OrderTransactionStateHandler&MockObject $handler */
+        $handler = $this->createMock(OrderTransactionStateHandler::class);
+
+        $paymentMethod = $this->generateSubClass(
+            $handler,
+            $this->getReadHipayConfig($config),
+            $this->getClientService($responses),
+            $this->getRequestStack(),
+            $this->getLocaleProvider($locale),
+            $this->generateOrderCustomerRepo()
+        );
+
+        $transaction = $this->generateTransaction($configTransaction);
+
+        $redirectResponse = $paymentMethod->pay(
+            $transaction,
+            $this->createMock(RequestDataBag::class),
+            $this->createMock(SalesChannelContext::class)
+        );
+
+        $this->assertSame(
+            $redirectUri.'&status='.$state,
+            $redirectResponse->getTargetUrl()
+        );
+
+        $this->expectException(AsyncPaymentFinalizeException::class);
+        $this->expectExceptionMessage('Payment '.$state);
+
+        $paymentMethod->finalize(
+            $transaction,
+            new Request(['status' => $state]),
+            $this->createMock(SalesChannelContext::class)
+        );
     }
 
     public function testPayValidWithHostedPage()
@@ -283,7 +425,7 @@ class AbstractPaymentMethodTest extends TestCase
         /** @var SalesChannelContext&MockObject */
         $salesChannelContext = $this->createMock(SalesChannelContext::class);
 
-        $redirectRequest = $paymentMethod->pay(
+        $redirectResponse = $paymentMethod->pay(
             $this->generateTransaction($configTransaction),
             $dataBag,
             $salesChannelContext
@@ -291,7 +433,7 @@ class AbstractPaymentMethodTest extends TestCase
 
         $this->assertEquals(
             $redirectUri,
-            $redirectRequest->getTargetUrl()
+            $redirectResponse->getTargetUrl()
         );
 
         $this->assertEquals(
@@ -384,6 +526,12 @@ class AbstractPaymentMethodTest extends TestCase
         $this->assertEquals(
             $configTransaction['order']['expected_description'],
             $orderRequest->description,
+            'description is too long'
+        );
+
+        $this->assertLessThanOrEqual(
+            255,
+            strlen($orderRequest->description),
             'description is too long'
         );
 
@@ -574,6 +722,25 @@ class AbstractPaymentMethodTest extends TestCase
 
         $this->assertIsInt($orderRequest->account_info->customer->account_change);
         $this->assertIsInt($orderRequest->account_info->customer->opening_account_date);
+
+        // urls
+        $this->assertSame(
+            'http://:/api/hipay/notify',
+            $orderRequest->notify_url
+        );
+
+        $this->assertSame(
+            ($orderRequest->forward_url ?? $configTransaction['return_url']).'&status=error',
+            $orderRequest->decline_url
+        );
+        $this->assertSame(
+            ($orderRequest->forward_url ?? $configTransaction['return_url']).'&status=error',
+            $orderRequest->exception_url
+        );
+        $this->assertSame(
+            ($orderRequest->forward_url ?? $configTransaction['return_url']).'&status=error',
+            $orderRequest->cancel_url
+        );
     }
 
     public function provideTestDeliveryTimeFrame()

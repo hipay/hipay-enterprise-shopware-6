@@ -7,6 +7,7 @@ use HiPay\Fullservice\Enum\ThreeDSTwo\DeviceChannel;
 use HiPay\Fullservice\Enum\ThreeDSTwo\PurchaseIndicator;
 use HiPay\Fullservice\Enum\ThreeDSTwo\ReorderIndicator;
 use HiPay\Fullservice\Enum\ThreeDSTwo\ShippingIndicator;
+use HiPay\Fullservice\Enum\Transaction\TransactionState;
 use HiPay\Fullservice\Exception\UnexpectedValueException;
 use HiPay\Fullservice\Gateway\Model\Request\ThreeDSTwo\AccountInfo;
 use HiPay\Fullservice\Gateway\Model\Request\ThreeDSTwo\AccountInfo\Customer;
@@ -32,6 +33,7 @@ use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStat
 use Shopware\Core\Checkout\Order\OrderEntity;
 use Shopware\Core\Checkout\Payment\Cart\AsyncPaymentTransactionStruct;
 use Shopware\Core\Checkout\Payment\Cart\PaymentHandler\AsynchronousPaymentHandlerInterface;
+use Shopware\Core\Checkout\Payment\Exception\AsyncPaymentFinalizeException;
 use Shopware\Core\Checkout\Payment\Exception\AsyncPaymentProcessException;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
@@ -83,8 +85,11 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
     /**
      * {@inheritDoc}
      */
-    public function pay(AsyncPaymentTransactionStruct $transaction, RequestDataBag $dataBag, SalesChannelContext $salesChannelContext): RedirectResponse
-    {
+    public function pay(
+        AsyncPaymentTransactionStruct $transaction,
+        RequestDataBag $dataBag,
+        SalesChannelContext $salesChannelContext
+    ): RedirectResponse {
         try {
             $locale = $this->localeProvider->getLocaleFromContext($salesChannelContext->getContext());
             $redirectUri = $this->getRedirectUri($transaction, $locale);
@@ -99,8 +104,18 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
     /**
      * {@inheritDoc}
      */
-    public function finalize(AsyncPaymentTransactionStruct $transaction, Request $request, SalesChannelContext $salesChannelContext): void
-    {
+    public function finalize(
+        AsyncPaymentTransactionStruct $transaction,
+        Request $request,
+        SalesChannelContext $salesChannelContext
+    ): void {
+        $transaction = $transaction->getOrderTransaction();
+
+        if ($status = $request->query->getAlpha('status')) {
+            throw new AsyncPaymentFinalizeException($transaction->getId(), 'Payment '.$status);
+        }
+
+        $this->transactionStateHandler->process($transaction->getId(), Context::createDefaultContext());
     }
 
     /**
@@ -116,7 +131,24 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
                 $this->generateRequestHostedFields($transaction, $locale)
             );
 
-            return $response->getForwardUrl() ?: $transaction->getReturnUrl();
+            // error as main return
+            $redirect = $transaction->getReturnUrl().'&status='.TransactionState::ERROR;
+
+            switch ($response->getState()) {
+                case TransactionState::FORWARDING:
+                    $redirect = $response->getForwardUrl();
+                    break;
+                case TransactionState::COMPLETED:
+                case TransactionState::PENDING:
+                    $redirect = $transaction->getReturnUrl();
+                    break;
+
+                case TransactionState::DECLINED:
+                    $redirect = $transaction->getReturnUrl().'&status='.TransactionState::DECLINED;
+                    break;
+            }
+
+            return $redirect;
         }
 
         if ($this->config->isHostedPage()) {
@@ -134,8 +166,10 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
     /**
      * Generate the request on hosted page mode.
      */
-    private function generateRequestHostedPage(AsyncPaymentTransactionStruct $transaction, string $locale): HostedPaymentPageRequest
-    {
+    private function generateRequestHostedPage(
+        AsyncPaymentTransactionStruct $transaction,
+        string $locale
+    ): HostedPaymentPageRequest {
         return $this->hydrateHostedPage(
             // @phpstan-ignore-next-line
             $this->hydrateGenericOrderRequest(new HostedPaymentPageRequest(), $transaction, $locale),
@@ -156,7 +190,10 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
     /**
      * hydrate the generic orderRequest.
      */
-    private function hydrateGenericOrderRequest(OrderRequest $orderRequest, AsyncPaymentTransactionStruct $transaction, string $locale): OrderRequest
+    private function hydrateGenericOrderRequest(
+        OrderRequest $orderRequest,
+        AsyncPaymentTransactionStruct $transaction,
+        string $locale): OrderRequest
     {
         $order = $transaction->getOrder();
 
@@ -192,12 +229,12 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
         $orderRequest->merchant_risk_statement = $this->generateMerchantRiskStatement($order);
         $orderRequest->account_info = $this->generateAccountInfo($order);
 
-        // TODO: redirect url
         $orderRequest->accept_url = $transaction->getReturnUrl();
-        $orderRequest->decline_url = $transaction->getReturnUrl();
         $orderRequest->pending_url = $transaction->getReturnUrl();
-        $orderRequest->exception_url = $transaction->getReturnUrl();
-        $orderRequest->cancel_url = $transaction->getReturnUrl();
+        $orderRequest->decline_url = $transaction->getReturnUrl().'&status='.TransactionState::ERROR;
+        $orderRequest->exception_url = $transaction->getReturnUrl().'&status='.TransactionState::ERROR;
+        $orderRequest->cancel_url = $transaction->getReturnUrl().'&status='.TransactionState::ERROR;
+
         $orderRequest->notify_url = $this->request->getSchemeAndHttpHost().'/api/hipay/notify';
 
         return $orderRequest;
@@ -206,7 +243,7 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
     /**
      * Generate a description.
      */
-    private function generateDescription(OrderLineItemCollection $lineItems, int $maxLength = 255, string $trailing = ''): string
+    private function generateDescription(OrderLineItemCollection $lineItems, int $maxLength, string $trailing): string
     {
         $description = [];
         foreach ($lineItems as $lineItem) {
@@ -332,7 +369,8 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
         // Purchase Indicator
         $statement->purchase_indicator = PurchaseIndicator::FUTURE_AVAILABILITY;
         foreach ($order->getLineItems() as $lineItem) {
-            if (($payload = $lineItem->getPayload()) && $payload['stock'] > 0) {
+            $payload = $lineItem->getPayload();
+            if ($payload && array_key_exists('stock', $payload) && $payload['stock'] > 0) {
                 $statement->purchase_indicator = PurchaseIndicator::MERCHANDISE_AVAILABLE;
                 break;
             }
@@ -549,5 +587,8 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
     /**
      * Configure hosted page request for the current payment method.
      */
-    abstract protected function hydrateHostedPage(HostedPaymentPageRequest $orderRequest, AsyncPaymentTransactionStruct $transaction): HostedPaymentPageRequest;
+    abstract protected function hydrateHostedPage(
+        HostedPaymentPageRequest $orderRequest,
+        AsyncPaymentTransactionStruct $transaction
+    ): HostedPaymentPageRequest;
 }
