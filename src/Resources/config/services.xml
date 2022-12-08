@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
-<container xmlns="http://symfony.com/schema/dic/services" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+<container xmlns="http://symfony.com/schema/dic/services"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
 
     <imports>
         <import resource="packages/*" />
@@ -14,22 +15,50 @@
         </service>
 
         <service id="HiPay\Payment\Service\NotificationService">
-            <argument type="service" id="hipay_notification.repository" />
             <argument type="service" id="order_transaction.repository" />
-            <argument type="service" id="order_transaction_capture.repository" />
-            <argument type="service" id="order_transaction_capture_refund.repository" />
-            <argument type="service" id="state_machine_state.repository" />
+            <argument type="service" id="hipay_notification.repository" />
+            <argument type="service" id="hipay_order.repository" />
+            <argument type="service" id="hipay_order_capture.repository" />
+            <argument type="service" id="hipay_order_refund.repository" />
+        </service>
+
+        <!-- Extension Entity -->
+        <service id="HiPay\Payment\Extension\Order\OrderExtension">
+            <tag name="shopware.entity.extension"/>
+        </service>
+
+        <service id="HiPay\Payment\Extension\Order\OrderTransactionExtension">
+            <tag name="shopware.entity.extension"/>
         </service>
 
         <!-- Entity -->
-        <service id="HiPay\Payment\Core\Checkout\Payment\HipayNotificationDefinition">
+        <service id="HiPay\Payment\Core\Checkout\Payment\HipayOrder\HipayOrderDefinition">
+            <tag name="shopware.entity.definition" entity="hipay_order" />
+        </service>
+
+        <service id="HiPay\Payment\Core\Checkout\Payment\HipayNotification\HipayNotificationDefinition">
             <tag name="shopware.entity.definition" entity="hipay_notification" />
+        </service>
+
+        <service id="HiPay\Payment\Core\Checkout\Payment\Capture\OrderCaptureDefinition">
+            <tag name="shopware.entity.definition" entity="hipay_order_capture" />
+        </service>
+
+        <service id="HiPay\Payment\Core\Checkout\Payment\Refund\OrderRefundDefinition">
+            <tag name="shopware.entity.definition" entity="hipay_order_refund" />
         </service>
 
         <!-- Controller-->
         <prototype namespace="HiPay\Payment\Controller\" resource="../../Controller/*Controller.php">
             <tag>controller.service_arguments</tag>
         </prototype>
+
+        <service id="HiPay\Payment\Controller\AdminController">
+            <argument type="service" id="hipay_order.repository" />
+            <argument type="service" id="hipay_order_capture.repository" />
+            <argument type="service" id="hipay_order_refund.repository" />
+            <tag>controller.service_arguments</tag>
+        </service>
 
         <!-- PaymentMethod -->
         <prototype namespace="HiPay\Payment\PaymentMethod\" resource="../../PaymentMethod/*.php" exclude="../../PaymentMethod/*Interface.php">
@@ -47,6 +76,11 @@
             <argument type="service" id="scheduled_task.repository" />
             <tag>name="messenger.message_handler</tag>
         </prototype>
+
+        <!-- Subscriber -->
+        <service id="HiPay\Payment\Subscriber\HipayOrderSubscriber">
+            <tag name="kernel.event_subscriber"/>
+        </service>
 
     </services>
 </container>

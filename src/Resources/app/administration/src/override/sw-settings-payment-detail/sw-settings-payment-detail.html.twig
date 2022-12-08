@@ -1,10 +1,7 @@
- {% block sw_settings_payment_detail_content_card %}
-    {% parent %}
-    <template v-if="paymentMethod.handlerIdentifier == 'HiPay\\Payment\\PaymentMethod\\CreditCard'">
-        <hipay-settings-cards-selector
-            :is-loading="isLoading"
-            :paymentMethod="paymentMethod"
-        >
-        </hipay-settings-cards-selector>
-    </template>
+{% block sw_settings_payment_detail_content_card %}
+  {% parent %}
+  <template v-if="paymentMethod.handlerIdentifier == 'HiPay\\Payment\\PaymentMethod\\CreditCard'">
+    <hipay-settings-cards-selector :is-loading="isLoading"
+      :paymentMethod="paymentMethod"></hipay-settings-cards-selector>
+  </template>
 {% endblock %}

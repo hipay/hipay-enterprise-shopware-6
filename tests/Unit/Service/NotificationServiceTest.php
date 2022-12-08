@@ -4,8 +4,17 @@ namespace Hipay\Payment\Tests\Unit\Service;
 
 use HiPay\Fullservice\Enum\Transaction\TransactionStatus;
 use HiPay\Fullservice\Exception\ApiErrorException;
-use HiPay\Payment\Core\Checkout\Payment\HipayNotificationCollection;
-use HiPay\Payment\Core\Checkout\Payment\HipayNotificationEntity;
+use HiPay\Fullservice\Exception\UnexpectedValueException;
+use HiPay\Payment\Core\Checkout\Payment\Capture\OrderCaptureCollection;
+use HiPay\Payment\Core\Checkout\Payment\Capture\OrderCaptureEntity;
+use HiPay\Payment\Core\Checkout\Payment\HipayNotification\HipayNotificationCollection;
+use HiPay\Payment\Core\Checkout\Payment\HipayNotification\HipayNotificationEntity;
+use HiPay\Payment\Core\Checkout\Payment\HipayOrder\HipayOrderCollection;
+use HiPay\Payment\Core\Checkout\Payment\HipayOrder\HipayOrderEntity;
+use HiPay\Payment\Core\Checkout\Payment\Refund\OrderRefundCollection;
+use HiPay\Payment\Core\Checkout\Payment\Refund\OrderRefundEntity;
+use HiPay\Payment\Enum\CaptureStatus;
+use HiPay\Payment\Enum\RefundStatus;
 use HiPay\Payment\Service\NotificationService;
 use HiPay\Payment\Tests\Tools\ReadHipayConfigServiceMockTrait;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -13,14 +22,11 @@ use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Ramsey\Uuid\Uuid;
-use Shopware\Core\Checkout\Cart\Price\Struct\CalculatedPrice;
-use Shopware\Core\Checkout\Cart\Tax\Struct\CalculatedTaxCollection;
-use Shopware\Core\Checkout\Cart\Tax\Struct\TaxRuleCollection;
 use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionCollection;
 use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionEntity;
 use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStateHandler;
 use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStates;
-use Shopware\Core\Defaults;
+use Shopware\Core\Checkout\Order\OrderEntity;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Event\EntityWrittenContainerEvent;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
@@ -77,7 +83,7 @@ class NotificationServiceTest extends TestCase
             [TransactionStatus::AUTHORIZED, NotificationService::AUTHORIZE],
             // PROCESS_AFTER_AUTHORIZED
             [TransactionStatus::CAPTURE_REQUESTED, NotificationService::PROCESS_AFTER_AUTHORIZE],
-            [TransactionStatus::REFUND_REQUESTED, NotificationService::PROCESS_AFTER_AUTHORIZE],
+            [TransactionStatus::REFUND_REQUESTED, NotificationService::PROCESS_AFTER_CAPTURE],
             // PAID PARTIALLY
             [TransactionStatus::PARTIALLY_CAPTURED, NotificationService::PAY_PARTIALLY],
             // PAID
@@ -97,6 +103,8 @@ class NotificationServiceTest extends TestCase
     public function testSaveNotificationRequest($code, $codeEntity)
     {
         $hipayNotification = [];
+        $transaction = $this->generateTransaction();
+        $hipayOrder = $this->generateHipayOrder($transaction);
 
         /** @var EntityRepository&MockObject $notificationRepo */
         $notificationRepo = $this->createMock(EntityRepository::class);
@@ -106,6 +114,33 @@ class NotificationServiceTest extends TestCase
             return $this->createMock(EntityWrittenContainerEvent::class);
         });
 
+        /** @var EntityRepository&MockObject $hipayOrderRepo */
+        $hipayOrderRepo = $this->createMock(EntityRepository::class);
+
+        $i = 0;
+        $hipayOrderRepo->method('search')->willReturnCallback(function ($criteria, $context) use ($hipayOrder, &$i) {
+            $collection = new HipayOrderCollection([]);
+            $collection2 = new HipayOrderCollection([$hipayOrder]);
+            $return = [
+                new EntitySearchResult(HipayOrderEntity::class, $collection->count(), $collection, null, $criteria, $context),
+                new EntitySearchResult(HipayOrderEntity::class, $collection2->count(), $collection2, null, $criteria, $context),
+            ];
+
+            if (!array_key_exists($i, $return)) {
+                throw new \AssertionError('Expected '.count($return).' calls. Actual is '.$i);
+            }
+
+            return $return[$i++];
+        });
+
+        /** @var EntityRepository&MockObject $transactionRepo */
+        $transactionRepo = $this->createMock(EntityRepository::class);
+        $transactionRepo->method('search')->willReturnCallback(function ($criteria, $context) use ($transaction) {
+            $collection = new OrderTransactionCollection([$transaction]);
+
+            return new EntitySearchResult(OrderTransactionEntity::class, $collection->count(), $collection, null, $criteria, $context);
+        });
+
         $config = $this->getReadHipayConfig([
             'hashStage' => 'sha256',
             'passphraseStage' => md5(random_int(0, PHP_INT_MAX)),
@@ -113,9 +148,9 @@ class NotificationServiceTest extends TestCase
         ]);
 
         $service = new NotificationService(
+            $transactionRepo,
             $notificationRepo,
-            $this->createMock(EntityRepository::class),
-            $this->createMock(EntityRepository::class),
+            $hipayOrderRepo,
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
             $config,
@@ -128,7 +163,7 @@ class NotificationServiceTest extends TestCase
             'date_updated' => (new \DateTimeImmutable())->format('Y-m-d\TH:i:sO'),
             'transaction_reference' => random_int(0, PHP_INT_MAX),
             'order' => [
-                'id' => random_int(0, PHP_INT_MAX),
+                'id' => 'ORDER_ID',
             ],
         ];
         $request = new Request([], $content);
@@ -137,20 +172,11 @@ class NotificationServiceTest extends TestCase
             $this->addSignature($request, $config->getHash(), $config->getPassphrase())
         );
 
-        $this->assertSame(
-            [[
-                'status' => $codeEntity,
-                'data' => $request->request->all(),
-                'notificationUpdatedAt' => (new \DateTimeImmutable($content['date_updated']))->format(Defaults::STORAGE_DATE_TIME_FORMAT),
-                'orderTransaction' => [
-                    'id' => $content['order']['id'],
-                    'customFields' => [
-                        'hipay_transaction_reference' => $content['transaction_reference'],
-                    ],
-                ],
-            ]],
-            $hipayNotification
-        );
+        $this->assertEquals($codeEntity, $hipayNotification[0]['status']);
+        $this->assertEquals($request->request->all(), $hipayNotification[0]['data']);
+        $this->assertEquals((new \DateTimeImmutable($content['date_updated']))->format('Y-m-d\TH:i:s.000P'), $hipayNotification[0]['notificationUpdatedAt']);
+        $this->assertEquals('HIPAY_ID', $hipayNotification[0]['hipayOrderId']);
+        $this->assertEquals(['id' => 'HIPAY_ID'], $hipayNotification[0]['hipayOrder']);
     }
 
     public function testSaveNotificationRequestBadAlgo()
@@ -164,8 +190,8 @@ class NotificationServiceTest extends TestCase
         ]);
 
         $service = new NotificationService(
-            $notificationRepo,
             $this->createMock(EntityRepository::class),
+            $notificationRepo,
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
@@ -191,8 +217,8 @@ class NotificationServiceTest extends TestCase
         ]);
 
         $service = new NotificationService(
-            $notificationRepo,
             $this->createMock(EntityRepository::class),
+            $notificationRepo,
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
@@ -219,8 +245,8 @@ class NotificationServiceTest extends TestCase
         ]);
 
         $service = new NotificationService(
-            $notificationRepo,
             $this->createMock(EntityRepository::class),
+            $notificationRepo,
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
@@ -252,8 +278,8 @@ class NotificationServiceTest extends TestCase
         ]);
 
         $service = new NotificationService(
-            $notificationRepo,
             $this->createMock(EntityRepository::class),
+            $notificationRepo,
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
@@ -284,8 +310,8 @@ class NotificationServiceTest extends TestCase
         ]);
 
         $service = new NotificationService(
-            $notificationRepo,
             $this->createMock(EntityRepository::class),
+            $notificationRepo,
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
@@ -319,8 +345,8 @@ class NotificationServiceTest extends TestCase
         ]);
 
         $service = new NotificationService(
-            $notificationRepo,
             $this->createMock(EntityRepository::class),
+            $notificationRepo,
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
@@ -348,6 +374,16 @@ class NotificationServiceTest extends TestCase
         /** @var EntityRepository&MockObject $notificationRepo */
         $notificationRepo = $this->createMock(EntityRepository::class);
 
+        $transaction = $this->generateTransaction();
+
+        /** @var EntityRepository&MockObject $transactionRepo */
+        $transactionRepo = $this->createMock(EntityRepository::class);
+        $transactionRepo->method('search')->willReturnCallback(function ($criteria, $context) use ($transaction) {
+            $collection = new OrderTransactionCollection([$transaction]);
+
+            return new EntitySearchResult(OrderTransactionEntity::class, $collection->count(), $collection, null, $criteria, $context);
+        });
+
         $config = $this->getReadHipayConfig([
             'hashStage' => 'sha256',
             'passphraseStage' => md5(random_int(0, PHP_INT_MAX)),
@@ -355,8 +391,8 @@ class NotificationServiceTest extends TestCase
         ]);
 
         $service = new NotificationService(
+            $transactionRepo,
             $notificationRepo,
-            $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
@@ -368,12 +404,12 @@ class NotificationServiceTest extends TestCase
         $content = [
             'status' => 0,
             'date_updated' => (new \DateTimeImmutable())->format('Y-m-d\TH:i:sO'),
-            'order' => ['id' => random_int(0, PHP_INT_MAX)],
+            'order' => ['id' => 'ORDER_ID'],
             'transaction_reference' => random_int(0, PHP_INT_MAX),
         ];
         $request = new Request([], $content);
 
-        $this->expectException(\UnexpectedValueException::class);
+        $this->expectException(UnexpectedValueException::class);
         $this->expectExceptionMessage('Status code "0" invalid');
 
         $service->saveNotificationRequest(
@@ -381,65 +417,77 @@ class NotificationServiceTest extends TestCase
         );
     }
 
-    private function generateTransaction($initialState, $initialCustomFields = [])
+    private function generateTransaction(string $initialState = OrderTransactionStates::STATE_IN_PROGRESS): OrderTransactionEntity
     {
+        $order = new OrderEntity();
+        $order->setId('ORDER_ID');
+
         $stateMachine = new StateMachineStateEntity();
         $stateMachine->setTechnicalName($initialState);
 
         $transaction = new OrderTransactionEntity();
-        $transaction->setId(md5(random_int(0, PHP_INT_MAX)));
+        $transaction->setId('TRX_ID');
+        $transaction->setOrder($order);
         $transaction->setStateMachineState($stateMachine);
-        $transaction->setCustomFields($initialCustomFields);
 
         return $transaction;
+    }
+
+    private function generateHipayOrder(OrderTransactionEntity $transaction): HipayOrderEntity
+    {
+        if (!$transaction) {
+            $transaction = $this->generateTransaction();
+        }
+
+        $hipayOrder = new HipayOrderEntity();
+        $hipayOrder->setId('HIPAY_ID');
+        $hipayOrder->setOrder($transaction->getOrder());
+        $hipayOrder->setTransaction($transaction);
+        $hipayOrder->setTransanctionReference(md5(random_int(0, PHP_INT_MAX)));
+
+        return $hipayOrder;
     }
 
     public function provideTestDispatchNotification()
     {
         return [
-            [NotificationService::PROCESS, TransactionStatus::AUTHORIZED_AND_PENDING, OrderTransactionStates::STATE_OPEN, 'process', OrderTransactionStates::STATE_IN_PROGRESS],
-            [NotificationService::FAILED, TransactionStatus::AUTHENTICATION_FAILED, OrderTransactionStates::STATE_IN_PROGRESS, 'fail', OrderTransactionStates::STATE_FAILED],
-            [NotificationService::CHARGEDBACK, TransactionStatus::CHARGED_BACK, OrderTransactionStates::STATE_IN_PROGRESS, 'chargeback', OrderTransactionStates::STATE_CHARGEBACK],
-            [NotificationService::AUTHORIZE, TransactionStatus::AUTHORIZED, OrderTransactionStates::STATE_IN_PROGRESS, 'authorize', OrderTransactionStates::STATE_AUTHORIZED],
-            [NotificationService::CANCELLED, TransactionStatus::CANCELLED, OrderTransactionStates::STATE_IN_PROGRESS, 'cancel', OrderTransactionStates::STATE_CANCELLED],
+            [NotificationService::PROCESS, TransactionStatus::AUTHORIZED_AND_PENDING, OrderTransactionStates::STATE_IN_PROGRESS, 'process', OrderTransactionStates::STATE_IN_PROGRESS],
+            [NotificationService::FAILED, TransactionStatus::AUTHENTICATION_FAILED, OrderTransactionStates::STATE_FAILED, 'fail', OrderTransactionStates::STATE_FAILED],
+            [NotificationService::CHARGEDBACK, TransactionStatus::CHARGED_BACK, OrderTransactionStates::STATE_CHARGEBACK, 'chargeback', OrderTransactionStates::STATE_CHARGEBACK],
+            [NotificationService::AUTHORIZE, TransactionStatus::AUTHORIZED, OrderTransactionStates::STATE_AUTHORIZED, 'authorize', OrderTransactionStates::STATE_AUTHORIZED],
+            [NotificationService::CANCELLED, TransactionStatus::CANCELLED, OrderTransactionStates::STATE_CANCELLED, 'cancel', OrderTransactionStates::STATE_CANCELLED],
         ];
     }
 
     /**
      * @dataProvider provideTestDispatchNotification
      */
-    public function testDispatchNotification($notificationStatus, $hipayStatus, $initialState, $methodExpected, $expectedState)
+    public function testDispatchExpiredNotification($notificationStatus, $hipayStatus, $initialState, $methodExpected, $expectedState)
     {
-        // Transaction
-        $initialCustomFields = rand(0, 1) ? [] : ['hipay_status' => [100]];
-        $transaction = $this->generateTransaction($initialState, $initialCustomFields);
+        $transaction = $this->generateTransaction();
+        $hipayOrder = $this->generateHipayOrder($transaction);
 
         /** @var EntityRepository&MockObject $transactionRepo */
         $transactionRepo = $this->createMock(EntityRepository::class);
         $transactionRepo->method('search')->willReturnCallback(function ($criteria, $context) use ($transaction) {
             $collection = new OrderTransactionCollection([$transaction]);
 
-            return new EntitySearchResult(HipayNotificationEntity::class, $collection->count(), $collection, null, $criteria, $context);
-        });
-
-        $customFields = [];
-        $transactionRepo->method('update')->willReturnCallback(function ($args) use (&$customFields) {
-            $customFields = $args;
-
-            return $this->createMock(EntityWrittenContainerEvent::class);
+            return new EntitySearchResult(OrderTransactionEntity::class, $collection->count(), $collection, null, $criteria, $context);
         });
 
         // Notifications
         $entity = new HipayNotificationEntity();
         $entity->setId(md5(random_int(0, PHP_INT_MAX)));
-        $entity->setOrderTransaction($transaction);
-        $entity->setOrderTransactionId($transaction->getId());
+        $entity->setHipayOrder($hipayOrder);
         $entity->setStatus($notificationStatus);
+        $entity->setCreatedAt(new \DateTime('yesterday'));
         $entity->setData([
             'captured_amount' => random_int(0, PHP_INT_MAX),
             'refunded_amount' => random_int(0, PHP_INT_MAX),
             'status' => $hipayStatus,
-            'operation_id' => md5(random_int(0, PHP_INT_MAX)),
+            'operation' => [
+                'id' => md5(random_int(0, PHP_INT_MAX)),
+            ],
         ]);
 
         /** @var EntityRepository&MockObject $notificationRepo */
@@ -467,10 +515,10 @@ class NotificationServiceTest extends TestCase
         $idSearchResult = $this->createMock(IdSearchResult::class);
         $idSearchResult->method('firstId')->willReturn($idState);
 
-        // TransactionStateHandler
-        /** @var OrderTransactionStateHandler&MockObject $TransactionStateHandler */
-        $TransactionStateHandler = $this->createMock(OrderTransactionStateHandler::class);
-        $TransactionStateHandler->expects($this->once())->method($methodExpected);
+        // transactionStateHandler
+        /** @var OrderTransactionStateHandler&MockObject $transactionStateHandler */
+        $transactionStateHandler = $this->createMock(OrderTransactionStateHandler::class);
+        $transactionStateHandler->expects($this->never())->method($methodExpected);
 
         // Logger
         /** @var LoggerInterface&MockObject $logger */
@@ -483,8 +531,8 @@ class NotificationServiceTest extends TestCase
             });
         }
 
-        /** @var EntityRepository&MockObject $machineStateRepo */
-        $machineStateRepo = $this->createMock(EntityRepository::class);
+        /** @var EntityRepository&MockObject $hipayOrderRepo */
+        $hipayOrderRepo = $this->createMock(EntityRepository::class);
 
         /** @var EntityRepository&MockObject $captureRepo */
         $captureRepo = $this->createMock(EntityRepository::class);
@@ -493,17 +541,160 @@ class NotificationServiceTest extends TestCase
         $refundRepo = $this->createMock(EntityRepository::class);
 
         $service = new NotificationService(
-            $notificationRepo,
             $transactionRepo,
+            $notificationRepo,
+            $hipayOrderRepo,
             $captureRepo,
             $refundRepo,
-            $machineStateRepo,
             $this->getReadHipayConfig([
                 'hashStage' => 'sha256',
                 'passphraseStage' => md5(random_int(0, PHP_INT_MAX)),
                 'environment' => 'Stage',
             ]),
-            $TransactionStateHandler,
+            $transactionStateHandler,
+            $logger
+        );
+
+        $service->dispatchNotifications();
+
+        $this->assertSame(
+            [
+                'notice' => [
+                    'Start dispatching '.$notificationCollection->count().' hipay notifications',
+                    'End dispatching Hipay notifications : '.count($deletedIds).' done',
+                ],
+                'warning' => [
+                    'Notification '.$entity->getId().' expired after 1 day',
+                ],
+            ],
+            $logs
+        );
+
+        $this->assertSame(
+            [['id' => $entity->getId()]],
+            $deletedIds
+        );
+
+        $this->assertSame(
+            [
+                'total-count-mode' => 0,
+                'associations' => [
+                    'orderTransaction' => [
+                        'total-count-mode' => 0,
+                    ],
+                ],
+                'sort' => [
+                    [
+                        'field' => 'status',
+                        'naturalSorting' => false,
+                        'extensions' => [],
+                        'order' => 'ASC',
+                    ],
+                ],
+              ],
+            json_decode((string) $notificationCriteria, true)
+        );
+    }
+
+    /**
+     * @dataProvider provideTestDispatchNotification
+     */
+    public function testDispatchNotification($notificationStatus, $hipayStatus, $initialState, $methodExpected, $expectedState)
+    {
+        // Transaction
+        $transaction = $this->generateTransaction($initialState);
+        $hipayOrder = $this->generateHipayOrder($transaction);
+
+        /** @var EntityRepository&MockObject $transactionRepo */
+        $transactionRepo = $this->createMock(EntityRepository::class);
+        $transactionRepo->method('search')->willReturnCallback(function ($criteria, $context) use ($transaction) {
+            $collection = new OrderTransactionCollection([$transaction]);
+
+            return new EntitySearchResult(OrderTransactionEntity::class, $collection->count(), $collection, null, $criteria, $context);
+        });
+
+        // Notifications
+        $entity = new HipayNotificationEntity();
+        $entity->setId(md5(random_int(0, PHP_INT_MAX)));
+        $entity->setHipayOrder($hipayOrder);
+        $entity->setStatus($notificationStatus);
+        $entity->setCreatedAt(new \DateTime());
+        $entity->setData([
+            'captured_amount' => random_int(0, PHP_INT_MAX),
+            'refunded_amount' => random_int(0, PHP_INT_MAX),
+            'status' => $hipayStatus,
+            'operation' => [
+                'id' => md5(random_int(0, PHP_INT_MAX)),
+            ],
+        ]);
+
+        /** @var EntityRepository&MockObject $notificationRepo */
+        $notificationRepo = $this->createMock(EntityRepository::class);
+        $notificationCollection = new HipayNotificationCollection([$entity]);
+
+        /** @var Criteria|null $notificationCriteria */
+        $notificationCriteria = null;
+        $notificationRepo->method('search')->willReturnCallback(function ($crit, $context) use (&$notificationCriteria, $notificationCollection) {
+            $notificationCriteria = $crit;
+
+            return new EntitySearchResult(HipayNotificationEntity::class, $notificationCollection->count(), $notificationCollection, null, $notificationCriteria, $context);
+        });
+
+        $deletedIds = [];
+        $notificationRepo->method('delete')->willReturnCallback(function ($ids) use (&$deletedIds) {
+            $deletedIds += $ids;
+
+            return $this->createMock(EntityWrittenContainerEvent::class);
+        });
+
+        $idState = md5(random_int(0, PHP_INT_MAX));
+
+        /** @var IdSearchResult&MockObject $idSearchResult */
+        $idSearchResult = $this->createMock(IdSearchResult::class);
+        $idSearchResult->method('firstId')->willReturn($idState);
+
+        // transactionStateHandler
+        /** @var OrderTransactionStateHandler&MockObject $transactionStateHandler */
+        $transactionStateHandler = $this->createMock(OrderTransactionStateHandler::class);
+        $transactionStateHandler->expects($this->once())->method($methodExpected);
+
+        // Logger
+        /** @var LoggerInterface&MockObject $logger */
+        $logger = $this->createMock(LoggerInterface::class);
+
+        $logs = [];
+        foreach (get_class_methods(LoggerInterface::class) as $method) {
+            $logger->method($method)->willReturnCallback(function ($message) use (&$logs, $method) {
+                $logs[$method][] = $message;
+            });
+        }
+
+        /** @var EntityRepository&MockObject $hipayOrderRepo */
+        $hipayOrderRepo = $this->createMock(EntityRepository::class);
+        $hipayOrderRepo->method('search')->willReturnCallback(function ($criteria, $context) use ($hipayOrder) {
+            $collection = new HipayOrderCollection([$hipayOrder]);
+
+            return new EntitySearchResult(HipayOrderEntity::class, $collection->count(), $collection, null, $criteria, $context);
+        });
+
+        /** @var EntityRepository&MockObject $captureRepo */
+        $captureRepo = $this->createMock(EntityRepository::class);
+
+        /** @var EntityRepository&MockObject $refundRepo */
+        $refundRepo = $this->createMock(EntityRepository::class);
+
+        $service = new NotificationService(
+            $transactionRepo,
+            $notificationRepo,
+            $hipayOrderRepo,
+            $captureRepo,
+            $refundRepo,
+            $this->getReadHipayConfig([
+                'hashStage' => 'sha256',
+                'passphraseStage' => md5(random_int(0, PHP_INT_MAX)),
+                'environment' => 'Stage',
+            ]),
+            $transactionStateHandler,
             $logger
         );
 
@@ -516,10 +707,10 @@ class NotificationServiceTest extends TestCase
                     'End dispatching Hipay notifications : '.count($deletedIds).' done',
                 ],
                 'debug' => [
-                    'Dispatching notification '.$entity->getId().' for the transaction '.$entity->getOrderTransactionId(),
+                    'Dispatching notification '.$entity->getId().' for the transaction '.$hipayOrder->getTransactionId(),
                 ],
                 'info' => [
-                    'Change order transaction '.$entity->getOrderTransactionId().' to status '.$expectedState.' (previously '.$initialState.')',
+                    'Change order transaction '.$hipayOrder->getTransactionId().' to status '.$expectedState.' (previously '.$initialState.')',
                 ],
             ],
             $logs
@@ -528,14 +719,6 @@ class NotificationServiceTest extends TestCase
         $this->assertSame(
             [['id' => $entity->getId()]],
             $deletedIds
-        );
-
-        $this->assertSame(
-            [[
-                'id' => $transaction->getId(),
-                'customFields' => array_merge_recursive($initialCustomFields, ['hipay_status' => [$hipayStatus]]),
-            ]],
-            $customFields
         );
 
         $this->assertSame(
@@ -564,25 +747,29 @@ class NotificationServiceTest extends TestCase
      */
     public function testDispatchNotificationWithSameState($notificationStatus, $hipayStatus, $initialState, $methodExpected, $expectedState)
     {
-        $transaction = $this->generateTransaction($expectedState);
+        $transaction = $this->generateTransaction($initialState);
+        $hipayOrder = $this->generateHipayOrder($transaction);
 
         /** @var EntityRepository&MockObject $transactionRepo */
         $transactionRepo = $this->createMock(EntityRepository::class);
         $transactionRepo->method('search')->willReturnCallback(function ($criteria, $context) use ($transaction) {
             $collection = new OrderTransactionCollection([$transaction]);
 
-            return new EntitySearchResult(HipayNotificationEntity::class, $collection->count(), $collection, null, $criteria, $context);
+            return new EntitySearchResult(OrderTransactionEntity::class, $collection->count(), $collection, null, $criteria, $context);
         });
         // Notifications
         $entity = new HipayNotificationEntity();
         $entity->setId(md5(random_int(0, PHP_INT_MAX)));
-        $entity->setOrderTransaction($transaction);
-        $entity->setOrderTransactionId($transaction->getId());
+        $entity->setHipayOrder($hipayOrder);
         $entity->setStatus($notificationStatus);
+        $entity->setCreatedAt(new \DateTime());
         $entity->setData([
             'captured_amount' => random_int(0, PHP_INT_MAX),
             'refunded_amount' => random_int(0, PHP_INT_MAX),
             'status' => $hipayStatus,
+            'operation' => [
+                'id' => md5(random_int(0, PHP_INT_MAX)),
+            ],
         ]);
 
         /** @var EntityRepository&MockObject $notificationRepo */
@@ -600,10 +787,10 @@ class NotificationServiceTest extends TestCase
             return $this->createMock(EntityWrittenContainerEvent::class);
         });
 
-        // TransactionStateHandler
-        /** @var OrderTransactionStateHandler&MockObject $TransactionStateHandler */
-        $TransactionStateHandler = $this->createMock(OrderTransactionStateHandler::class);
-        $TransactionStateHandler->expects($this->never())->method($methodExpected);
+        // transactionStateHandler
+        /** @var OrderTransactionStateHandler&MockObject $transactionStateHandler */
+        $transactionStateHandler = $this->createMock(OrderTransactionStateHandler::class);
+        $transactionStateHandler->expects($this->once())->method($methodExpected);
 
         // Logger
         /** @var LoggerInterface&MockObject $logger */
@@ -616,8 +803,13 @@ class NotificationServiceTest extends TestCase
             });
         }
 
-        /** @var EntityRepository&MockObject $machineStateRepo */
-        $machineStateRepo = $this->createMock(EntityRepository::class);
+        /** @var EntityRepository&MockObject $hipayOrderRepo */
+        $hipayOrderRepo = $this->createMock(EntityRepository::class);
+        $hipayOrderRepo->method('search')->willReturnCallback(function ($criteria, $context) use ($hipayOrder) {
+            $collection = new HipayOrderCollection([$hipayOrder]);
+
+            return new EntitySearchResult(HipayOrderEntity::class, $collection->count(), $collection, null, $criteria, $context);
+        });
 
         /** @var EntityRepository&MockObject $captureRepo */
         $captureRepo = $this->createMock(EntityRepository::class);
@@ -626,17 +818,17 @@ class NotificationServiceTest extends TestCase
         $refundRepo = $this->createMock(EntityRepository::class);
 
         $service = new NotificationService(
-            $notificationRepo,
             $transactionRepo,
+            $notificationRepo,
+            $hipayOrderRepo,
             $captureRepo,
             $refundRepo,
-            $machineStateRepo,
             $this->getReadHipayConfig([
                 'hashStage' => 'sha256',
                 'passphraseStage' => md5(random_int(0, PHP_INT_MAX)),
                 'environment' => 'Stage',
             ]),
-            $TransactionStateHandler,
+            $transactionStateHandler,
             $logger
         );
 
@@ -649,10 +841,10 @@ class NotificationServiceTest extends TestCase
                     'End dispatching Hipay notifications : '.count($deletedIds).' done',
                 ],
                 'debug' => [
-                    'Dispatching notification '.$entity->getId().' for the transaction '.$entity->getOrderTransactionId(),
+                    'Dispatching notification '.$entity->getId().' for the transaction '.$hipayOrder->getTransactionId(),
                 ],
                 'info' => [
-                    'Ignore notification '.$entity->getId().'. Transaction '.$entity->getOrderTransactionId().' already have status '.$expectedState,
+                    'Change order transaction '.$hipayOrder->getTransactionId().' to status '.$expectedState.' (previously '.$initialState.')',
                 ],
             ],
             $logs
@@ -677,33 +869,36 @@ class NotificationServiceTest extends TestCase
      */
     public function testDispatchNotificationWithAuthorize($notificationStatus, $hipayStatus, $previousHipayStatus, $initialState, $methodExpected, $expectedState)
     {
+        $operationId = Uuid::uuid4();
+
         // Transaction
-        $initialCustomFields = ['hipay_status' => $previousHipayStatus];
-        $transaction = $this->generateTransaction($initialState, $initialCustomFields);
+        $transaction = $this->generateTransaction($initialState);
+        $hipayOrder = $this->generateHipayOrder($transaction);
+        $hipayOrder->setTransactionStatus($previousHipayStatus);
+
+        // Capture
+        $capture = new OrderCaptureEntity();
+        $capture->setId('CAPTURE_ID');
+        $capture->setOperationId($operationId);
+        $capture->setStatus(CaptureStatus::IN_PROGRESS);
+        $capture->setHipayOrder($hipayOrder);
+
+        $hipayOrder->setCaptures(new OrderCaptureCollection([$capture]));
 
         /** @var EntityRepository&MockObject $transactionRepo */
         $transactionRepo = $this->createMock(EntityRepository::class);
         $transactionRepo->method('search')->willReturnCallback(function ($criteria, $context) use ($transaction) {
             $collection = new OrderTransactionCollection([$transaction]);
 
-            return new EntitySearchResult(HipayNotificationEntity::class, $collection->count(), $collection, null, $criteria, $context);
+            return new EntitySearchResult(OrderTransactionEntity::class, $collection->count(), $collection, null, $criteria, $context);
         });
-
-        $customFields = [];
-        $transactionRepo->method('update')->willReturnCallback(function ($args) use (&$customFields) {
-            $customFields = $args;
-
-            return $this->createMock(EntityWrittenContainerEvent::class);
-        });
-
-        $operationId = Uuid::uuid4();
 
         // Notifications
         $entity = new HipayNotificationEntity();
         $entity->setId(md5(random_int(0, PHP_INT_MAX)));
-        $entity->setOrderTransaction($transaction);
-        $entity->setOrderTransactionId($transaction->getId());
+        $entity->setHipayOrder($hipayOrder);
         $entity->setStatus($notificationStatus);
+        $entity->setCreatedAt(new \DateTime());
         $entity->setData([
             'captured_amount' => random_int(0, 1000000),
             'status' => $hipayStatus,
@@ -728,13 +923,11 @@ class NotificationServiceTest extends TestCase
             return $this->createMock(EntityWrittenContainerEvent::class);
         });
 
-        $idState = md5(random_int(0, PHP_INT_MAX));
-
-        // TransactionStateHandler
-        /** @var OrderTransactionStateHandler&MockObject $TransactionStateHandler */
-        $TransactionStateHandler = $this->createMock(OrderTransactionStateHandler::class);
+        // transactionStateHandler
+        /** @var OrderTransactionStateHandler&MockObject $transactionStateHandler */
+        $transactionStateHandler = $this->createMock(OrderTransactionStateHandler::class);
         // check that the expected method was call
-        $TransactionStateHandler->expects($this->once())->method($methodExpected);
+        $transactionStateHandler->expects($this->once())->method($methodExpected);
 
         // Logger
         /** @var LoggerInterface&MockObject $logger */
@@ -746,26 +939,16 @@ class NotificationServiceTest extends TestCase
             });
         }
 
-        // Capture
-        /** @var IdSearchResult&MockObject $searchIdResultCapture */
-        $searchIdResultCapture = $this->createMock(IdSearchResult::class);
-        $idCapture = md5(random_int(0, PHP_INT_MAX));
-        $searchIdResultCapture->method('firstId')->willReturn($idCapture);
-
         /** @var EntityRepository&MockObject $captureRepo */
         $captureRepo = $this->createMock(EntityRepository::class);
-        $captureRepo->method('searchIds')->willReturn($searchIdResultCapture);
 
-        // Machine State
-        /** @var EntityRepository&MockObject $machineStateRepo */
-        $machineStateRepo = $this->createMock(EntityRepository::class);
+        /** @var EntityRepository&MockObject $hipayOrderRepo */
+        $hipayOrderRepo = $this->createMock(EntityRepository::class);
+        $hipayOrderRepo->method('search')->willReturnCallback(function ($criteria, $context) use ($hipayOrder) {
+            $collection = new HipayOrderCollection([$hipayOrder]);
 
-        /** @var IdSearchResult&MockObject $idSearchResult */
-        $idSearchResult = $this->createMock(IdSearchResult::class);
-        $idState = md5(random_int(0, PHP_INT_MAX));
-        $idSearchResult->method('firstId')->willReturn($idState);
-
-        $machineStateRepo->expects($this->exactly(2))->method('searchIds')->willReturn($idSearchResult);
+            return new EntitySearchResult(HipayOrderEntity::class, $collection->count(), $collection, null, $criteria, $context);
+        });
 
         $captures = [];
         $captureRepo->method('update')->willReturnCallback(function ($args) use (&$captures) {
@@ -774,35 +957,20 @@ class NotificationServiceTest extends TestCase
             return $this->createMock(EntityWrittenContainerEvent::class);
         });
 
-        $amount = $entity->getData()['captured_amount'];
-        $expectedCaptures = [[
-            'id' => $idCapture,
-            'orderTransactionId' => $transaction->getId(),
-            'stateId' => $idState,
-            'totalAmount' => $amount,
-            'amount' => new CalculatedPrice(
-                $amount,
-                $amount,
-                new CalculatedTaxCollection(),
-                new TaxRuleCollection()
-            ),
-            'externalReference' => $operationId->toString(),
-        ]];
-
         $refundRepo = $this->createMock(EntityRepository::class);
 
         $service = new NotificationService(
-            $notificationRepo,
             $transactionRepo,
+            $notificationRepo,
+            $hipayOrderRepo,
             $captureRepo,
             $refundRepo,
-            $machineStateRepo,
             $this->getReadHipayConfig([
                 'hashStage' => 'sha256',
                 'passphraseStage' => md5(random_int(0, PHP_INT_MAX)),
                 'environment' => 'Stage',
             ]),
-            $TransactionStateHandler,
+            $transactionStateHandler,
             $logger
         );
 
@@ -815,10 +983,10 @@ class NotificationServiceTest extends TestCase
                     'End dispatching Hipay notifications : '.count($deletedIds).' done',
                 ],
                 'debug' => [
-                    'Dispatching notification '.$entity->getId().' for the transaction '.$entity->getOrderTransactionId(),
+                    'Dispatching notification '.$entity->getId().' for the transaction '.$hipayOrder->getTransactionId(),
                 ],
                 'info' => [
-                    'Change order transaction '.$entity->getOrderTransactionId().' to status '.$expectedState.' (previously '.$initialState.')',
+                    'Change order transaction '.$hipayOrder->getTransactionId().' to status '.$expectedState.' (previously '.$initialState.')',
                 ],
             ],
             $logs
@@ -830,19 +998,9 @@ class NotificationServiceTest extends TestCase
             'Deleteds notifications ID missmatch'
         );
 
-        $this->assertSame(
-            [[
-                'id' => $transaction->getId(),
-                'customFields' => array_merge_recursive($initialCustomFields, ['hipay_status' => [$hipayStatus]]),
-            ]],
-            $customFields
-        );
-
-        $this->assertEquals(
-            $expectedCaptures,
-            $captures,
-            'Captures creation missmatch'
-        );
+        $this->assertEquals($capture->getId(), $captures[0]['id']);
+        $this->assertEquals($capture->getOperationId(), $captures[0]['operationId']);
+        $this->assertEquals(CaptureStatus::COMPLETED, $captures[0]['status']);
     }
 
     /**
@@ -850,33 +1008,36 @@ class NotificationServiceTest extends TestCase
      */
     public function testDispatchNotificationWithAuthorizeAndWithoutPending($notificationStatus, $hipayStatus, $previousHipayStatus, $initialState, $methodExpected, $expectedState)
     {
+        $operationId = Uuid::uuid4();
+
         // Transaction
-        $initialCustomFields = ['hipay_status' => $previousHipayStatus];
-        $transaction = $this->generateTransaction($initialState, $initialCustomFields);
+        $transaction = $this->generateTransaction($initialState);
+        $hipayOrder = $this->generateHipayOrder($transaction);
+        $hipayOrder->setTransactionStatus($previousHipayStatus);
+
+        // Capture
+        $capture = new OrderCaptureEntity();
+        $capture->setId('CAPTURE_ID');
+        $capture->setOperationId($operationId);
+        $capture->setStatus(CaptureStatus::OPEN);
+        $capture->setHipayOrder($hipayOrder);
+
+        $hipayOrder->setCaptures(new OrderCaptureCollection([$capture]));
 
         /** @var EntityRepository&MockObject $transactionRepo */
         $transactionRepo = $this->createMock(EntityRepository::class);
         $transactionRepo->method('search')->willReturnCallback(function ($criteria, $context) use ($transaction) {
             $collection = new OrderTransactionCollection([$transaction]);
 
-            return new EntitySearchResult(HipayNotificationEntity::class, $collection->count(), $collection, null, $criteria, $context);
+            return new EntitySearchResult(OrderTransactionEntity::class, $collection->count(), $collection, null, $criteria, $context);
         });
-
-        $customFields = [];
-        $transactionRepo->method('update')->willReturnCallback(function ($args) use (&$customFields) {
-            $customFields = $args;
-
-            return $this->createMock(EntityWrittenContainerEvent::class);
-        });
-
-        $operationId = Uuid::uuid4();
 
         // Notifications
         $entity = new HipayNotificationEntity();
         $entity->setId(md5(random_int(0, PHP_INT_MAX)));
-        $entity->setOrderTransaction($transaction);
-        $entity->setOrderTransactionId($transaction->getId());
+        $entity->setHipayOrder($hipayOrder);
         $entity->setStatus($notificationStatus);
+        $entity->setCreatedAt(new \DateTime());
         $entity->setData([
             'captured_amount' => random_int(0, 1000000),
             'status' => $hipayStatus,
@@ -901,13 +1062,11 @@ class NotificationServiceTest extends TestCase
             return $this->createMock(EntityWrittenContainerEvent::class);
         });
 
-        $idState = md5(random_int(0, PHP_INT_MAX));
-
-        // TransactionStateHandler
-        /** @var OrderTransactionStateHandler&MockObject $TransactionStateHandler */
-        $TransactionStateHandler = $this->createMock(OrderTransactionStateHandler::class);
+        // transactionStateHandler
+        /** @var OrderTransactionStateHandler&MockObject $transactionStateHandler */
+        $transactionStateHandler = $this->createMock(OrderTransactionStateHandler::class);
         // check that the expected method was call
-        $TransactionStateHandler->expects($this->never())->method($methodExpected);
+        $transactionStateHandler->expects($this->once())->method($methodExpected);
 
         // Logger
         /** @var LoggerInterface&MockObject $logger */
@@ -919,26 +1078,17 @@ class NotificationServiceTest extends TestCase
             });
         }
 
-        // Capture
-        /** @var IdSearchResult&MockObject $searchIdResultCapture */
-        $searchIdResultCapture = $this->createMock(IdSearchResult::class);
-        $idCapture = null;
-        $searchIdResultCapture->method('firstId')->willReturn($idCapture);
-
         /** @var EntityRepository&MockObject $captureRepo */
         $captureRepo = $this->createMock(EntityRepository::class);
-        $captureRepo->method('searchIds')->willReturn($searchIdResultCapture);
 
         // Machine State
-        /** @var EntityRepository&MockObject $machineStateRepo */
-        $machineStateRepo = $this->createMock(EntityRepository::class);
+        /** @var EntityRepository&MockObject $hipayOrderRepo */
+        $hipayOrderRepo = $this->createMock(EntityRepository::class);
+        $hipayOrderRepo->method('search')->willReturnCallback(function ($criteria, $context) use ($hipayOrder) {
+            $collection = new HipayOrderCollection([$hipayOrder]);
 
-        /** @var IdSearchResult&MockObject $idSearchResult */
-        $idSearchResult = $this->createMock(IdSearchResult::class);
-        $idState = md5(random_int(0, PHP_INT_MAX));
-        $idSearchResult->method('firstId')->willReturn($idState);
-
-        $machineStateRepo->expects($this->exactly(1))->method('searchIds')->willReturn($idSearchResult);
+            return new EntitySearchResult(HipayOrderEntity::class, $collection->count(), $collection, null, $criteria, $context);
+        });
 
         $captures = [];
         $captureRepo->method('update')->willReturnCallback(function ($args) use (&$captures) {
@@ -951,17 +1101,17 @@ class NotificationServiceTest extends TestCase
         $refundRepo = $this->createMock(EntityRepository::class);
 
         $service = new NotificationService(
-            $notificationRepo,
             $transactionRepo,
+            $notificationRepo,
+            $hipayOrderRepo,
             $captureRepo,
             $refundRepo,
-            $machineStateRepo,
             $this->getReadHipayConfig([
                 'hashStage' => 'sha256',
                 'passphraseStage' => md5(random_int(0, PHP_INT_MAX)),
                 'environment' => 'Stage',
             ]),
-            $TransactionStateHandler,
+            $transactionStateHandler,
             $logger
         );
 
@@ -974,31 +1124,24 @@ class NotificationServiceTest extends TestCase
                     'End dispatching Hipay notifications : '.count($deletedIds).' done',
                 ],
                 'debug' => [
-                    'Dispatching notification '.$entity->getId().' for the transaction '.$entity->getOrderTransactionId(),
+                    'Dispatching notification '.$entity->getId().' for the transaction '.$hipayOrder->getTransactionId(),
                 ],
                 'info' => [
-                    'Skipped notification : No PENDING capture found for the transaction '.$entity->getOrderTransactionId(),
+                    'Change order transaction '.$hipayOrder->getTransactionId().' to status '.$expectedState.' (previously '.$initialState.')',
                 ],
             ],
             $logs
         );
 
         $this->assertSame(
-            [],
+            [['id' => $entity->getId()]],
             $deletedIds,
             'Deleteds notifications ID missmatch'
         );
 
-        $this->assertSame(
-            [],
-            $customFields
-        );
-
-        $this->assertEquals(
-            [],
-            $captures,
-            'Captures creation missmatch'
-        );
+        $this->assertEquals($capture->getId(), $captures[0]['id']);
+        $this->assertEquals($capture->getOperationId(), $captures[0]['operationId']);
+        $this->assertEquals(CaptureStatus::COMPLETED, $captures[0]['status']);
     }
 
     public function testDispatchNotificationWithAuthorizeAndCreateCapture()
@@ -1009,22 +1152,16 @@ class NotificationServiceTest extends TestCase
         $initialState = OrderTransactionStates::STATE_AUTHORIZED;
 
         // Transaction
-        $initialCustomFields = ['hipay_status' => $previousHipayStatus];
-        $transaction = $this->generateTransaction($initialState, $initialCustomFields);
+        $transaction = $this->generateTransaction($initialState);
+        $hipayOrder = $this->generateHipayOrder($transaction);
+        $hipayOrder->setTransactionStatus($previousHipayStatus);
 
         /** @var EntityRepository&MockObject $transactionRepo */
         $transactionRepo = $this->createMock(EntityRepository::class);
         $transactionRepo->method('search')->willReturnCallback(function ($criteria, $context) use ($transaction) {
             $collection = new OrderTransactionCollection([$transaction]);
 
-            return new EntitySearchResult(HipayNotificationEntity::class, $collection->count(), $collection, null, $criteria, $context);
-        });
-
-        $customFields = [];
-        $transactionRepo->method('update')->willReturnCallback(function ($args) use (&$customFields) {
-            $customFields = $args;
-
-            return $this->createMock(EntityWrittenContainerEvent::class);
+            return new EntitySearchResult(OrderTransactionEntity::class, $collection->count(), $collection, null, $criteria, $context);
         });
 
         $operationId = Uuid::uuid4();
@@ -1032,9 +1169,9 @@ class NotificationServiceTest extends TestCase
         // Notifications
         $entity = new HipayNotificationEntity();
         $entity->setId(md5(random_int(0, PHP_INT_MAX)));
-        $entity->setOrderTransaction($transaction);
-        $entity->setOrderTransactionId($transaction->getId());
+        $entity->setHipayOrder($hipayOrder);
         $entity->setStatus($notificationStatus);
+        $entity->setCreatedAt(new \DateTime());
         $entity->setData([
             'captured_amount' => random_int(0, 1000000),
             'status' => $hipayStatus,
@@ -1058,11 +1195,9 @@ class NotificationServiceTest extends TestCase
             return $this->createMock(EntityWrittenContainerEvent::class);
         });
 
-        $idState = md5(random_int(0, PHP_INT_MAX));
-
-        // TransactionStateHandler
-        /** @var OrderTransactionStateHandler&MockObject $TransactionStateHandler */
-        $TransactionStateHandler = $this->createMock(OrderTransactionStateHandler::class);
+        // transactionStateHandler
+        /** @var OrderTransactionStateHandler&MockObject $transactionStateHandler */
+        $transactionStateHandler = $this->createMock(OrderTransactionStateHandler::class);
 
         // Logger
         /** @var LoggerInterface&MockObject $logger */
@@ -1074,26 +1209,17 @@ class NotificationServiceTest extends TestCase
             });
         }
 
-        // Capture
-        /** @var IdSearchResult&MockObject $searchIdResultCapture */
-        $searchIdResultCapture = $this->createMock(IdSearchResult::class);
-        $idCapture = null;
-        $searchIdResultCapture->method('firstId')->willReturn($idCapture);
-
         /** @var EntityRepository&MockObject $captureRepo */
         $captureRepo = $this->createMock(EntityRepository::class);
-        $captureRepo->method('searchIds')->willReturn($searchIdResultCapture);
 
         // Machine State
-        /** @var EntityRepository&MockObject $machineStateRepo */
-        $machineStateRepo = $this->createMock(EntityRepository::class);
+        /** @var EntityRepository&MockObject $hipayOrderRepo */
+        $hipayOrderRepo = $this->createMock(EntityRepository::class);
+        $hipayOrderRepo->method('search')->willReturnCallback(function ($criteria, $context) use ($hipayOrder) {
+            $collection = new HipayOrderCollection([$hipayOrder]);
 
-        /** @var IdSearchResult&MockObject $idSearchResult */
-        $idSearchResult = $this->createMock(IdSearchResult::class);
-        $idState = md5(random_int(0, PHP_INT_MAX));
-        $idSearchResult->method('firstId')->willReturn($idState);
-
-        $machineStateRepo->expects($this->exactly(2))->method('searchIds')->willReturn($idSearchResult);
+            return new EntitySearchResult(HipayOrderEntity::class, $collection->count(), $collection, null, $criteria, $context);
+        });
 
         $captures = [];
         $captureRepo->method('create')->willReturnCallback(function ($args) use (&$captures) {
@@ -1102,36 +1228,21 @@ class NotificationServiceTest extends TestCase
             return $this->createMock(EntityWrittenContainerEvent::class);
         });
 
-        $amount = $entity->getData()['captured_amount'];
-        $expectedCaptures = [[
-            'id' => null,
-            'orderTransactionId' => $transaction->getId(),
-            'stateId' => $idState,
-            'totalAmount' => $amount,
-            'amount' => new CalculatedPrice(
-                $amount,
-                $amount,
-                new CalculatedTaxCollection(),
-                new TaxRuleCollection()
-            ),
-            'externalReference' => $operationId->toString(),
-        ]];
-
         /** @var EntityRepository&MockObject $refundRepo */
         $refundRepo = $this->createMock(EntityRepository::class);
 
         $service = new NotificationService(
-            $notificationRepo,
             $transactionRepo,
+            $notificationRepo,
+            $hipayOrderRepo,
             $captureRepo,
             $refundRepo,
-            $machineStateRepo,
             $this->getReadHipayConfig([
                 'hashStage' => 'sha256',
                 'passphraseStage' => md5(random_int(0, PHP_INT_MAX)),
                 'environment' => 'Stage',
             ]),
-            $TransactionStateHandler,
+            $transactionStateHandler,
             $logger
         );
 
@@ -1144,10 +1255,10 @@ class NotificationServiceTest extends TestCase
                     'End dispatching Hipay notifications : '.count($deletedIds).' done',
                 ],
                 'debug' => [
-                    'Dispatching notification '.$entity->getId().' for the transaction '.$entity->getOrderTransactionId(),
+                    'Dispatching notification '.$entity->getId().' for the transaction '.$hipayOrder->getTransactionId(),
                 ],
                 'info' => [
-                    'Notification '.$entity->getId().' create PENDING capture for the transaction '.$transaction->getId(),
+                    'Notification '.$entity->getId().' create IN_PROGRESS capture for the transaction '.$hipayOrder->getTransactionId(),
                 ],
             ],
             $logs
@@ -1159,19 +1270,9 @@ class NotificationServiceTest extends TestCase
             'Deleteds notifications ID missmatch'
         );
 
-        $this->assertSame(
-            [[
-                'id' => $transaction->getId(),
-                'customFields' => array_merge_recursive($initialCustomFields, ['hipay_status' => [$hipayStatus]]),
-            ]],
-            $customFields
-        );
-
-        $this->assertEquals(
-            $expectedCaptures,
-            $captures,
-            'Captures creation missmatch'
-        );
+        $this->assertEquals(null, $captures[0]['id']);
+        $this->assertEquals($operationId, $captures[0]['operationId']);
+        $this->assertEquals(CaptureStatus::IN_PROGRESS, $captures[0]['status']);
     }
 
     public function provideDispatchNotificationWithCapture()
@@ -1187,33 +1288,36 @@ class NotificationServiceTest extends TestCase
      */
     public function testDispatchNotificationWithCapture($notificationStatus, $hipayStatus, $previousHipayStatus, $initialState, $methodExpected, $expectedState)
     {
+        $operationId = Uuid::uuid4();
+
         // Transaction
-        $initialCustomFields = ['hipay_status' => $previousHipayStatus];
-        $transaction = $this->generateTransaction($initialState, $initialCustomFields);
+        $transaction = $this->generateTransaction($initialState);
+        $hipayOrder = $this->generateHipayOrder($transaction);
+        $hipayOrder->setTransactionStatus($previousHipayStatus);
+
+        // Refund
+        $refund = new OrderRefundEntity();
+        $refund->setId('REFUND_ID');
+        $refund->setOperationId($operationId);
+        $refund->setStatus(RefundStatus::OPEN);
+        $refund->setHipayOrder($hipayOrder);
+
+        $hipayOrder->setRefunds(new OrderRefundCollection([$refund]));
 
         /** @var EntityRepository&MockObject $transactionRepo */
         $transactionRepo = $this->createMock(EntityRepository::class);
         $transactionRepo->method('search')->willReturnCallback(function ($criteria, $context) use ($transaction) {
             $collection = new OrderTransactionCollection([$transaction]);
 
-            return new EntitySearchResult(HipayNotificationEntity::class, $collection->count(), $collection, null, $criteria, $context);
+            return new EntitySearchResult(OrderTransactionEntity::class, $collection->count(), $collection, null, $criteria, $context);
         });
-
-        $customFields = [];
-        $transactionRepo->method('update')->willReturnCallback(function ($args) use (&$customFields) {
-            $customFields = $args;
-
-            return $this->createMock(EntityWrittenContainerEvent::class);
-        });
-
-        $operationId = Uuid::uuid4();
 
         // Notifications
         $entity = new HipayNotificationEntity();
         $entity->setId(md5(random_int(0, PHP_INT_MAX)));
-        $entity->setOrderTransaction($transaction);
-        $entity->setOrderTransactionId($transaction->getId());
+        $entity->setHipayOrder($hipayOrder);
         $entity->setStatus($notificationStatus);
+        $entity->setCreatedAt(new \DateTime());
         $entity->setData([
             'refunded_amount' => random_int(0, 1000000),
             'status' => $hipayStatus,
@@ -1237,13 +1341,11 @@ class NotificationServiceTest extends TestCase
             return $this->createMock(EntityWrittenContainerEvent::class);
         });
 
-        $idState = md5(random_int(0, PHP_INT_MAX));
-
-        // TransactionStateHandler
-        /** @var OrderTransactionStateHandler&MockObject $TransactionStateHandler */
-        $TransactionStateHandler = $this->createMock(OrderTransactionStateHandler::class);
+        // transactionStateHandler
+        /** @var OrderTransactionStateHandler&MockObject $transactionStateHandler */
+        $transactionStateHandler = $this->createMock(OrderTransactionStateHandler::class);
         // check that the expected method was call
-        $TransactionStateHandler->expects($this->once())->method($methodExpected);
+        $transactionStateHandler->expects($this->once())->method($methodExpected);
 
         // Logger
         /** @var LoggerInterface&MockObject $logger */
@@ -1255,36 +1357,19 @@ class NotificationServiceTest extends TestCase
             });
         }
 
-        // Capture
-        /** @var IdSearchResult&MockObject $searchIdResultCapture */
-        $searchIdResultCapture = $this->createMock(IdSearchResult::class);
-        $idCapture = md5(random_int(0, PHP_INT_MAX));
-        $searchIdResultCapture->method('firstId')->willReturn($idCapture);
-
         /** @var EntityRepository&MockObject $captureRepo */
         $captureRepo = $this->createMock(EntityRepository::class);
-        $captureRepo->method('searchIds')->willReturn($searchIdResultCapture);
 
-        // Machine State
-        /** @var EntityRepository&MockObject $machineStateRepo */
-        $machineStateRepo = $this->createMock(EntityRepository::class);
+        /** @var EntityRepository&MockObject $hipayOrderRepo */
+        $hipayOrderRepo = $this->createMock(EntityRepository::class);
+        $hipayOrderRepo->method('search')->willReturnCallback(function ($criteria, $context) use ($hipayOrder) {
+            $collection = new HipayOrderCollection([$hipayOrder]);
 
-        /** @var IdSearchResult&MockObject $idSearchResult */
-        $idSearchResult = $this->createMock(IdSearchResult::class);
-        $idState = md5(random_int(0, PHP_INT_MAX));
-        $idSearchResult->method('firstId')->willReturn($idState);
-
-        $machineStateRepo->method('searchIds')->willReturn($idSearchResult);
+            return new EntitySearchResult(HipayOrderEntity::class, $collection->count(), $collection, null, $criteria, $context);
+        });
 
         /** @var EntityRepository&MockObject $refundRepo */
         $refundRepo = $this->createMock(EntityRepository::class);
-
-        /** @var IdSearchResult&MockObject $idSearchResultRefund */
-        $idSearchResultRefund = $this->createMock(IdSearchResult::class);
-        $idRefund = md5(random_int(0, PHP_INT_MAX));
-        $idSearchResultRefund->method('firstId')->willReturn($idRefund);
-
-        $refundRepo->method('searchIds')->willReturn($idSearchResultRefund);
 
         $refunds = [];
         $refundRepo->method('update')->willReturnCallback(function ($args) use (&$refunds) {
@@ -1293,25 +1378,18 @@ class NotificationServiceTest extends TestCase
             return $this->createMock(EntityWrittenContainerEvent::class);
         });
 
-        $expectedRefunds = [
-            [
-                'id' => $idRefund,
-                'stateId' => $idState,
-            ],
-            ];
-
         $service = new NotificationService(
-            $notificationRepo,
             $transactionRepo,
+            $notificationRepo,
+            $hipayOrderRepo,
             $captureRepo,
             $refundRepo,
-            $machineStateRepo,
             $this->getReadHipayConfig([
                 'hashStage' => 'sha256',
                 'passphraseStage' => md5(random_int(0, PHP_INT_MAX)),
                 'environment' => 'Stage',
             ]),
-            $TransactionStateHandler,
+            $transactionStateHandler,
             $logger
         );
 
@@ -1324,10 +1402,10 @@ class NotificationServiceTest extends TestCase
                     'End dispatching Hipay notifications : '.count($deletedIds).' done',
                 ],
                 'debug' => [
-                    'Dispatching notification '.$entity->getId().' for the transaction '.$entity->getOrderTransactionId(),
+                    'Dispatching notification '.$entity->getId().' for the transaction '.$hipayOrder->getTransactionId(),
                 ],
                 'info' => [
-                    'Change order transaction '.$entity->getOrderTransactionId().' to status '.$expectedState.' (previously '.$initialState.')',
+                    'Change order transaction '.$hipayOrder->getTransactionId().' to status '.$expectedState.' (previously '.$initialState.')',
                 ],
             ],
             $logs
@@ -1339,19 +1417,9 @@ class NotificationServiceTest extends TestCase
             'Deleteds notifications ID missmatch'
         );
 
-        $this->assertSame(
-            [[
-                'id' => $transaction->getId(),
-                'customFields' => array_merge_recursive($initialCustomFields, ['hipay_status' => [$hipayStatus]]),
-            ]],
-            $customFields
-        );
-
-        $this->assertEquals(
-            $expectedRefunds,
-            $refunds,
-            'Refunds creation missmatch'
-        );
+        $this->assertEquals($refund->getId(), $refunds[0]['id']);
+        $this->assertEquals($refund->getOperationId(), $refunds[0]['operationId']);
+        $this->assertEquals(RefundStatus::COMPLETED, $refunds[0]['status']);
     }
 
     /**
@@ -1359,33 +1427,36 @@ class NotificationServiceTest extends TestCase
      */
     public function testDispatchNotificationWithCaptureNoCaptureFound($notificationStatus, $hipayStatus, $previousHipayStatus, $initialState, $methodExpected, $expectedState)
     {
+        $operationId = Uuid::uuid4();
+
         // Transaction
-        $initialCustomFields = ['hipay_status' => $previousHipayStatus];
-        $transaction = $this->generateTransaction($initialState, $initialCustomFields);
+        $transaction = $this->generateTransaction($initialState);
+        $hipayOrder = $this->generateHipayOrder($transaction);
+        $hipayOrder->setTransactionStatus($previousHipayStatus);
+
+        // Capture
+        $capture = new OrderCaptureEntity();
+        $capture->setId('CAPTURE_ID');
+        $capture->setOperationId($operationId);
+        $capture->setStatus(CaptureStatus::OPEN);
+        $capture->setHipayOrder($hipayOrder);
+
+        $hipayOrder->setCaptures(new OrderCaptureCollection([$capture]));
 
         /** @var EntityRepository&MockObject $transactionRepo */
         $transactionRepo = $this->createMock(EntityRepository::class);
         $transactionRepo->method('search')->willReturnCallback(function ($criteria, $context) use ($transaction) {
             $collection = new OrderTransactionCollection([$transaction]);
 
-            return new EntitySearchResult(HipayNotificationEntity::class, $collection->count(), $collection, null, $criteria, $context);
+            return new EntitySearchResult(OrderTransactionEntity::class, $collection->count(), $collection, null, $criteria, $context);
         });
-
-        $customFields = [];
-        $transactionRepo->method('update')->willReturnCallback(function ($args) use (&$customFields) {
-            $customFields = $args;
-
-            return $this->createMock(EntityWrittenContainerEvent::class);
-        });
-
-        $operationId = Uuid::uuid4();
 
         // Notifications
         $entity = new HipayNotificationEntity();
         $entity->setId(md5(random_int(0, PHP_INT_MAX)));
-        $entity->setOrderTransaction($transaction);
-        $entity->setOrderTransactionId($transaction->getId());
+        $entity->setHipayOrder($hipayOrder);
         $entity->setStatus($notificationStatus);
+        $entity->setCreatedAt(new \DateTime());
         $entity->setData([
             'refunded_amount' => random_int(0, 1000000),
             'status' => $hipayStatus,
@@ -1409,13 +1480,11 @@ class NotificationServiceTest extends TestCase
             return $this->createMock(EntityWrittenContainerEvent::class);
         });
 
-        $idState = md5(random_int(0, PHP_INT_MAX));
-
-        // TransactionStateHandler
-        /** @var OrderTransactionStateHandler&MockObject $TransactionStateHandler */
-        $TransactionStateHandler = $this->createMock(OrderTransactionStateHandler::class);
+        // transactionStateHandler
+        /** @var OrderTransactionStateHandler&MockObject $transactionStateHandler */
+        $transactionStateHandler = $this->createMock(OrderTransactionStateHandler::class);
         // check that the expected method was call
-        $TransactionStateHandler->expects($this->never())->method($methodExpected);
+        $transactionStateHandler->expects($this->never())->method($methodExpected);
 
         // Logger
         /** @var LoggerInterface&MockObject $logger */
@@ -1427,49 +1496,33 @@ class NotificationServiceTest extends TestCase
             });
         }
 
-        // Capture
-        /** @var IdSearchResult&MockObject $searchIdResultCapture */
-        $searchIdResultCapture = $this->createMock(IdSearchResult::class);
-        $idCapture = md5(random_int(0, PHP_INT_MAX));
-        $searchIdResultCapture->method('firstId')->willReturn($idCapture);
-
         /** @var EntityRepository&MockObject $captureRepo */
         $captureRepo = $this->createMock(EntityRepository::class);
-        $captureRepo->method('searchIds')->willReturn($searchIdResultCapture);
+        $captureRepo->expects($this->never())->method('update');
 
-        // Machine State
-        /** @var EntityRepository&MockObject $machineStateRepo */
-        $machineStateRepo = $this->createMock(EntityRepository::class);
+        /** @var EntityRepository&MockObject $hipayOrderRepo */
+        $hipayOrderRepo = $this->createMock(EntityRepository::class);
+        $hipayOrderRepo->method('search')->willReturnCallback(function ($criteria, $context) use ($hipayOrder) {
+            $collection = new HipayOrderCollection([$hipayOrder]);
 
-        /** @var IdSearchResult&MockObject $idSearchResult */
-        $idSearchResult = $this->createMock(IdSearchResult::class);
-        $idState = md5(random_int(0, PHP_INT_MAX));
-        $idSearchResult->method('firstId')->willReturn($idState);
-
-        $machineStateRepo->method('searchIds')->willReturn($idSearchResult);
+            return new EntitySearchResult(HipayOrderEntity::class, $collection->count(), $collection, null, $criteria, $context);
+        });
 
         /** @var EntityRepository&MockObject $refundRepo */
         $refundRepo = $this->createMock(EntityRepository::class);
 
-        /** @var IdSearchResult&MockObject $idSearchResultRefund */
-        $idSearchResultRefund = $this->createMock(IdSearchResult::class);
-        $idRefund = null;
-        $idSearchResultRefund->method('firstId')->willReturn($idRefund);
-
-        $refundRepo->method('searchIds')->willReturn($idSearchResultRefund);
-
         $service = new NotificationService(
-            $notificationRepo,
             $transactionRepo,
+            $notificationRepo,
+            $hipayOrderRepo,
             $captureRepo,
             $refundRepo,
-            $machineStateRepo,
             $this->getReadHipayConfig([
                 'hashStage' => 'sha256',
                 'passphraseStage' => md5(random_int(0, PHP_INT_MAX)),
                 'environment' => 'Stage',
             ]),
-            $TransactionStateHandler,
+            $transactionStateHandler,
             $logger
         );
 
@@ -1482,10 +1535,10 @@ class NotificationServiceTest extends TestCase
                     'End dispatching Hipay notifications : '.count($deletedIds).' done',
                 ],
                 'debug' => [
-                    'Dispatching notification '.$entity->getId().' for the transaction '.$entity->getOrderTransactionId(),
+                    'Dispatching notification '.$entity->getId().' for the transaction '.$hipayOrder->getTransactionId(),
                 ],
                 'info' => [
-                    'Skipped notification : No PENDING open or in_progress refund found for the transaction '.$entity->getOrderTransactionId(),
+                    'Skipped notification : No refund found with operation ID '.$operationId.' for the transaction '.$hipayOrder->getTransactionId(),
                 ],
             ],
             $logs
@@ -1495,11 +1548,6 @@ class NotificationServiceTest extends TestCase
             [],
             $deletedIds,
             'Deleteds notifications ID missmatch'
-        );
-
-        $this->assertSame(
-            [],
-            $customFields
         );
     }
 
@@ -1516,22 +1564,16 @@ class NotificationServiceTest extends TestCase
     public function testDispatchFailedNotification($notificationStatus, $hipayStatus, $previousHipayStatus, $initialState, $methodExpected, $expectedState)
     {
         // Transaction
-        $initialCustomFields = ['hipay_status' => $previousHipayStatus];
-        $transaction = $this->generateTransaction($initialState, $initialCustomFields);
+        $transaction = $this->generateTransaction($initialState);
+        $hipayOrder = $this->generateHipayOrder($transaction);
+        $hipayOrder->setTransactionStatus($previousHipayStatus);
 
         /** @var EntityRepository&MockObject $transactionRepo */
         $transactionRepo = $this->createMock(EntityRepository::class);
         $transactionRepo->method('search')->willReturnCallback(function ($criteria, $context) use ($transaction) {
             $collection = new OrderTransactionCollection([$transaction]);
 
-            return new EntitySearchResult(HipayNotificationEntity::class, $collection->count(), $collection, null, $criteria, $context);
-        });
-
-        $customFields = [];
-        $transactionRepo->method('update')->willReturnCallback(function ($args) use (&$customFields) {
-            $customFields = $args;
-
-            return $this->createMock(EntityWrittenContainerEvent::class);
+            return new EntitySearchResult(OrderTransactionEntity::class, $collection->count(), $collection, null, $criteria, $context);
         });
 
         $operationId = Uuid::uuid4();
@@ -1539,9 +1581,9 @@ class NotificationServiceTest extends TestCase
         // Notifications
         $entity = new HipayNotificationEntity();
         $entity->setId(md5(random_int(0, PHP_INT_MAX)));
-        $entity->setOrderTransaction($transaction);
-        $entity->setOrderTransactionId($transaction->getId());
+        $entity->setHipayOrder($hipayOrder);
         $entity->setStatus($notificationStatus);
+        $entity->setCreatedAt(new \DateTime());
         $entity->setData([
             'refunded_amount' => random_int(0, 1000000),
             'status' => $hipayStatus,
@@ -1565,11 +1607,11 @@ class NotificationServiceTest extends TestCase
             return $this->createMock(EntityWrittenContainerEvent::class);
         });
 
-        // TransactionStateHandler
-        /** @var OrderTransactionStateHandler&MockObject $TransactionStateHandler */
-        $TransactionStateHandler = $this->createMock(OrderTransactionStateHandler::class);
+        // transactionStateHandler
+        /** @var OrderTransactionStateHandler&MockObject $transactionStateHandler */
+        $transactionStateHandler = $this->createMock(OrderTransactionStateHandler::class);
         // check that the expected method was call
-        $TransactionStateHandler->expects($this->once())->method($methodExpected);
+        $transactionStateHandler->expects($this->once())->method($methodExpected);
 
         // Logger
         /** @var LoggerInterface&MockObject $logger */
@@ -1581,8 +1623,13 @@ class NotificationServiceTest extends TestCase
             });
         }
 
-        /** @var EntityRepository&MockObject $machineStateRepo */
-        $machineStateRepo = $this->createMock(EntityRepository::class);
+        /** @var EntityRepository&MockObject $hipayOrderRepo */
+        $hipayOrderRepo = $this->createMock(EntityRepository::class);
+        $hipayOrderRepo->method('search')->willReturnCallback(function ($criteria, $context) use ($hipayOrder) {
+            $collection = new HipayOrderCollection([$hipayOrder]);
+
+            return new EntitySearchResult(HipayOrderEntity::class, $collection->count(), $collection, null, $criteria, $context);
+        });
 
         /** @var EntityRepository&MockObject $captureRepo */
         $captureRepo = $this->createMock(EntityRepository::class);
@@ -1591,17 +1638,17 @@ class NotificationServiceTest extends TestCase
         $refundRepo = $this->createMock(EntityRepository::class);
 
         $service = new NotificationService(
-            $notificationRepo,
             $transactionRepo,
+            $notificationRepo,
+            $hipayOrderRepo,
             $captureRepo,
             $refundRepo,
-            $machineStateRepo,
             $this->getReadHipayConfig([
                 'hashStage' => 'sha256',
                 'passphraseStage' => md5(random_int(0, PHP_INT_MAX)),
                 'environment' => 'Stage',
             ]),
-            $TransactionStateHandler,
+            $transactionStateHandler,
             $logger
         );
 
@@ -1614,10 +1661,10 @@ class NotificationServiceTest extends TestCase
                     'End dispatching Hipay notifications : '.count($deletedIds).' done',
                 ],
                 'debug' => [
-                    'Dispatching notification '.$entity->getId().' for the transaction '.$entity->getOrderTransactionId(),
+                    'Dispatching notification '.$entity->getId().' for the transaction '.$hipayOrder->getTransactionId(),
                 ],
                 'info' => [
-                    'Change order transaction '.$entity->getOrderTransactionId().' to status '.$expectedState.' (previously '.$initialState.')',
+                    'Change order transaction '.$hipayOrder->getTransactionId().' to status '.$expectedState.' (previously '.$initialState.')',
                 ],
             ],
             $logs
@@ -1628,49 +1675,46 @@ class NotificationServiceTest extends TestCase
             $deletedIds,
             'Deleteds notifications ID missmatch'
         );
-
-        $this->assertSame(
-            [[
-                'id' => $transaction->getId(),
-                'customFields' => array_merge_recursive($initialCustomFields, ['hipay_status' => [$hipayStatus]]),
-            ]],
-            $customFields
-        );
     }
 
     public function testDispatchCaptureRefusedNotification()
     {
+        $operationId = Uuid::uuid4();
         $hipayStatus = TransactionStatus::CAPTURE_REFUSED;
+        $previousHipayStatus = [TransactionStatus::AUTHORIZED, TransactionStatus::CAPTURE_REQUESTED];
         $initialState = OrderTransactionStates::STATE_AUTHORIZED;
         $expectedState = OrderTransactionStates::STATE_FAILED;
+
         // Transaction
-        $initialCustomFields = ['hipay_status' => [TransactionStatus::AUTHORIZED, TransactionStatus::CAPTURE_REQUESTED]];
-        $transaction = $this->generateTransaction($initialState, $initialCustomFields);
+        $transaction = $this->generateTransaction($initialState);
+        $hipayOrder = $this->generateHipayOrder($transaction);
+        $hipayOrder->setTransactionStatus($previousHipayStatus);
+
+        // Capture
+        $capture = new OrderCaptureEntity();
+        $capture->setId('CAPTURE_ID');
+        $capture->setOperationId($operationId);
+        $capture->setStatus(CaptureStatus::IN_PROGRESS);
+        $capture->setHipayOrder($hipayOrder);
+
+        $hipayOrder->setCaptures(new OrderCaptureCollection([$capture]));
 
         /** @var EntityRepository&MockObject $transactionRepo */
         $transactionRepo = $this->createMock(EntityRepository::class);
         $transactionRepo->method('search')->willReturnCallback(function ($criteria, $context) use ($transaction) {
             $collection = new OrderTransactionCollection([$transaction]);
 
-            return new EntitySearchResult(HipayNotificationEntity::class, $collection->count(), $collection, null, $criteria, $context);
+            return new EntitySearchResult(OrderTransactionEntity::class, $collection->count(), $collection, null, $criteria, $context);
         });
 
-        $customFields = [];
-        $transactionRepo->method('update')->willReturnCallback(function ($args) use (&$customFields) {
-            $customFields = $args;
-
-            return $this->createMock(EntityWrittenContainerEvent::class);
-        });
-
-        $operationId = Uuid::uuid4();
         $amount = random_int(0, 1000000);
 
         // Notifications
         $entity = new HipayNotificationEntity();
         $entity->setId(md5(random_int(0, PHP_INT_MAX)));
-        $entity->setOrderTransaction($transaction);
-        $entity->setOrderTransactionId($transaction->getId());
+        $entity->setHipayOrder($hipayOrder);
         $entity->setStatus(NotificationService::FAILED);
+        $entity->setCreatedAt(new \DateTime());
         $entity->setData([
             'captured_amount' => $amount,
             'status' => $hipayStatus,
@@ -1694,13 +1738,11 @@ class NotificationServiceTest extends TestCase
             return $this->createMock(EntityWrittenContainerEvent::class);
         });
 
-        $idState = md5(random_int(0, PHP_INT_MAX));
-
-        // TransactionStateHandler
-        /** @var OrderTransactionStateHandler&MockObject $TransactionStateHandler */
-        $TransactionStateHandler = $this->createMock(OrderTransactionStateHandler::class);
+        // transactionStateHandler
+        /** @var OrderTransactionStateHandler&MockObject $transactionStateHandler */
+        $transactionStateHandler = $this->createMock(OrderTransactionStateHandler::class);
         // check that the expected method was call
-        $TransactionStateHandler->expects($this->once())->method('fail');
+        $transactionStateHandler->expects($this->once())->method('fail');
 
         // Logger
         /** @var LoggerInterface&MockObject $logger */
@@ -1712,63 +1754,33 @@ class NotificationServiceTest extends TestCase
             });
         }
 
-        // Capture
-        /** @var IdSearchResult&MockObject $searchIdResultCapture */
-        $searchIdResultCapture = $this->createMock(IdSearchResult::class);
-        $idCapture = md5(random_int(0, PHP_INT_MAX));
-        $searchIdResultCapture->method('firstId')->willReturn($idCapture);
-
         /** @var EntityRepository&MockObject $captureRepo */
         $captureRepo = $this->createMock(EntityRepository::class);
-        $captureRepo->method('searchIds')->willReturn($searchIdResultCapture);
+        $captureRepo->expects($this->once())->method('update');
 
-        // Machine State
-        /** @var EntityRepository&MockObject $machineStateRepo */
-        $machineStateRepo = $this->createMock(EntityRepository::class);
+        /** @var EntityRepository&MockObject $hipayOrderRepo */
+        $hipayOrderRepo = $this->createMock(EntityRepository::class);
+        $hipayOrderRepo->method('search')->willReturnCallback(function ($criteria, $context) use ($hipayOrder) {
+            $collection = new HipayOrderCollection([$hipayOrder]);
 
-        /** @var IdSearchResult&MockObject $idSearchResult */
-        $idSearchResult = $this->createMock(IdSearchResult::class);
-        $idState = md5(random_int(0, PHP_INT_MAX));
-        $idSearchResult->method('firstId')->willReturn($idState);
-
-        $machineStateRepo->method('searchIds')->willReturn($idSearchResult);
-
-        $captures = [];
-        $captureRepo->method('update')->willReturnCallback(function ($args) use (&$captures) {
-            $captures = $args;
-
-            return $this->createMock(EntityWrittenContainerEvent::class);
+            return new EntitySearchResult(HipayOrderEntity::class, $collection->count(), $collection, null, $criteria, $context);
         });
-
-        $expectedCaptures = [[
-            'id' => $idCapture,
-            'orderTransactionId' => $transaction->getId(),
-            'stateId' => $idState,
-            'totalAmount' => $amount,
-            'amount' => new CalculatedPrice(
-                $amount,
-                $amount,
-                new CalculatedTaxCollection(),
-                new TaxRuleCollection()
-            ),
-            'externalReference' => $operationId->toString(),
-        ]];
 
         /** @var EntityRepository&MockObject $refundRepo */
         $refundRepo = $this->createMock(EntityRepository::class);
 
         $service = new NotificationService(
-            $notificationRepo,
             $transactionRepo,
+            $notificationRepo,
+            $hipayOrderRepo,
             $captureRepo,
             $refundRepo,
-            $machineStateRepo,
             $this->getReadHipayConfig([
                 'hashStage' => 'sha256',
                 'passphraseStage' => md5(random_int(0, PHP_INT_MAX)),
                 'environment' => 'Stage',
             ]),
-            $TransactionStateHandler,
+            $transactionStateHandler,
             $logger
         );
 
@@ -1781,10 +1793,10 @@ class NotificationServiceTest extends TestCase
                     'End dispatching Hipay notifications : '.count($deletedIds).' done',
                 ],
                 'debug' => [
-                    'Dispatching notification '.$entity->getId().' for the transaction '.$entity->getOrderTransactionId(),
+                    'Dispatching notification '.$entity->getId().' for the transaction '.$hipayOrder->getTransactionId(),
                 ],
                 'info' => [
-                    'Change order transaction '.$entity->getOrderTransactionId().' to status '.$expectedState.' (previously '.$initialState.')',
+                    'Change order transaction '.$hipayOrder->getTransactionId().' to status '.$expectedState.' (previously '.$initialState.')',
                 ],
             ],
             $logs
@@ -1794,20 +1806,6 @@ class NotificationServiceTest extends TestCase
             [['id' => $entity->getId()]],
             $deletedIds,
             'Deleteds notifications ID missmatch'
-        );
-
-        $this->assertSame(
-            [[
-                'id' => $transaction->getId(),
-                'customFields' => array_merge_recursive($initialCustomFields, ['hipay_status' => [$hipayStatus]]),
-            ]],
-            $customFields
-        );
-
-        $this->assertEquals(
-            $expectedCaptures,
-            $captures,
-            'Captures creation missmatch'
         );
     }
 
@@ -1828,15 +1826,16 @@ class NotificationServiceTest extends TestCase
         $initialState = OrderTransactionStates::STATE_AUTHORIZED;
 
         // Transaction
-        $initialCustomFields = ['hipay_status' => $previousHipayStatus];
-        $transaction = $this->generateTransaction($initialState, $initialCustomFields);
+        $transaction = $this->generateTransaction($initialState);
+        $hipayOrder = $this->generateHipayOrder($transaction);
+        $hipayOrder->setTransactionStatus($previousHipayStatus);
 
         /** @var EntityRepository&MockObject $transactionRepo */
         $transactionRepo = $this->createMock(EntityRepository::class);
         $transactionRepo->method('search')->willReturnCallback(function ($criteria, $context) use ($transaction) {
             $collection = new OrderTransactionCollection([$transaction]);
 
-            return new EntitySearchResult(HipayNotificationEntity::class, $collection->count(), $collection, null, $criteria, $context);
+            return new EntitySearchResult(OrderTransactionEntity::class, $collection->count(), $collection, null, $criteria, $context);
         });
 
         $operationId = Uuid::uuid4();
@@ -1845,9 +1844,9 @@ class NotificationServiceTest extends TestCase
         // Notifications
         $entity = new HipayNotificationEntity();
         $entity->setId(md5(random_int(0, PHP_INT_MAX)));
-        $entity->setOrderTransaction($transaction);
-        $entity->setOrderTransactionId($transaction->getId());
+        $entity->setHipayOrder($hipayOrder);
         $entity->setStatus(NotificationService::FAILED);
+        $entity->setCreatedAt(new \DateTime());
         $entity->setData([
             'captured_amount' => $amount,
             'status' => $hipayStatus,
@@ -1871,11 +1870,11 @@ class NotificationServiceTest extends TestCase
             return $this->createMock(EntityWrittenContainerEvent::class);
         });
 
-        // TransactionStateHandler
-        /** @var OrderTransactionStateHandler&MockObject $TransactionStateHandler */
-        $TransactionStateHandler = $this->createMock(OrderTransactionStateHandler::class);
+        // transactionStateHandler
+        /** @var OrderTransactionStateHandler&MockObject $transactionStateHandler */
+        $transactionStateHandler = $this->createMock(OrderTransactionStateHandler::class);
         // check that the expected method was call
-        $TransactionStateHandler->expects($this->never())->method('fail');
+        $transactionStateHandler->expects($this->never())->method('fail');
 
         // Logger
         /** @var LoggerInterface&MockObject $logger */
@@ -1890,32 +1889,29 @@ class NotificationServiceTest extends TestCase
         /** @var EntityRepository&MockObject $captureRepo */
         $captureRepo = $this->createMock(EntityRepository::class);
 
-        // Machine State
-        /** @var EntityRepository&MockObject $machineStateRepo */
-        $machineStateRepo = $this->createMock(EntityRepository::class);
+        /** @var EntityRepository&MockObject $hipayOrderRepo */
+        $hipayOrderRepo = $this->createMock(EntityRepository::class);
+        $hipayOrderRepo->method('search')->willReturnCallback(function ($criteria, $context) use ($hipayOrder) {
+            $collection = new HipayOrderCollection([$hipayOrder]);
 
-        /** @var IdSearchResult&MockObject $idSearchResult */
-        $idSearchResult = $this->createMock(IdSearchResult::class);
-        $idState = md5(random_int(0, PHP_INT_MAX));
-        $idSearchResult->method('firstId')->willReturn($idState);
-
-        $machineStateRepo->method('searchIds')->willReturn($idSearchResult);
+            return new EntitySearchResult(HipayOrderEntity::class, $collection->count(), $collection, null, $criteria, $context);
+        });
 
         /** @var EntityRepository&MockObject $refundRepo */
         $refundRepo = $this->createMock(EntityRepository::class);
 
         $service = new NotificationService(
-            $notificationRepo,
             $transactionRepo,
+            $notificationRepo,
+            $hipayOrderRepo,
             $captureRepo,
             $refundRepo,
-            $machineStateRepo,
             $this->getReadHipayConfig([
                 'hashStage' => 'sha256',
                 'passphraseStage' => md5(random_int(0, PHP_INT_MAX)),
                 'environment' => 'Stage',
             ]),
-            $TransactionStateHandler,
+            $transactionStateHandler,
             $logger
         );
 
@@ -1928,10 +1924,10 @@ class NotificationServiceTest extends TestCase
                     'End dispatching Hipay notifications : '.count($deletedIds).' done',
                 ],
                 'debug' => [
-                    'Dispatching notification '.$entity->getId().' for the transaction '.$entity->getOrderTransactionId(),
+                    'Dispatching notification '.$entity->getId().' for the transaction '.$hipayOrder->getTransactionId(),
                 ],
                 'info' => [
-                    'Skipped notification : No '.$missingStatus.' notification receive for the transaction '.$entity->getOrderTransactionId().', skip status 173',
+                    'Skipped notification : No '.$missingStatus.' notification received for the transaction '.$hipayOrder->getTransactionId().', skip status 173',
                     ],
             ],
             $logs
@@ -1946,30 +1942,41 @@ class NotificationServiceTest extends TestCase
 
     public function testDispatchCaptureRefusedNotificationMissingCapture()
     {
+        $operationId = Uuid::uuid4();
         $hipayStatus = TransactionStatus::CAPTURE_REFUSED;
+        $previousHipayStatus = [TransactionStatus::AUTHORIZED, TransactionStatus::CAPTURE_REQUESTED];
         $initialState = OrderTransactionStates::STATE_AUTHORIZED;
 
         // Transaction
-        $initialCustomFields = ['hipay_status' => [TransactionStatus::AUTHORIZED, TransactionStatus::CAPTURE_REQUESTED]];
-        $transaction = $this->generateTransaction($initialState, $initialCustomFields);
+        $transaction = $this->generateTransaction($initialState);
+        $hipayOrder = $this->generateHipayOrder($transaction);
+        $hipayOrder->setTransactionStatus($previousHipayStatus);
+
+        // Capture
+        $capture = new OrderCaptureEntity();
+        $capture->setId('CAPTURE_ID');
+        $capture->setOperationId($operationId);
+        $capture->setStatus(CaptureStatus::OPEN);
+        $capture->setHipayOrder($hipayOrder);
+
+        $hipayOrder->setCaptures(new OrderCaptureCollection([$capture]));
 
         /** @var EntityRepository&MockObject $transactionRepo */
         $transactionRepo = $this->createMock(EntityRepository::class);
         $transactionRepo->method('search')->willReturnCallback(function ($criteria, $context) use ($transaction) {
             $collection = new OrderTransactionCollection([$transaction]);
 
-            return new EntitySearchResult(HipayNotificationEntity::class, $collection->count(), $collection, null, $criteria, $context);
+            return new EntitySearchResult(OrderTransactionEntity::class, $collection->count(), $collection, null, $criteria, $context);
         });
 
-        $operationId = Uuid::uuid4();
         $amount = random_int(0, 1000000);
 
         // Notifications
         $entity = new HipayNotificationEntity();
         $entity->setId(md5(random_int(0, PHP_INT_MAX)));
-        $entity->setOrderTransaction($transaction);
-        $entity->setOrderTransactionId($transaction->getId());
+        $entity->setHipayOrder($hipayOrder);
         $entity->setStatus(NotificationService::FAILED);
+        $entity->setCreatedAt(new \DateTime());
         $entity->setData([
             'captured_amount' => $amount,
             'status' => $hipayStatus,
@@ -1993,11 +2000,11 @@ class NotificationServiceTest extends TestCase
             return $this->createMock(EntityWrittenContainerEvent::class);
         });
 
-        // TransactionStateHandler
-        /** @var OrderTransactionStateHandler&MockObject $TransactionStateHandler */
-        $TransactionStateHandler = $this->createMock(OrderTransactionStateHandler::class);
+        // transactionStateHandler
+        /** @var OrderTransactionStateHandler&MockObject $transactionStateHandler */
+        $transactionStateHandler = $this->createMock(OrderTransactionStateHandler::class);
         // check that the expected method was call
-        $TransactionStateHandler->expects($this->never())->method('fail');
+        $transactionStateHandler->expects($this->never())->method('fail');
 
         // Logger
         /** @var LoggerInterface&MockObject $logger */
@@ -2013,31 +2020,36 @@ class NotificationServiceTest extends TestCase
         $captureRepo = $this->createMock(EntityRepository::class);
 
         // Machine State
-        /** @var EntityRepository&MockObject $machineStateRepo */
-        $machineStateRepo = $this->createMock(EntityRepository::class);
+        /** @var EntityRepository&MockObject $hipayOrderRepo */
+        $hipayOrderRepo = $this->createMock(EntityRepository::class);
+        $hipayOrderRepo->method('search')->willReturnCallback(function ($criteria, $context) use ($hipayOrder) {
+            $collection = new HipayOrderCollection([$hipayOrder]);
+
+            return new EntitySearchResult(HipayOrderEntity::class, $collection->count(), $collection, null, $criteria, $context);
+        });
 
         /** @var IdSearchResult&MockObject $idSearchResult */
         $idSearchResult = $this->createMock(IdSearchResult::class);
         $idState = md5(random_int(0, PHP_INT_MAX));
         $idSearchResult->method('firstId')->willReturn($idState);
 
-        $machineStateRepo->method('searchIds')->willReturn($idSearchResult);
+        $hipayOrderRepo->method('searchIds')->willReturn($idSearchResult);
 
         /** @var EntityRepository&MockObject $refundRepo */
         $refundRepo = $this->createMock(EntityRepository::class);
 
         $service = new NotificationService(
-            $notificationRepo,
             $transactionRepo,
+            $notificationRepo,
+            $hipayOrderRepo,
             $captureRepo,
             $refundRepo,
-            $machineStateRepo,
             $this->getReadHipayConfig([
                 'hashStage' => 'sha256',
                 'passphraseStage' => md5(random_int(0, PHP_INT_MAX)),
                 'environment' => 'Stage',
             ]),
-            $TransactionStateHandler,
+            $transactionStateHandler,
             $logger
         );
 
@@ -2050,10 +2062,10 @@ class NotificationServiceTest extends TestCase
                     'End dispatching Hipay notifications : '.count($deletedIds).' done',
                 ],
                 'debug' => [
-                    'Dispatching notification '.$entity->getId().' for the transaction '.$entity->getOrderTransactionId(),
+                    'Dispatching notification '.$entity->getId().' for the transaction '.$hipayOrder->getTransactionId(),
                 ],
                 'info' => [
-                    'Skipped notification : No PENDING capture found for the transaction '.$entity->getOrderTransactionId(),
+                    'Skipped notification : No IN_PROGRESS capture found with operation ID '.$operationId.' for the transaction '.$hipayOrder->getTransactionId(),
                     ],
             ],
             $logs
@@ -2068,37 +2080,42 @@ class NotificationServiceTest extends TestCase
 
     public function testDispatchRefundRefusedNotification()
     {
+        $operationId = Uuid::uuid4();
         $hipayStatus = TransactionStatus::REFUND_REFUSED;
+        $previousHipayStatus = [TransactionStatus::CAPTURED, TransactionStatus::REFUND_REQUESTED];
         $initialState = OrderTransactionStates::STATE_AUTHORIZED;
         $expectedState = OrderTransactionStates::STATE_FAILED;
+
         // Transaction
-        $initialCustomFields = ['hipay_status' => [TransactionStatus::AUTHORIZED, TransactionStatus::CAPTURED]];
-        $transaction = $this->generateTransaction($initialState, $initialCustomFields);
+        $transaction = $this->generateTransaction($initialState);
+        $hipayOrder = $this->generateHipayOrder($transaction);
+        $hipayOrder->setTransactionStatus($previousHipayStatus);
+
+        // Refund
+        $refund = new OrderRefundEntity();
+        $refund->setId('REFUND_ID');
+        $refund->setOperationId($operationId);
+        $refund->setStatus(RefundStatus::IN_PROGRESS);
+        $refund->setHipayOrder($hipayOrder);
+
+        $hipayOrder->setRefunds(new OrderRefundCollection([$refund]));
 
         /** @var EntityRepository&MockObject $transactionRepo */
         $transactionRepo = $this->createMock(EntityRepository::class);
         $transactionRepo->method('search')->willReturnCallback(function ($criteria, $context) use ($transaction) {
             $collection = new OrderTransactionCollection([$transaction]);
 
-            return new EntitySearchResult(HipayNotificationEntity::class, $collection->count(), $collection, null, $criteria, $context);
+            return new EntitySearchResult(OrderTransactionEntity::class, $collection->count(), $collection, null, $criteria, $context);
         });
 
-        $customFields = [];
-        $transactionRepo->method('update')->willReturnCallback(function ($args) use (&$customFields) {
-            $customFields = $args;
-
-            return $this->createMock(EntityWrittenContainerEvent::class);
-        });
-
-        $operationId = Uuid::uuid4();
         $amount = random_int(0, 1000000);
 
         // Notifications
         $entity = new HipayNotificationEntity();
         $entity->setId(md5(random_int(0, PHP_INT_MAX)));
-        $entity->setOrderTransaction($transaction);
-        $entity->setOrderTransactionId($transaction->getId());
+        $entity->setHipayOrder($hipayOrder);
         $entity->setStatus(NotificationService::FAILED);
+        $entity->setCreatedAt(new \DateTime());
         $entity->setData([
             'captured_amount' => $amount,
             'status' => $hipayStatus,
@@ -2122,13 +2139,11 @@ class NotificationServiceTest extends TestCase
             return $this->createMock(EntityWrittenContainerEvent::class);
         });
 
-        $idState = md5(random_int(0, PHP_INT_MAX));
-
-        // TransactionStateHandler
-        /** @var OrderTransactionStateHandler&MockObject $TransactionStateHandler */
-        $TransactionStateHandler = $this->createMock(OrderTransactionStateHandler::class);
+        // transactionStateHandler
+        /** @var OrderTransactionStateHandler&MockObject $transactionStateHandler */
+        $transactionStateHandler = $this->createMock(OrderTransactionStateHandler::class);
         // check that the expected method was call
-        $TransactionStateHandler->expects($this->once())->method('fail');
+        $transactionStateHandler->expects($this->once())->method('fail');
 
         // Logger
         /** @var LoggerInterface&MockObject $logger */
@@ -2143,25 +2158,17 @@ class NotificationServiceTest extends TestCase
         $captureRepo = $this->createMock(EntityRepository::class);
 
         // Machine State
-        /** @var EntityRepository&MockObject $machineStateRepo */
-        $machineStateRepo = $this->createMock(EntityRepository::class);
+        /** @var EntityRepository&MockObject $hipayOrderRepo */
+        $hipayOrderRepo = $this->createMock(EntityRepository::class);
+        $hipayOrderRepo->method('search')->willReturnCallback(function ($criteria, $context) use ($hipayOrder) {
+            $collection = new HipayOrderCollection([$hipayOrder]);
 
-        /** @var IdSearchResult&MockObject $idSearchResult */
-        $idSearchResult = $this->createMock(IdSearchResult::class);
-        $idState = md5(random_int(0, PHP_INT_MAX));
-        $idSearchResult->method('firstId')->willReturn($idState);
-
-        $machineStateRepo->method('searchIds')->willReturn($idSearchResult);
+            return new EntitySearchResult(HipayOrderEntity::class, $collection->count(), $collection, null, $criteria, $context);
+        });
 
         /** @var EntityRepository&MockObject $refundRepo */
         $refundRepo = $this->createMock(EntityRepository::class);
-
-        /** @var IdSearchResult&MockObject $searchIdResultRefund */
-        $searchIdResultRefund = $this->createMock(IdSearchResult::class);
-        $idRefund = md5(random_int(0, PHP_INT_MAX));
-        $searchIdResultRefund->method('firstId')->willReturn($idRefund);
-
-        $refundRepo->method('searchIds')->willReturn($searchIdResultRefund);
+        $refundRepo->expects($this->once())->method('update');
 
         $refunds = [];
         $refundRepo->method('update')->willReturnCallback(function ($args) use (&$refunds) {
@@ -2170,23 +2177,18 @@ class NotificationServiceTest extends TestCase
             return $this->createMock(EntityWrittenContainerEvent::class);
         });
 
-        $expectedRefunds = [[
-             'id' => $idRefund,
-             'stateId' => $idState,
-        ]];
-
         $service = new NotificationService(
-            $notificationRepo,
             $transactionRepo,
+            $notificationRepo,
+            $hipayOrderRepo,
             $captureRepo,
             $refundRepo,
-            $machineStateRepo,
             $this->getReadHipayConfig([
                 'hashStage' => 'sha256',
                 'passphraseStage' => md5(random_int(0, PHP_INT_MAX)),
                 'environment' => 'Stage',
             ]),
-            $TransactionStateHandler,
+            $transactionStateHandler,
             $logger
         );
 
@@ -2199,10 +2201,10 @@ class NotificationServiceTest extends TestCase
                     'End dispatching Hipay notifications : '.count($deletedIds).' done',
                 ],
                 'debug' => [
-                    'Dispatching notification '.$entity->getId().' for the transaction '.$entity->getOrderTransactionId(),
+                    'Dispatching notification '.$entity->getId().' for the transaction '.$hipayOrder->getTransactionId(),
                 ],
                 'info' => [
-                    'Change order transaction '.$entity->getOrderTransactionId().' to status '.$expectedState.' (previously '.$initialState.')',
+                    'Change order transaction '.$hipayOrder->getTransactionId().' to status '.$expectedState.' (previously '.$initialState.')',
                 ],
             ],
             $logs
@@ -2214,54 +2216,48 @@ class NotificationServiceTest extends TestCase
             'Deleteds notifications ID missmatch'
         );
 
-        $this->assertSame(
-            [[
-                'id' => $transaction->getId(),
-                'customFields' => array_merge_recursive($initialCustomFields, ['hipay_status' => [$hipayStatus]]),
-            ]],
-            $customFields
-        );
-
-        $this->assertEquals(
-            $expectedRefunds,
-            $refunds,
-            'Captures creation missmatch'
-        );
+        $this->assertEquals($refund->getId(), $refunds[0]['id']);
+        $this->assertEquals($refund->getOperationId(), $refunds[0]['operationId']);
+        $this->assertEquals(RefundStatus::FAILED, $refunds[0]['status']);
     }
 
     public function testDispatchRefundRefusedNotificationWithoutRefund()
     {
+        $operationId = Uuid::uuid4();
         $hipayStatus = TransactionStatus::REFUND_REFUSED;
+        $previousHipayStatus = [TransactionStatus::CAPTURED, TransactionStatus::REFUND_REQUESTED];
         $initialState = OrderTransactionStates::STATE_AUTHORIZED;
-        $expectedState = OrderTransactionStates::STATE_FAILED;
+
         // Transaction
-        $initialCustomFields = ['hipay_status' => [TransactionStatus::AUTHORIZED, TransactionStatus::CAPTURED]];
-        $transaction = $this->generateTransaction($initialState, $initialCustomFields);
+        $transaction = $this->generateTransaction($initialState);
+        $hipayOrder = $this->generateHipayOrder($transaction);
+        $hipayOrder->setTransactionStatus($previousHipayStatus);
+
+        // Refund
+        $refund = new OrderRefundEntity();
+        $refund->setId('REFUND_ID');
+        $refund->setOperationId($operationId);
+        $refund->setStatus(RefundStatus::OPEN);
+        $refund->setHipayOrder($hipayOrder);
+
+        $hipayOrder->setRefunds(new OrderRefundCollection([$refund]));
 
         /** @var EntityRepository&MockObject $transactionRepo */
         $transactionRepo = $this->createMock(EntityRepository::class);
         $transactionRepo->method('search')->willReturnCallback(function ($criteria, $context) use ($transaction) {
             $collection = new OrderTransactionCollection([$transaction]);
 
-            return new EntitySearchResult(HipayNotificationEntity::class, $collection->count(), $collection, null, $criteria, $context);
+            return new EntitySearchResult(OrderTransactionEntity::class, $collection->count(), $collection, null, $criteria, $context);
         });
 
-        $customFields = [];
-        $transactionRepo->method('update')->willReturnCallback(function ($args) use (&$customFields) {
-            $customFields = $args;
-
-            return $this->createMock(EntityWrittenContainerEvent::class);
-        });
-
-        $operationId = Uuid::uuid4();
         $amount = random_int(0, 1000000);
 
         // Notifications
         $entity = new HipayNotificationEntity();
         $entity->setId(md5(random_int(0, PHP_INT_MAX)));
-        $entity->setOrderTransaction($transaction);
-        $entity->setOrderTransactionId($transaction->getId());
+        $entity->setHipayOrder($hipayOrder);
         $entity->setStatus(NotificationService::FAILED);
+        $entity->setCreatedAt(new \DateTime());
         $entity->setData([
             'captured_amount' => $amount,
             'status' => $hipayStatus,
@@ -2285,11 +2281,11 @@ class NotificationServiceTest extends TestCase
             return $this->createMock(EntityWrittenContainerEvent::class);
         });
 
-        // TransactionStateHandler
-        /** @var OrderTransactionStateHandler&MockObject $TransactionStateHandler */
-        $TransactionStateHandler = $this->createMock(OrderTransactionStateHandler::class);
+        // transactionStateHandler
+        /** @var OrderTransactionStateHandler&MockObject $transactionStateHandler */
+        $transactionStateHandler = $this->createMock(OrderTransactionStateHandler::class);
         // check that the expected method was call
-        $TransactionStateHandler->expects($this->never())->method('fail');
+        $transactionStateHandler->expects($this->never())->method('fail');
 
         // Logger
         /** @var LoggerInterface&MockObject $logger */
@@ -2303,46 +2299,30 @@ class NotificationServiceTest extends TestCase
         /** @var EntityRepository&MockObject $captureRepo */
         $captureRepo = $this->createMock(EntityRepository::class);
 
-        // Machine State
-        /** @var EntityRepository&MockObject $machineStateRepo */
-        $machineStateRepo = $this->createMock(EntityRepository::class);
+        /** @var EntityRepository&MockObject $hipayOrderRepo */
+        $hipayOrderRepo = $this->createMock(EntityRepository::class);
+        $hipayOrderRepo->method('search')->willReturnCallback(function ($criteria, $context) use ($hipayOrder) {
+            $collection = new HipayOrderCollection([$hipayOrder]);
 
-        /** @var IdSearchResult&MockObject $idSearchResult */
-        $idSearchResult = $this->createMock(IdSearchResult::class);
-        $idState = md5(random_int(0, PHP_INT_MAX));
-        $idSearchResult->method('firstId')->willReturn($idState);
-
-        $machineStateRepo->method('searchIds')->willReturn($idSearchResult);
+            return new EntitySearchResult(HipayOrderEntity::class, $collection->count(), $collection, null, $criteria, $context);
+        });
 
         /** @var EntityRepository&MockObject $refundRepo */
         $refundRepo = $this->createMock(EntityRepository::class);
-
-        /** @var IdSearchResult&MockObject $searchIdResultRefund */
-        $searchIdResultRefund = $this->createMock(IdSearchResult::class);
-        $idRefund = null;
-        $searchIdResultRefund->method('firstId')->willReturn($idRefund);
-
-        $refundRepo->method('searchIds')->willReturn($searchIdResultRefund);
-
-        $refunds = [];
-        $refundRepo->method('update')->willReturnCallback(function ($args) use (&$refunds) {
-            $refunds = $args;
-
-            return $this->createMock(EntityWrittenContainerEvent::class);
-        });
+        $refundRepo->expects($this->never())->method('update');
 
         $service = new NotificationService(
-            $notificationRepo,
             $transactionRepo,
+            $notificationRepo,
+            $hipayOrderRepo,
             $captureRepo,
             $refundRepo,
-            $machineStateRepo,
             $this->getReadHipayConfig([
                 'hashStage' => 'sha256',
                 'passphraseStage' => md5(random_int(0, PHP_INT_MAX)),
                 'environment' => 'Stage',
             ]),
-            $TransactionStateHandler,
+            $transactionStateHandler,
             $logger
         );
 
@@ -2355,10 +2335,10 @@ class NotificationServiceTest extends TestCase
                     'End dispatching Hipay notifications : '.count($deletedIds).' done',
                 ],
                 'debug' => [
-                    'Dispatching notification '.$entity->getId().' for the transaction '.$entity->getOrderTransactionId(),
+                    'Dispatching notification '.$entity->getId().' for the transaction '.$hipayOrder->getTransactionId(),
                 ],
                 'info' => [
-                    'Skipped notification : No PENDING open or in_progress refund found for the transaction '.$entity->getOrderTransactionId(),
+                    'Skipped notification : No IN_PROGRESS refund found with operation ID '.$operationId.' for the transaction '.$hipayOrder->getTransactionId(),
                 ],
             ],
             $logs
@@ -2369,11 +2349,6 @@ class NotificationServiceTest extends TestCase
             $deletedIds,
             'Deleteds notifications ID missmatch'
         );
-
-        $this->assertSame(
-            [],
-            $customFields
-        );
     }
 
     public function provideDispatchNotificationWithoutAuthorize()
@@ -2383,8 +2358,8 @@ class NotificationServiceTest extends TestCase
             [NotificationService::PAY_PARTIALLY, TransactionStatus::PARTIALLY_CAPTURED, [], OrderTransactionStates::STATE_OPEN, 'payPartially', 'AUTHORIZED'],
             [NotificationService::PAID, TransactionStatus::CAPTURED, [], OrderTransactionStates::STATE_OPEN, 'paid', 'AUTHORIZED'],
             [NotificationService::FAILED, TransactionStatus::CAPTURE_REFUSED, [], OrderTransactionStates::STATE_OPEN, 'fail', 'AUTHORIZED'],
-            [NotificationService::REFUNDED_PARTIALLY, TransactionStatus::PARTIALLY_REFUNDED, [], OrderTransactionStates::STATE_OPEN, 'refundPartially', 'CAPTURED'],
-            [NotificationService::REFUNDED, TransactionStatus::REFUNDED, [], OrderTransactionStates::STATE_OPEN, 'refund', 'CAPTURED'],
+            [NotificationService::REFUNDED_PARTIALLY, TransactionStatus::PARTIALLY_REFUNDED, [], OrderTransactionStates::STATE_OPEN, 'refundPartially', 'CAPTURED | PARTIALLY_CAPTURED'],
+            [NotificationService::REFUNDED, TransactionStatus::REFUNDED, [], OrderTransactionStates::STATE_OPEN, 'refund', 'CAPTURED | PARTIALLY_CAPTURED'],
         ];
     }
 
@@ -2394,28 +2369,16 @@ class NotificationServiceTest extends TestCase
     public function testDispatchNotificationWithoutAuthorize($notificationStatus, $hipayStatus, $previousHipayStatus, $initialState, $methodUnexpected, $message)
     {
         // Transaction
-        $initialCustomFields = ['hipay_status' => $previousHipayStatus];
-        $transaction = $this->generateTransaction($initialState, $initialCustomFields);
+        $transaction = $this->generateTransaction($initialState);
+        $hipayOrder = $this->generateHipayOrder($transaction);
+        $hipayOrder->setTransactionStatus($previousHipayStatus);
 
         /** @var EntityRepository&MockObject $transactionRepo */
         $transactionRepo = $this->createMock(EntityRepository::class);
         $transactionRepo->method('search')->willReturnCallback(function ($criteria, $context) use ($transaction) {
             $collection = new OrderTransactionCollection([$transaction]);
 
-            return new EntitySearchResult(HipayNotificationEntity::class, $collection->count(), $collection, null, $criteria, $context);
-        });
-
-        $customFields = [];
-        $captures = [];
-        $transactionRepo->method('update')->willReturnCallback(function ($args) use (&$customFields, &$captures) {
-            $args = current($args);
-            if (isset($args['customFields'])) {
-                $customFields = [$args];
-            } elseif (isset($args['orderTransactionCapture'])) {
-                $captures = [$args];
-            }
-
-            return $this->createMock(EntityWrittenContainerEvent::class);
+            return new EntitySearchResult(OrderTransactionEntity::class, $collection->count(), $collection, null, $criteria, $context);
         });
 
         $operationId = Uuid::uuid4();
@@ -2423,9 +2386,9 @@ class NotificationServiceTest extends TestCase
         // Notifications
         $entity = new HipayNotificationEntity();
         $entity->setId(md5(random_int(0, PHP_INT_MAX)));
-        $entity->setOrderTransaction($transaction);
-        $entity->setOrderTransactionId($transaction->getId());
+        $entity->setHipayOrder($hipayOrder);
         $entity->setStatus($notificationStatus);
+        $entity->setCreatedAt(new \DateTime());
         $entity->setData([
             'captured_amount' => random_int(0, PHP_INT_MAX),
             'refunded_amount' => random_int(0, PHP_INT_MAX),
@@ -2452,8 +2415,13 @@ class NotificationServiceTest extends TestCase
             return $this->createMock(EntityWrittenContainerEvent::class);
         });
 
-        /** @var EntityRepository&MockObject $machineStateRepo */
-        $machineStateRepo = $this->createMock(EntityRepository::class);
+        /** @var EntityRepository&MockObject $hipayOrderRepo */
+        $hipayOrderRepo = $this->createMock(EntityRepository::class);
+        $hipayOrderRepo->method('search')->willReturnCallback(function ($criteria, $context) use ($hipayOrder) {
+            $collection = new HipayOrderCollection([$hipayOrder]);
+
+            return new EntitySearchResult(HipayOrderEntity::class, $collection->count(), $collection, null, $criteria, $context);
+        });
 
         $idState = md5(random_int(0, PHP_INT_MAX));
 
@@ -2461,10 +2429,10 @@ class NotificationServiceTest extends TestCase
         $idSearchResult = $this->createMock(IdSearchResult::class);
         $idSearchResult->method('firstId')->willReturn($idState);
 
-        // TransactionStateHandler
-        /** @var OrderTransactionStateHandler&MockObject $TransactionStateHandler */
-        $TransactionStateHandler = $this->createMock(OrderTransactionStateHandler::class);
-        $TransactionStateHandler->expects($this->never())->method($methodUnexpected);
+        // transactionStateHandler
+        /** @var OrderTransactionStateHandler&MockObject $transactionStateHandler */
+        $transactionStateHandler = $this->createMock(OrderTransactionStateHandler::class);
+        $transactionStateHandler->expects($this->never())->method($methodUnexpected);
 
         // Logger
         /** @var LoggerInterface&MockObject $logger */
@@ -2484,17 +2452,17 @@ class NotificationServiceTest extends TestCase
         $refundRepo = $this->createMock(EntityRepository::class);
 
         $service = new NotificationService(
-            $notificationRepo,
             $transactionRepo,
+            $notificationRepo,
+            $hipayOrderRepo,
             $captureRepo,
             $refundRepo,
-            $machineStateRepo,
             $this->getReadHipayConfig([
                 'hashStage' => 'sha256',
                 'passphraseStage' => md5(random_int(0, PHP_INT_MAX)),
                 'environment' => 'Stage',
             ]),
-            $TransactionStateHandler,
+            $transactionStateHandler,
             $logger
         );
 
@@ -2507,10 +2475,10 @@ class NotificationServiceTest extends TestCase
                     'End dispatching Hipay notifications : '.count($deletedIds).' done',
                 ],
                 'debug' => [
-                    'Dispatching notification '.$entity->getId().' for the transaction '.$entity->getOrderTransactionId(),
+                    'Dispatching notification '.$entity->getId().' for the transaction '.$hipayOrder->getTransactionId(),
                 ],
                 'info' => [
-                    'Skipped notification : No '.$message.' notification receive for the transaction '.$transaction->getId().', skip status '.$hipayStatus,
+                    'Skipped notification : No '.$message.' notification received for the transaction '.$transaction->getId().', skip status '.$hipayStatus,
                 ],
             ],
             $logs
@@ -2521,29 +2489,20 @@ class NotificationServiceTest extends TestCase
             $deletedIds,
             'Deleteds notifications ID missmatch'
         );
-
-        $this->assertSame(
-            [],
-            $customFields
-        );
-
-        $this->assertEquals(
-            [],
-            $captures,
-            'Captures creation missmatch'
-        );
     }
 
     public function testDispatchNotificationStatutCodeInvalid()
     {
-        $transaction = $this->generateTransaction(OrderTransactionStates::STATE_OPEN);
+        // Transaction
+        $transaction = $this->generateTransaction();
+        $hipayOrder = $this->generateHipayOrder($transaction);
 
         /** @var EntityRepository&MockObject $transactionRepo */
         $transactionRepo = $this->createMock(EntityRepository::class);
         $transactionRepo->method('search')->willReturnCallback(function ($criteria, $context) use ($transaction) {
             $collection = new OrderTransactionCollection([$transaction]);
 
-            return new EntitySearchResult(HipayNotificationEntity::class, $collection->count(), $collection, null, $criteria, $context);
+            return new EntitySearchResult(OrderTransactionEntity::class, $collection->count(), $collection, null, $criteria, $context);
         });
 
         /** @var EntityRepository&MockObject $notificationRepo */
@@ -2551,9 +2510,9 @@ class NotificationServiceTest extends TestCase
 
         $entity = new HipayNotificationEntity();
         $entity->setId(md5(random_int(0, PHP_INT_MAX)));
-        $entity->setOrderTransaction($transaction);
-        $entity->setOrderTransactionId($transaction->getId());
+        $entity->setHipayOrder($hipayOrder);
         $entity->setStatus(3000);
+        $entity->setCreatedAt(new \DateTime());
         $entity->setData([
             'status' => 0,
         ]);
@@ -2597,11 +2556,19 @@ class NotificationServiceTest extends TestCase
         /** @var EntityRepository&MockObject $captureRepo */
         $captureRepo = $this->createMock(EntityRepository::class);
 
+        /** @var EntityRepository&MockObject $hipayOrderRepo */
+        $hipayOrderRepo = $this->createMock(EntityRepository::class);
+        $hipayOrderRepo->method('search')->willReturnCallback(function ($criteria, $context) use ($hipayOrder) {
+            $collection = new HipayOrderCollection([$hipayOrder]);
+
+            return new EntitySearchResult(HipayOrderEntity::class, $collection->count(), $collection, null, $criteria, $context);
+        });
+
         $service = new NotificationService(
-            $notificationRepo,
             $transactionRepo,
+            $notificationRepo,
+            $hipayOrderRepo,
             $captureRepo,
-            $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
             $config,
             $this->createMock(OrderTransactionStateHandler::class),
@@ -2622,7 +2589,7 @@ class NotificationServiceTest extends TestCase
                     'End dispatching Hipay notifications : 0 done',
                 ],
                 'debug' => [
-                    'Dispatching notification '.$entity->getId().' for the transaction '.$entity->getOrderTransactionId(),
+                    'Dispatching notification '.$entity->getId().' for the transaction '.$hipayOrder->getTransactionId(),
                 ],
                 'error' => [
                     'Error during an Hipay notification dispatching : Bad status code for Hipay notification '.$entity->getId(),
@@ -2656,8 +2623,8 @@ class NotificationServiceTest extends TestCase
         }
 
         $service = new NotificationService(
-            $notificationRepo,
             $this->createMock(EntityRepository::class),
+            $notificationRepo,
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),

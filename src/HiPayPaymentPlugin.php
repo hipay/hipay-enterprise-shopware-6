@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace HiPay\Payment;
 
+use Composer\InstalledVersions;
 use HiPay\Fullservice\Exception\UnexpectedValueException;
 use HiPay\Payment\PaymentMethod\CreditCard;
 use HiPay\Payment\PaymentMethod\PaymentMethodInterface;
@@ -62,11 +63,34 @@ class HiPayPaymentPlugin extends Plugin
         return array_pop($path);
     }
 
+    /**
+     * Get the plugin version.
+     */
+    public static function getModuleVersion(): string
+    {
+        $content = file_get_contents(__DIR__.'/../composer.json');
+        if (!$content) {
+            return '';
+        }
+
+        $composer = json_decode($content);
+
+        return $composer->version;
+    }
+
+    /**
+     * Get Shopware version.
+     */
+    public static function getShopwareVersion(): string
+    {
+        return InstalledVersions::isInstalled('shopware/platform')
+            ? InstalledVersions::getVersion('shopware/platform')
+            : InstalledVersions::getVersion('shopware/core');
+    }
+
     public function install(InstallContext $context): void
     {
-        $paymentMethods = [
-            CreditCard::class,
-        ];
+        $paymentMethods = [CreditCard::class];
 
         foreach ($paymentMethods as $paymentMethod) {
             $this->addPaymentMethod($paymentMethod, $context->getContext());
@@ -79,18 +103,30 @@ class HiPayPaymentPlugin extends Plugin
     {
         // Only set the payment method to inactive when uninstalling. Removing the payment method would
         // cause data consistency issues, since the payment method might have been used in several orders
-        $this->setPaymentMethodIsActive(false, CreditCard::class, $context->getContext());
+        $this->setPaymentMethodIsActive(
+            false,
+            CreditCard::class,
+            $context->getContext()
+        );
     }
 
     public function activate(ActivateContext $context): void
     {
-        $this->setPaymentMethodIsActive(true, CreditCard::class, $context->getContext());
+        $this->setPaymentMethodIsActive(
+            true,
+            CreditCard::class,
+            $context->getContext()
+        );
         parent::activate($context);
     }
 
     public function deactivate(DeactivateContext $context): void
     {
-        $this->setPaymentMethodIsActive(false, CreditCard::class, $context->getContext());
+        $this->setPaymentMethodIsActive(
+            false,
+            CreditCard::class,
+            $context->getContext()
+        );
         parent::deactivate($context);
     }
 
@@ -101,11 +137,13 @@ class HiPayPaymentPlugin extends Plugin
      * @throws ServiceCircularReferenceException
      * @throws ServiceNotFoundException
      */
-    private function addPaymentMethod(string $paymentClassname, Context $context): void
-    {
+    private function addPaymentMethod(
+        string $paymentClassname,
+        Context $context
+    ): void {
         // Check implementation
         if (!is_subclass_of($paymentClassname, PaymentMethodInterface::class)) {
-            throw new UnexpectedValueException('the payment method "'.$paymentClassname.'" must implement interface "'.PaymentMethodInterface::class.'"');
+            throw new UnexpectedValueException('The payment method "'.$paymentClassname.'" must implement interface "'.PaymentMethodInterface::class.'"');
         }
 
         // Payment method exists already
@@ -116,7 +154,10 @@ class HiPayPaymentPlugin extends Plugin
         if (!isset($this->pluginId)) {
             /** @var PluginIdProvider $pluginIdProvider */
             $pluginIdProvider = $this->container->get(PluginIdProvider::class);
-            $this->pluginId = $pluginIdProvider->getPluginIdByBaseClass(static::class, $context);
+            $this->pluginId = $pluginIdProvider->getPluginIdByBaseClass(
+                static::class,
+                $context
+            );
         }
 
         $translations = [];
@@ -124,7 +165,9 @@ class HiPayPaymentPlugin extends Plugin
             $translations[] = [
                 'languageId' => $lang['id'],
                 'name' => $paymentClassname::getName($lang['code']),
-                'description' => $paymentClassname::getDescription($lang['code']),
+                'description' => $paymentClassname::getDescription(
+                    $lang['code']
+                ),
                 'customFields' => $paymentClassname::addDefaultCustomFields(),
             ];
         }
@@ -148,8 +191,11 @@ class HiPayPaymentPlugin extends Plugin
      * @throws ServiceCircularReferenceException
      * @throws ServiceNotFoundException
      */
-    private function setPaymentMethodIsActive(bool $active, string $paymentClassname, Context $context): void
-    {
+    private function setPaymentMethodIsActive(
+        bool $active,
+        string $paymentClassname,
+        Context $context
+    ): void {
         /** @var EntityRepository $paymentRepository */
         $paymentRepository = $this->container->get($this->paymentMethodRepoName);
 
@@ -180,9 +226,13 @@ class HiPayPaymentPlugin extends Plugin
         $paymentRepository = $this->container->get($this->paymentMethodRepoName);
 
         // Fetch ID for update
-        $paymentCriteria = (new Criteria())->addFilter(new EqualsFilter('handlerIdentifier', $paymentClassname));
+        $paymentCriteria = (new Criteria())->addFilter(
+            new EqualsFilter('handlerIdentifier', $paymentClassname)
+        );
 
-        return $paymentRepository->searchIds($paymentCriteria, Context::createDefaultContext())->firstId();
+        return $paymentRepository
+            ->searchIds($paymentCriteria, Context::createDefaultContext())
+            ->firstId();
     }
 
     /**
@@ -195,7 +245,9 @@ class HiPayPaymentPlugin extends Plugin
         /** @var EntityRepository $paymentRepository */
         $paymentRepository = $this->container->get('sales_channel.repository');
 
-        return $paymentRepository->searchIds(new Criteria(), Context::createDefaultContext())->getData();
+        return $paymentRepository
+            ->searchIds(new Criteria(), Context::createDefaultContext())
+            ->getData();
     }
 
     /**
@@ -210,7 +262,9 @@ class HiPayPaymentPlugin extends Plugin
         $languageRepository = $this->container->get('language.repository');
 
         $criteria = (new Criteria())->addAssociation('locale');
-        $languages = $languageRepository->search($criteria, Context::createDefaultContext())->getEntities();
+        $languages = $languageRepository
+            ->search($criteria, Context::createDefaultContext())
+            ->getEntities();
 
         /** @var LanguageEntity $language */
         foreach ($languages as $language) {
@@ -241,15 +295,22 @@ class HiPayPaymentPlugin extends Plugin
         }
 
         /** @var EntityRepository $systemConfigRepository */
-        $systemConfigRepository = $this->container->get('system_config.repository');
+        $systemConfigRepository = $this->container->get(
+            'system_config.repository'
+        );
 
         // Delete default fields when set bey env vars
         $critera = new Criteria();
-        $critera->addFilter(new EqualsAnyFilter('configurationKey', $deleteKeys));
+        $critera->addFilter(
+            new EqualsAnyFilter('configurationKey', $deleteKeys)
+        );
         $ids = $systemConfigRepository->searchIds($critera, $context);
 
         if ($ids->getTotal()) {
-            $systemConfigRepository->delete(array_values($ids->getData()), $context);
+            $systemConfigRepository->delete(
+                array_values($ids->getData()),
+                $context
+            );
         }
 
         $systemConfigRepository->create($validParams, $context);

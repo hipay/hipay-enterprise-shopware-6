@@ -193,13 +193,14 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
     private function hydrateGenericOrderRequest(
         OrderRequest $orderRequest,
         AsyncPaymentTransactionStruct $transaction,
-        string $locale): OrderRequest
-    {
+        string $locale
+    ): OrderRequest {
+        $isCaptureAuto = $this->config->isCaptureAuto();
         $order = $transaction->getOrder();
 
         // Order data
         $orderRequest->orderid = $transaction->getOrderTransaction()->getId();
-        $orderRequest->operation = $this->config->isCaptureAuto() ? 'Sale' : 'Authorization';
+        $orderRequest->operation = $isCaptureAuto ? 'Sale' : 'Authorization';
         $orderRequest->description = $this->generateDescription($order->getLineItems(), 255, '...');
         // $orderRequest->basket = $this->generateBasket($transaction->getOrder());
 
@@ -222,9 +223,13 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
         $orderRequest->cid = $order->getOrderCustomer()->getId();
         $orderRequest->customerBillingInfo = $this->generateCustomerBillingInfo($order);
         $orderRequest->customerShippingInfo = $this->generateCustomerShippingInfo($order);
-        $orderRequest->custom_data = [
-            'operation_id' => Uuid::uuid4()->toString(),
-        ];
+
+        if ($isCaptureAuto) {
+            // Create operation_id in custom_data if capture mode is auto
+            $orderRequest->custom_data = [
+                'operation_id' => Uuid::uuid4()->toString(),
+            ];
+        }
 
         $orderRequest->merchant_risk_statement = $this->generateMerchantRiskStatement($order);
         $orderRequest->account_info = $this->generateAccountInfo($order);

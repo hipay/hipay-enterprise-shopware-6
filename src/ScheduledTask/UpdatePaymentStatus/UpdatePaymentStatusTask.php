@@ -15,6 +15,10 @@ class UpdatePaymentStatusTask extends ScheduledTask
     /** {@inheritDoc} */
     public static function getDefaultInterval(): int
     {
+        if ('dev' === getenv('APP_ENV')) {
+            return 30;
+        }
+
         return 300; // 5 minutes
     }
 }

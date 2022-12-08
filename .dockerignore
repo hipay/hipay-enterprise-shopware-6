@@ -8,6 +8,7 @@
 bin/
 !bin/docker/images/shopware/entrypoint.sh
 web/
+log/
 .gitlab-ci.yml
 .gitignore
 .dockerignore

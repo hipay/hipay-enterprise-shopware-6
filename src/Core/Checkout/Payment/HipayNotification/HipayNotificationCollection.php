@@ -1,6 +1,6 @@
 <?php
 
-namespace HiPay\Payment\Core\Checkout\Payment;
+namespace HiPay\Payment\Core\Checkout\Payment\HipayNotification;
 
 use Shopware\Core\Framework\DataAbstractionLayer\EntityCollection;
 

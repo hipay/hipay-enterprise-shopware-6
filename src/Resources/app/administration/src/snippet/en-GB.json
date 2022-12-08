@@ -4,22 +4,66 @@
       "help": {
         "manual": "Online manual",
         "github": "Report Errors on github",
-        "version": "version"
+        "version": "Version"
       },
       "checkAccess": {
         "title": "Hipay Configuration",
         "success": "Your configuration is valid.",
         "failure": "There's an issue in your configuration.",
-        "button": "Test API Credentials"
+        "button": "Test API credentials"
       },
       "title": {
         "privateKey": "Private key",
         "publicKey": "Public key",
-        "notification": "Notification setting"
+        "notification": "Notification settings"
       },
-      "info": "In order to inform you of events related to your payment system, such as a new transaction or a 3-D Secure transaction, the HiPay Enterprise platform can send your application a server-to-server notification. Log in to the Hipay Back Office, go to the Integration > Security Setting module to retrieve the passphrase of your HiPay merchant account",
+      "info": "To inform you about events related to your payment system, e.g. about a new transaction or a 3-D Secure transaction, the HiPay Enterprise platform can send your application a server-to-server notification. Login to Hipay Back Office, go to Integration > Security Settings module and get your HiPay merchant account passphrase.",
       "creditCards": {
         "choice": "Select credit card"
+      }
+    },
+    "hosted-page": {
+      "redirect-message": "You will be redirected to an external payment page. Please do not refresh the page during the process"
+    },
+    "hosted-fields": {
+      "fullname": "fullname",
+      "card-number": "Card number",
+      "expiry-date": "Expiry date",
+      "cvc": "CVC"
+    },
+    "action": {
+      "cancel": "Cancel",
+      "capture": "Capture",
+      "refund": "Refund",
+      "full_capture": "Full Capture",
+      "full_refund": "Full Refund"
+    },
+    "basket": {
+      "column": {
+        "product": "Product",
+        "quantity": "Quantity",
+        "price": "Price",
+        "shipping": "Shipping costs"
+      }
+    },
+    "field": {
+      "capture_amount": "Capture amount",
+      "remaining_amount": "Remaining amount",
+      "order_amount": "Order amount",
+      "captured_amount": "Captured amount",
+      "refund_amount": "Refund amount",
+      "refunded_amount": "Refunded amount"
+    },
+    "notification": {
+      "capture": {
+        "title": "Transaction capture",
+        "success": "Transaction successfully captured",
+        "failure": "Error during transaction capture"
+      },
+      "refund": {
+        "title": "Transaction refund",
+        "success": "Transaction successfully refunded",
+        "failure": "Error during transaction refund"
       }
     }
   }

@@ -1,0 +1,134 @@
+{% block sw_order_detail_actions_slot_smart_bar_actions %}
+  <template v-if="showOnHipayMethod">
+    <sw-button variant="contrast"
+      v-if="canCapture"
+      @click="openCapture"
+      :disabled="!acl.can('order.editor')">
+      {{ $tc('hipay.action.capture') }}
+    </sw-button>
+    <sw-button variant="contrast"
+      v-if="canRefund"
+      @click="openRefund"
+      :disabled="!acl.can('order.editor')">
+      {{ $tc('hipay.action.refund') }}
+    </sw-button>
+    {% parent %}
+    <sw-modal :title="$tc('hipay.action.capture')"
+      v-if="showOrderCapture"
+      v-show="!showOrderStateForCapture"
+      @modal-close="closeOrderCaptureModal">
+      <sw-data-grid ref="basket"
+        :dataSource="orderBasket"
+        :columns="basketColumns"
+        :showActions="false"
+        :isRecordSelectable="isProductSelectable"
+        @selection-change="onSelectProductForCapture"
+        @quantity-change="onQuantityChangeForCapture"
+        @hook:mounted="selectAllProducts"></sw-data-grid>
+      <br />
+      <div class="captureBtnGrp">
+        <sw-text-field :label="$tc('hipay.field.order_amount')"
+          :value="currency + orderAmount.toFixed(2)"
+          :disabled="true"></sw-text-field>
+        <sw-text-field :label="$tc('hipay.field.captured_amount')"
+          :value="currency + capturedAmountInProgress.toFixed(2)"
+          :disabled="true"></sw-text-field>
+      </div>
+      <div class="captureBtnGrp">
+        <sw-text-field :label="$tc('hipay.field.remaining_amount')"
+          :value="currency + remainingCaptureAmount.toFixed(2)"
+          :disabled="true"></sw-text-field>
+        <sw-number-field ref="captureAmount"
+          :label="$tc('hipay.field.capture_amount')"
+          :min="0.01"
+          :max="remainingCaptureAmount"
+          :value="getCaptureAmount"
+          :allowEmpty="true"
+          :required="true"
+          :isInvalid="isInvalidCaptureAmount"
+          @change="onManualCaptureAmount"
+          :placeholder="captureAmountPlaceholder ? currency + captureAmountPlaceholder?.toFixed(2) : null"></sw-number-field>
+      </div>
+      <template slot="modal-footer">
+        <sw-button @click="closeOrderCaptureModal">
+          {{ $tc('hipay.action.cancel') }}
+        </sw-button>
+        <sw-button variant="primary"
+          @click="captureOrder"
+          :disabled="isInvalidCaptureAmount">
+          {{ $tc('hipay.action.capture') }}
+        </sw-button>
+        <sw-button variant="primary"
+          @click="fullCaptureOrder"
+          :disabled="isInvalidFullCaptureAmount">
+          {{ $tc('hipay.action.full_capture') }}
+        </sw-button>
+      </template>
+    </sw-modal>
+    <sw-order-state-change-modal :order="orderData"
+      :isLoading="isLoadingRequest"
+      technicalName=""
+      v-if="showOrderStateForCapture"
+      @page-leave="closeOrderStateModal"
+      @page-leave-confirm="makeCapture"></sw-order-state-change-modal>
+
+    <sw-modal :title="$tc('hipay.action.refund')"
+      v-if="showOrderRefund"
+      v-show="!showOrderStateForRefund"
+      @modal-close="closeOrderRefundModal">
+      <sw-data-grid ref="basket"
+        :dataSource="orderBasket"
+        :columns="basketColumns"
+        :showActions="false"
+        :isRecordSelectable="isProductSelectable"
+        @selection-change="onSelectProductForRefund"
+        @quantity-change="onQuantityChangeForRefund"
+        @hook:mounted="selectAllProducts"></sw-data-grid>
+      <br />
+      <div class="refundBtnGrp">
+        <sw-text-field :label="$tc('hipay.field.captured_amount')"
+          :value="currency + capturedAmount.toFixed(2)"
+          :disabled="true"></sw-text-field>
+        <sw-text-field :label="$tc('hipay.field.refunded_amount')"
+          :value="currency + refundedAmountInProgress.toFixed(2)"
+          :disabled="true"></sw-text-field>
+      </div>
+      <div class="refundBtnGrp">
+        <sw-text-field :label="$tc('hipay.field.remaining_amount')"
+          :value="currency + remainingRefundAmount.toFixed(2)"
+          :disabled="true"></sw-text-field>
+        <sw-number-field ref="refundAmount"
+          :label="$tc('hipay.field.refund_amount')"
+          :min="0.01"
+          :max="remainingRefundAmount"
+          :value="getRefundAmount"
+          :allowEmpty="true"
+          :required="true"
+          :isInvalid="isInvalidRefundAmount"
+          @change="onManualRefundAmount"
+          :placeholder="refundAmountPlaceholder ? currency + refundAmountPlaceholder?.toFixed(2) : null"></sw-number-field>
+      </div>
+      <template slot="modal-footer">
+        <sw-button @click="closeOrderRefundModal">
+          {{ $tc('hipay.action.cancel') }}
+        </sw-button>
+        <sw-button variant="primary"
+          @click="refundOrder"
+          :disabled="isInvalidRefundAmount">
+          {{ $tc('hipay.action.refund') }}
+        </sw-button>
+        <sw-button variant="primary"
+          @click="fullRefundOrder"
+          :disabled="isInvalidFullRefundAmount">
+          {{ $tc('hipay.action.full_refund') }}
+        </sw-button>
+      </template>
+      <sw-order-state-change-modal :order="orderData"
+        :isLoading="isLoadingRequest"
+        technicalName=""
+        v-if="showOrderStateForRefund"
+        @page-leave="closeOrderStateModal"
+        @page-leave-confirm="makeRefund"></sw-order-state-change-modal>
+    </sw-modal>
+  </template>
+{% endblock %}

@@ -4,7 +4,7 @@ image: $REGISTRY_CI/gitlab-ci-base:buster
 include:
   - template: Security/SAST.gitlab-ci.yml
 
-variables:  
+variables:
   SAST_EXCLUDED_ANALYZERS: 'eslint,semgrep'
   DOCKWARE_VERSION: latest
   GIT_DEPTH: 10
@@ -129,9 +129,11 @@ install-test:
     - small
 
 #### TEST ####
+
 sast:
   rules:
     - if: ! $ONLY_DEPLOY
+
 # Code style
 code-style:
   stage: test
@@ -156,6 +158,8 @@ smoke-test:
     - build-test
   variables:
     TZ: Europe/Paris
+    NODE_VERSION: 16
+    COMPOSER_HOME: /var/www/html/var/cache/composer
     APP_URL: http://web
   services:
     - name: $REGISTRY_CI/test-jobs-${DOCKER_STACK}-${DOCKER_SERVICE}_web:${CI_COMMIT_REF_SLUG}

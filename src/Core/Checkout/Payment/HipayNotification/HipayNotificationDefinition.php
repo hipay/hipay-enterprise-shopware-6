@@ -1,8 +1,8 @@
 <?php
 
-namespace HiPay\Payment\Core\Checkout\Payment;
+namespace HiPay\Payment\Core\Checkout\Payment\HipayNotification;
 
-use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionDefinition;
+use HiPay\Payment\Core\Checkout\Payment\HipayOrder\HipayOrderDefinition;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityDefinition;
 use Shopware\Core\Framework\DataAbstractionLayer\Field\DateTimeField;
 use Shopware\Core\Framework\DataAbstractionLayer\Field\FkField;
@@ -44,10 +44,8 @@ class HipayNotificationDefinition extends EntityDefinition
             (new IntField('status', 'status'))->addFlags(new Required()),
             (new JsonField('data', 'data'))->addFlags(new Required()),
             (new DateTimeField('notification_updated_at', 'notificationUpdatedAt'))->addFlags(new Required()),
-
-            new FkField('order_transaction_id', 'orderTransactionId', OrderTransactionDefinition::class),
-
-            new ManyToOneAssociationField('orderTransaction', 'order_transaction_id', OrderTransactionDefinition::class, 'id', false),
+            new FkField('hipay_order_id', 'hipayOrderId', HipayOrderDefinition::class),
+            new ManyToOneAssociationField('hipayOrder', 'hipay_order_id', HipayOrderDefinition::class, 'id', false),
         ]);
     }
 }
