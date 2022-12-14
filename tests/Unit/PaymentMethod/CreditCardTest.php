@@ -28,21 +28,39 @@ class CreditCardTest extends TestCase
             ],
         ];
 
+        $response2 = [
+            'token' => static::class,
+            'payment_product' => 'foo,bar',
+        ];
+
         $orderRequest = $this->getHostedFiledsOrderRequest(CreditCard::class, $response);
+        $orderRequest2 = $this->getHostedFiledsOrderRequest(CreditCard::class, $response2);
 
         $this->assertSame(
             $response['token'],
             $orderRequest->paymentMethod->cardtoken
+        );
+        $this->assertSame(
+            $response2['token'],
+            $orderRequest2->paymentMethod->cardtoken
         );
 
         $this->assertSame(
             7,
             $orderRequest->paymentMethod->eci
         );
+        $this->assertSame(
+            7,
+            $orderRequest2->paymentMethod->eci
+        );
 
         $this->assertSame(
             $response['payment_product'],
             $orderRequest->payment_product
+        );
+        $this->assertSame(
+            $response2['payment_product'],
+            $orderRequest2->payment_product
         );
     }
 
@@ -65,7 +83,7 @@ class CreditCardTest extends TestCase
     public function testStatic()
     {
         $this->assertEquals(
-            ['cards' => ['cb', 'visa', 'mastercard', 'american-express', 'bancontact', 'maestro']],
+            ['cards' => ['cb', 'visa', 'mastercard', 'american-express', 'bcmc', 'maestro']],
             CreditCard::addDefaultCustomFields()
         );
 

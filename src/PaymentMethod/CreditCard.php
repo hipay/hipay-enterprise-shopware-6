@@ -40,7 +40,7 @@ class CreditCard extends AbstractPaymentMethod
     public static function addDefaultCustomFields(): array
     {
         return [
-            'cards' => ['cb', 'visa', 'mastercard', 'american-express', 'bancontact', 'maestro'],
+            'cards' => ['cb', 'visa', 'mastercard', 'american-express', 'bcmc', 'maestro'],
         ];
     }
 
@@ -61,21 +61,21 @@ class CreditCard extends AbstractPaymentMethod
         $browserInfo = new BrowserInfo();
         $browserInfo->ipaddr = $this->request->getClientIp();
         $browserInfo->http_accept = 'application/json';
-        $browserInfo->http_user_agent = $payload['browser_info']['http_user_agent'];
-        $browserInfo->java_enabled = $payload['browser_info']['java_enabled'];
-        $browserInfo->javascript_enabled = $payload['browser_info']['javascript_enabled'];
-        $browserInfo->language = $payload['browser_info']['language'];
-        $browserInfo->color_depth = $payload['browser_info']['color_depth'];
-        $browserInfo->screen_height = $payload['browser_info']['screen_height'];
-        $browserInfo->screen_width = $payload['browser_info']['screen_width'];
-        $browserInfo->timezone = $payload['browser_info']['timezone'];
+        $browserInfo->http_user_agent = isset($payload['browser_info']['http_user_agent']) ? $payload['browser_info']['http_user_agent'] : null;
+        $browserInfo->java_enabled = isset($payload['browser_info']['java_enabled']) ? $payload['browser_info']['java_enabled'] : null;
+        $browserInfo->javascript_enabled = isset($payload['browser_info']['javascript_enabled']) ? $payload['browser_info']['javascript_enabled'] : null;
+        $browserInfo->language = isset($payload['browser_info']['language']) ? $payload['browser_info']['language'] : null;
+        $browserInfo->color_depth = isset($payload['browser_info']['color_depth']) ? $payload['browser_info']['color_depth'] : null;
+        $browserInfo->screen_height = isset($payload['browser_info']['screen_height']) ? $payload['browser_info']['screen_height'] : null;
+        $browserInfo->screen_width = isset($payload['browser_info']['screen_width']) ? $payload['browser_info']['screen_width'] : null;
+        $browserInfo->timezone = isset($payload['browser_info']['timezone']) ? $payload['browser_info']['timezone'] : null;
 
         // @phpstan-ignore-next-line
         $orderRequest->paymentMethod = $paymentMethod;
         $orderRequest->browser_info = $browserInfo;
 
         $orderRequest->payment_product = $payload['payment_product'];
-        $orderRequest->device_fingerprint = $payload['device_fingerprint'];
+        $orderRequest->device_fingerprint = isset($payload['device_fingerprint']) ? $payload['device_fingerprint'] : null;
 
         return $orderRequest;
     }

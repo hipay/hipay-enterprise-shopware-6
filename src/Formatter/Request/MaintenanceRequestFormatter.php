@@ -3,7 +3,7 @@
 namespace HiPay\Payment\Formatter\Request;
 
 use HiPay\Fullservice\Gateway\Request\Maintenance\MaintenanceRequest;
-use HiPay\Payment\HiPayPaymentPlugin;
+use HiPay\Payment\Helper\Source;
 use Ramsey\Uuid\Uuid;
 
 /**
@@ -23,12 +23,7 @@ class MaintenanceRequestFormatter
         $maintenanceRequest->amount = $params['amount'] ?? null;
         $maintenanceRequest->operation = $params['operation'] ?? null;
         $maintenanceRequest->operation_id = Uuid::uuid4()->toString();
-        $source = json_encode([
-            'source' => 'CMS',
-            'brand' => 'shopware',
-            'brand_version' => HiPayPaymentPlugin::getShopwareVersion(),
-            'integration_version' => HiPayPaymentPlugin::getModuleVersion(),
-        ]);
+        $source = Source::toString();
         $maintenanceRequest->source = $source ?: null;
 
         if (isset($params['basket'])) {

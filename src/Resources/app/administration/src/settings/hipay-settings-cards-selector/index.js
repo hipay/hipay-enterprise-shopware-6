@@ -36,8 +36,8 @@ Shopware.Component.register('hipay-settings-cards-selector', {
           value: 'american-express'
         },
         {
-          label: 'Bancontact',
-          value: 'bancontact'
+          label: 'Bancontact / Mister Cash',
+          value: 'bcmc'
         },
         {
           label: 'Maestro',

@@ -9,6 +9,22 @@ use Shopware\Core\Checkout\Order\OrderEntity;
 
 class HipayOrderEntityTest extends TestCase
 {
+    public function testCreate()
+    {
+        $order = new OrderEntity();
+        $order->setId('ORDER_ID');
+
+        $transaction = new OrderTransactionEntity();
+        $transaction->setId('TRX_ID');
+
+        $hipayOrder = HipayOrderEntity::create('REF', $order, $transaction, [116]);
+
+        $this->assertEquals('REF', $hipayOrder->getTransanctionReference());
+        $this->assertEquals('ORDER_ID', $hipayOrder->getOrderId());
+        $this->assertEquals('TRX_ID', $hipayOrder->getTransactionId());
+        $this->assertEquals([116], $hipayOrder->getTransactionStatus());
+    }
+
     public function testToArray()
     {
         $order = new OrderEntity();

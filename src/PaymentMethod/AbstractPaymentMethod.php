@@ -20,6 +20,7 @@ use HiPay\Fullservice\Gateway\Request\Info\CustomerBillingInfoRequest;
 use HiPay\Fullservice\Gateway\Request\Info\CustomerShippingInfoRequest;
 use HiPay\Fullservice\Gateway\Request\Order\HostedPaymentPageRequest;
 use HiPay\Fullservice\Gateway\Request\Order\OrderRequest;
+use HiPay\Payment\Helper\Source;
 use HiPay\Payment\Service\HiPayHttpClientService;
 use HiPay\Payment\Service\ReadHipayConfigService;
 use Ramsey\Uuid\Uuid;
@@ -211,6 +212,10 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
         $orderRequest->shipping = $order->getShippingTotal();
         $orderRequest->amount = $order->getAmountTotal();
         $orderRequest->tax = $order->getAmountTotal() - $order->getAmountNet();
+
+        // Server Data
+        $source = Source::toString();
+        $orderRequest->source = $source ?: null;
 
         // Client Data
         $orderRequest->language = str_replace('-', '_', $locale);
