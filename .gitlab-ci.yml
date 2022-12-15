@@ -14,6 +14,7 @@ stages:
   - test-init
   - test
   - analyse
+  - package
   - build
   - deploy
 
@@ -281,6 +282,27 @@ sonarqube:
       -Dsonar.php.test.reportPath=$PATH_REPORTS_PHPUNIT/phpunit-junit.xml
       -Dsonar.php.phpstan.reportPaths=$PATH_REPORTS_PHPSTAN/phpstan-junit.xml
       -Dsonar.qualitygate.wait=true
+
+# Package into zip
+package:
+  stage: package
+  image:
+    name: $REGISTRY_CI/test-jobs-${DOCKER_STACK}-${DOCKER_SERVICE}_web:${CI_COMMIT_REF_SLUG}
+    entrypoint: ['']
+  needs:
+    - build-test
+  script:
+    - echo "Package module $CI_COMMIT_REF_SLUG"
+    - ./package-ready-for-shopware/builder/module_builder.sh -v $CI_COMMIT_REF_SLUG
+  artifacts:
+    paths:
+      - ./package-ready-for-shopware
+  tags:
+    - small
+  when: manual
+  except:
+    variables:
+      - $ONLY_DEPLOY
 
 #### BUILD ####
 
