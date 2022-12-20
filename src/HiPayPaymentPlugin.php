@@ -8,6 +8,7 @@ use Composer\InstalledVersions;
 use HiPay\Fullservice\Exception\UnexpectedValueException;
 use HiPay\Payment\PaymentMethod\CreditCard;
 use HiPay\Payment\PaymentMethod\PaymentMethodInterface;
+use HiPay\Payment\Service\ImageImportService;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
@@ -115,7 +116,9 @@ class HiPayPaymentPlugin extends Plugin
         $this->setPaymentMethodIsActive(
             true,
             CreditCard::class,
-            $context->getContext()
+            $context->getContext(),
+            'credit_card.svg',
+            'administration/media'
         );
         parent::activate($context);
     }
@@ -194,7 +197,9 @@ class HiPayPaymentPlugin extends Plugin
     private function setPaymentMethodIsActive(
         bool $active,
         string $paymentClassname,
-        Context $context
+        Context $context,
+        ?string $filename = null,
+        string $directory = ''
     ): void {
         /** @var EntityRepository $paymentRepository */
         $paymentRepository = $this->container->get($this->paymentMethodRepoName);
@@ -210,6 +215,10 @@ class HiPayPaymentPlugin extends Plugin
             'id' => $paymentMethodId,
             'active' => $active,
         ];
+
+        if ($filename && $mediaId = $this->addImageToPaymentMethod($filename, $directory, $context)) {
+            $paymentMethod['mediaId'] = $mediaId;
+        }
 
         $paymentRepository->update([$paymentMethod], $context);
     }
@@ -275,6 +284,15 @@ class HiPayPaymentPlugin extends Plugin
         }
 
         return $langMap;
+    }
+
+    private function addImageToPaymentMethod(string $filename, string $directory, Context $context): ?string
+    {
+        /** @var ImageImportService $imageImportService */
+        $imageImportService = $this->container->get(ImageImportService::class);
+
+        // Upload credit card image to media library
+        return $imageImportService->addImageToMediaFromFile($filename, $directory, 'payment_method', $context);
     }
 
     /**

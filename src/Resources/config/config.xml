@@ -283,6 +283,11 @@
             <label lang="de-DE">Technische Logs aktivieren</label>
         </input-field>
 
+        <component name="hipay-help-info">
+            <name>paragraph</name>
+            <value>hipay.config.authenticationIndicator</value>
+        </component>
+
         <input-field type="single-select">
             <name>authFlag3DS</name>
             <label>Authentication Indicator</label>

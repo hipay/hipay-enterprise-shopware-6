@@ -6,6 +6,10 @@
         <import resource="packages/*" />
     </imports>
 
+    <parameters>
+        <parameter key="hipay.media_directory">/Resources/public/</parameter>
+    </parameters>
+
     <services>
         <defaults autowire="true" autoconfigure="true" />
         <!-- Services -->
@@ -20,6 +24,13 @@
             <argument type="service" id="hipay_order.repository" />
             <argument type="service" id="hipay_order_capture.repository" />
             <argument type="service" id="hipay_order_refund.repository" />
+        </service>
+
+        <service id="HiPay\Payment\Service\ImageImportService" public="true">
+            <argument type="service" id="media.repository" />
+            <argument type="service" id="Shopware\Core\Content\Media\MediaService" />
+            <argument type="service" id="Shopware\Core\Content\Media\File\FileSaver" />
+            <argument>%hipay.media_directory%</argument>
         </service>
 
         <!-- Extension Entity -->
