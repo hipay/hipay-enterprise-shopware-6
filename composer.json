@@ -2,7 +2,7 @@
   "name": "hipay/hipay-enterprise-shopware-6",
   "description": "HiPay enterprise module for Shopware",
   "license": "Apache-2.0",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "authors": [
     {
       "email": "support.tpp@hipay.com",

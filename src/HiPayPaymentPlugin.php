@@ -334,3 +334,8 @@ class HiPayPaymentPlugin extends Plugin
         $systemConfigRepository->create($validParams, $context);
     }
 }
+
+if (file_exists(__DIR__ . '/../vendor/autoload.php')) {
+    require_once __DIR__ . '/../vendor/autoload.php';
+}
+
