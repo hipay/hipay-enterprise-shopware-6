@@ -28,15 +28,15 @@
       <br />
       <div class="captureBtnGrp">
         <sw-text-field :label="$tc('hipay.field.order_amount')"
-          :value="currency + orderAmount.toFixed(2)"
+          :value="formatCurrency(orderAmount)"
           :disabled="true"></sw-text-field>
         <sw-text-field :label="$tc('hipay.field.captured_amount')"
-          :value="currency + capturedAmountInProgress.toFixed(2)"
+          :value="formatCurrency(capturedAmountInProgress)"
           :disabled="true"></sw-text-field>
       </div>
       <div class="captureBtnGrp">
         <sw-text-field :label="$tc('hipay.field.remaining_amount')"
-          :value="currency + remainingCaptureAmount.toFixed(2)"
+          :value="formatCurrency(remainingCaptureAmount)"
           :disabled="true"></sw-text-field>
         <sw-number-field ref="captureAmount"
           :label="$tc('hipay.field.capture_amount')"
@@ -47,7 +47,7 @@
           :required="true"
           :isInvalid="isInvalidCaptureAmount"
           @change="onManualCaptureAmount"
-          :placeholder="captureAmountPlaceholder ? currency + captureAmountPlaceholder?.toFixed(2) : null"></sw-number-field>
+          :placeholder="captureAmountPlaceholder ? formatCurrency(captureAmountPlaceholder) : null"></sw-number-field>
       </div>
       <template slot="modal-footer">
         <sw-button @click="closeOrderCaptureModal">
@@ -87,15 +87,15 @@
       <br />
       <div class="refundBtnGrp">
         <sw-text-field :label="$tc('hipay.field.captured_amount')"
-          :value="currency + capturedAmount.toFixed(2)"
+          :value="formatCurrency(capturedAmount)"
           :disabled="true"></sw-text-field>
         <sw-text-field :label="$tc('hipay.field.refunded_amount')"
-          :value="currency + refundedAmountInProgress.toFixed(2)"
+          :value="formatCurrency(refundedAmountInProgress)"
           :disabled="true"></sw-text-field>
       </div>
       <div class="refundBtnGrp">
         <sw-text-field :label="$tc('hipay.field.remaining_amount')"
-          :value="currency + remainingRefundAmount.toFixed(2)"
+          :value="formatCurrency(remainingRefundAmount)"
           :disabled="true"></sw-text-field>
         <sw-number-field ref="refundAmount"
           :label="$tc('hipay.field.refund_amount')"
@@ -106,7 +106,7 @@
           :required="true"
           :isInvalid="isInvalidRefundAmount"
           @change="onManualRefundAmount"
-          :placeholder="refundAmountPlaceholder ? currency + refundAmountPlaceholder?.toFixed(2) : null"></sw-number-field>
+          :placeholder="refundAmountPlaceholder ? formatCurrency(refundAmountPlaceholder) : null"></sw-number-field>
       </div>
       <template slot="modal-footer">
         <sw-button @click="closeOrderRefundModal">

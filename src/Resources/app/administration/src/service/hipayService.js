@@ -10,6 +10,13 @@ class ApiHiPay extends ApiService {
     this.headers = this.getBasicHeaders({});
   }
 
+  getCurrencyFormater(currency) {
+    return new Intl.NumberFormat(
+        localStorage.getItem('sw-admin-locale'),
+        { style: 'currency', currency }
+    );
+  }
+
   validateConfig(values) {
     const headers = this.getBasicHeaders({});
 
@@ -55,6 +62,8 @@ class ApiHiPay extends ApiService {
         return ApiService.handleResponse(response);
       });
   }
+
+
 }
 
 Application.addServiceProvider('hipayService', (container) => {

@@ -21,7 +21,6 @@ class Migration extends MigrationStep
         CREATE TABLE IF NOT EXISTS `hipay_order` (
             `id` BINARY(16) NOT NULL,
             `transaction_reference` VARCHAR(255) UNIQUE NOT NULL,
-            `transaction_status` JSON NULL,
             `order_id` BINARY(16) UNIQUE NOT NULL,
             `transaction_id` BINARY(16) UNIQUE NOT NULL,
             `created_at` DATETIME(3) NOT NULL,
@@ -98,6 +97,27 @@ class Migration extends MigrationStep
             `updated_at` DATETIME(3) NULL,
             PRIMARY KEY (`id`),
             CONSTRAINT `fk.hipay_order_refund.hipay_order_id` FOREIGN KEY (`hipay_order_id`)
+            REFERENCES `hipay_order` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+        )
+        ENGINE = InnoDB
+        DEFAULT CHARSET = utf8mb4
+        COLLATE = utf8mb4_unicode_ci;
+        SQL;
+        $connection->executeStatement($sql);
+
+        // Create table for HiPay status related to hipay order
+        $sql = <<<SQL
+        CREATE TABLE IF NOT EXISTS `hipay_status_flow` (
+            `id` BINARY(16) NOT NULL,
+            `hipay_order_id` BINARY(16) NOT NULL,
+            `code` INT NOT NULL,
+            `message` VARCHAR(255),
+            `amount` FLOAT NOT NULL,
+            `hash` CHAR(8) UNIQUE NOT NULL,
+            `created_at` DATETIME(3) NOT NULL,
+            `updated_at` DATETIME(3) NULL,
+            PRIMARY KEY (`id`),
+            CONSTRAINT `fk.hipay_status_flow.hipay_order_id` FOREIGN KEY (`hipay_order_id`)
             REFERENCES `hipay_order` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
         )
         ENGINE = InnoDB

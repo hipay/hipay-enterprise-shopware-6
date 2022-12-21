@@ -4,7 +4,7 @@
     <!-- help bloc -->
     <card>
         <title>How can we help you ?</title>
-        <title lang="de-DE">Wie können wir Ihnen helfen ? </title>
+        <title lang="de-DE">Wie können wir ihnen helfen ? </title>
 
         <component name="hipay-help-bloc">
             <name>help</name>
@@ -18,19 +18,19 @@
 
         <input-field type="single-select">
             <name>environment</name>
-            <label>Choose test or environment</label>
-            <label lang="de-DE">Wählen Sie Test oder Umgebung</label>
+            <label>Choose an environment</label>
+            <label lang="de-DE">Umgebung wählen</label>
             <required>true</required>
             <options>
                 <option>
                     <id>Stage</id>
-                    <name>Stage</name>
-                    <name lang="de-DE">Stage</name>
+                    <name>Test</name>
+                    <name lang="de-DE">Test</name>
                 </option>
                 <option>
                     <id>Production</id>
-                    <name>Production</name>
-                    <name lang="de-DE">Produktion</name>
+                    <name>Live</name>
+                    <name lang="de-DE">Live</name>
                 </option>
             </options>
         </input-field>
@@ -91,14 +91,15 @@
 
         <input-field type="password">
             <name>passphraseProduction</name>
-            <label>Passphrase</label>
+            <label>Secret passphrase</label>
+            <label lang="de-DE">geheime Passphrase</label>
             <required>true</required>
         </input-field>
 
         <input-field type="single-select">
             <name>hashProduction</name>
-            <label>Algorithm</label>
-            <label lang="de-DE">Algorithmus</label>
+            <label>Hashing algorithm</label>
+            <label lang="de-DE">Hash-Algorithmus</label>
             <required>true</required>
             <options>
                 <option>
@@ -174,14 +175,15 @@
 
         <input-field type="password">
             <name>passphraseStage</name>
-            <label>Passphrase</label>
+            <label>Secret passphrase</label>
+            <label lang="de-DE">geheime Passphrase</label>
             <required>true</required>
         </input-field>
 
         <input-field type="single-select">
             <name>hashStage</name>
-            <label>Algorithm</label>
-            <label lang="de-DE">Algorithmus</label>
+            <label>Hashing algorithm</label>
+            <label lang="de-DE">Hash-Algorithmus</label>
             <required>true</required>
             <options>
                 <option>
@@ -205,7 +207,12 @@
     <!-- configuration transaction -->
     <card>
         <title>Configuration mode Transaction </title>
-        <title lang="de-DE">Transaktion im Konfigurationsmodus</title>
+        <title lang="de-DE">Transaktionsmodus Konfiguration</title>
+
+        <component name="hipay-help-info">
+            <name>helpCaptureMode</name>
+            <value>hipay.config.capture-help</value>
+        </component>
 
         <input-field type="single-select">
             <name>captureMode</name>
@@ -216,7 +223,7 @@
                 <option>
                     <id>automatic</id>
                     <name>Automatic (by default)</name>
-                    <name lang="de-DE">Automatisch (standardmäßig) </name>
+                    <name lang="de-DE">Automatisch (voreingestellt)</name>
                 </option>
                 <option>
                     <id>manual</id>
@@ -225,22 +232,17 @@
                 </option>
             </options>
             <defaultValue>automatic</defaultValue>
-
-            <helpText>                
-                Automatic: All transactions will be automatically captured.
-                Manual: All transactions will be captured manually in your HiPay or Shopware back office.
-            </helpText>
-            <helpText lang="de-DE">
-                Automatich: Alle Transaktionen werden automatisch erfasst.
-                Manual: Alle Transaktionen werden manuell in Ihrem HiPay- oder PrestaShop-Backoffice erfasst.
-            </helpText>
         </input-field>
 
+        <component name="hipay-help-info">
+            <name>helpOperationMode</name>
+            <value>hipay.config.operation-help</value>
+        </component>
 
         <input-field type="single-select">
             <name>operationMode</name>
-            <label>Operation mode</label>
-            <label lang="de-DE">Betriebsart</label>
+            <label>Integration type</label>
+            <label lang="de-DE">Integrations Typ</label>
             <required>true</required>
             <options>
                 <option>
@@ -255,27 +257,19 @@
                 </option>
             </options>
             <defaultValue>hostedPage</defaultValue>
-            <helpText>                
-                Hosted page: The customer is redirected to a secure payment page hosted by HiPay. 
-                Hosted fields: The customer will fill in their banking information directly on the merchant's website but the form fields will be hosted by HiPay. This mode is only valid for credit cards
-            </helpText>
-            <helpText lang="de-DE">                
-                Gehostete Seite : Der Kunde wird zu einer sicheren, von HiPay gehosteten Zahlungsseite weitergeleitet.
-                Heruntergeladene Felder: Der Kunde gibt seine Bankdaten direkt auf der Website des Händlers ein, die Felder des Formulars werden jedoch von HiPay gehostet. Dieser Modus ist nur für Kreditkarten gülti
-            </helpText>
         </input-field>
 
-        <input-field type="bool">
+        <!-- <input-field type="bool">
             <name>oneClickPayment</name>
             <label>Using One-click payment</label>
-            <label lang="de-DE">One-Click-Zahlung verwenden</label>
+            <label lang="de-DE">One-Click-Zahlung</label>
         </input-field>
 
         <input-field type="bool">
             <name>rememberCart</name>
-            <label>Retain cart if payment fails</label>
-            <label lang="de-DE">Bewahren Sie den Warenkorb auf, wenn die Zahlung fehlschlägt</label>
-        </input-field>
+            <label>Keep the basket if the payment fails.</label>
+            <label lang="de-DE">Den Warenkorb behalten, wenn die Zahlung fehlschlägt</label>
+        </input-field> -->
 
         <input-field type="bool">
             <name>debugMode</name>
@@ -303,7 +297,7 @@
                 </option>
                 <option>
                     <id>2</id>
-                    <name>3-D Secure authentication mandator</name>
+                    <name>3-D Secure authentication mandatory</name>
                     <name lang="de-DE">
                         3-D Secure-Authentifizierungsmandat
                     </name>
@@ -326,7 +320,7 @@
         <input-field>
             <name>hostedFieldsFontFamilly</name>
             <label>Font familly</label>
-            <label lang="de-DE">Schriftfamilie</label>
+            <label lang="de-DE">Schrift-Familie</label>
         </input-field>
 
         <input-field type="int">

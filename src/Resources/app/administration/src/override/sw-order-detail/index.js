@@ -15,7 +15,6 @@ Shopware.Component.override('sw-order-detail', {
       showOrderRefund: false,
       lastTransaction: null,
       lineItems: null,
-      currency: null,
       basketColumns: [
         {
           property: 'label',
@@ -28,6 +27,7 @@ Shopware.Component.override('sw-order-detail', {
         },
         { property: 'totalPrice', label: this.$tc('hipay.basket.column.price') }
       ],
+      currency: null,
       captureAmount: null,
       refundAmount: null,
       manualCaptureAmount: null,
@@ -58,9 +58,7 @@ Shopware.Component.override('sw-order-detail', {
     orderBasket() {
       // Returns lineItems as source to data grid & show currency next to totalPrice
       for (const lineItem of this.lineItems) {
-        lineItem.totalPrice =
-          this.currency +
-          (lineItem.unitPrice * lineItem.currentQuantity).toFixed(2);
+        lineItem.totalPrice = this.formatCurrency(lineItem.unitPrice * lineItem.currentQuantity);
       }
       return this.lineItems;
     },
@@ -116,6 +114,9 @@ Shopware.Component.override('sw-order-detail', {
     }
   },
   methods: {
+    formatCurrency(number) {     
+        return this.hipayService.getCurrencyFormater(this.currency).format(number);
+    },
     openCapture() {
       console.log(JSON.parse(JSON.stringify(this.hipayOrderData)));
       this.showOrderCapture = true;
@@ -134,11 +135,13 @@ Shopware.Component.override('sw-order-detail', {
     },
     orderLoaded(order) {
       this.orderData = order;
+      this.currency = order.currency.isoCode;
       console.log(JSON.parse(JSON.stringify(this.orderData)));
-      this.currency = this.orderData.currency.symbol;
       this.lastTransaction = this.orderData.transactions.last();
-      this.hipayOrderData = this.orderData.extensions.hipayOrder;
-      console.log(JSON.parse(JSON.stringify(this.hipayOrderData)));
+      this.hipayOrderData = this.orderData.extensions?.hipayOrder;
+      if (this.hipayOrderData) {
+        console.log(JSON.parse(JSON.stringify(this.hipayOrderData)));
+      }
 
       // Set lineItems from orderData & add currentQuantity field to lineItems
       const lineItems = JSON.parse(JSON.stringify(this.orderData.lineItems));
@@ -216,7 +219,7 @@ Shopware.Component.override('sw-order-detail', {
     onQuantityChangeForCapture(val, product) {
       // Change current quantity of a lineItem & trigger selectProduct event
       const itemIndex = this.lineItems.findIndex(
-        (lineItem) => lineItem.id === product.id
+        lineItem => lineItem.id === product.id
       );
       if (itemIndex >= 0) {
         this.lineItems[itemIndex].currentQuantity = val;
@@ -226,7 +229,7 @@ Shopware.Component.override('sw-order-detail', {
     onQuantityChangeForRefund(val, product) {
       // Change current quantity of a lineItem & trigger selectProduct event
       const itemIndex = this.lineItems.findIndex(
-        (lineItem) => lineItem.id === product.id
+        lineItem => lineItem.id === product.id
       );
       if (itemIndex >= 0) {
         this.lineItems[itemIndex].currentQuantity = val;
@@ -271,7 +274,7 @@ Shopware.Component.override('sw-order-detail', {
             : this.$refs.captureAmount.currentValue ??
                 this.captureAmountPlaceholder
         )
-        .then((response) => {
+        .then(response => {
           if (!response.success) {
             throw new Error(response.message);
           }
@@ -316,7 +319,7 @@ Shopware.Component.override('sw-order-detail', {
             : this.$refs.refundAmount.currentValue ??
                 this.refundAmountPlaceholder
         )
-        .then((response) => {
+        .then(response => {
           if (!response.success) {
             throw new Error(response.message);
           }

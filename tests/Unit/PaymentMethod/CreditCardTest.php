@@ -1,6 +1,6 @@
 <?php
 
-namespace Hipay\Payment\Tests\Unit\PaymentMethod;
+namespace HiPay\Payment\Tests\Unit\PaymentMethod;
 
 use HiPay\Payment\PaymentMethod\CreditCard;
 use HiPay\Payment\Tests\Tools\PaymentMethodMockTrait;

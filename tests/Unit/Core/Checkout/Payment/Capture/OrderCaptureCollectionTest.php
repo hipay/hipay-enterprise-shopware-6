@@ -1,6 +1,6 @@
 <?php
 
-namespace Hipay\Payment\Tests\Unit\Core\Checkout\Payment\Capture;
+namespace HiPay\Payment\Tests\Unit\Core\Checkout\Payment\Capture;
 
 use HiPay\Payment\Core\Checkout\Payment\Capture\OrderCaptureCollection;
 use HiPay\Payment\Core\Checkout\Payment\Capture\OrderCaptureEntity;

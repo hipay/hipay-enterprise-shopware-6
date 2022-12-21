@@ -87,7 +87,7 @@ elif [ "$1" = 'test' ]; then
         docker exec $container bash -c "
             export XDEBUG_MODE=coverage
             cd custom/plugins/HiPayPaymentPlugin
-            php -d xdebug.mode=coverage vendor/bin/infection --logger-html=reports/infection.html --min-covered-msi=90 --threads=4
+            php -d xdebug.mode=coverage vendor/bin/infection --logger-html=reports/infection.html --min-covered-msi=85 --threads=4
         "
         find=true
     fi

@@ -1,6 +1,6 @@
 <?php
 
-namespace Hipay\Payment\Tests\Unit\PaymentMethod;
+namespace HiPay\Payment\Tests\Unit\PaymentMethod;
 
 use HiPay\Fullservice\Enum\ThreeDSTwo\DeliveryTimeFrame;
 use HiPay\Fullservice\Enum\ThreeDSTwo\DeviceChannel;
@@ -73,6 +73,7 @@ class AbstractPaymentMethodTest extends TestCase
         $configTransaction = [
             'return_url' => $returnUrl,
             'order' => [
+                'order_number' => 98765,
                 'shipping_total' => 1.34,
                 'amount_total' => 123.4,
                 'amount_net' => 99.99,
@@ -140,7 +141,7 @@ class AbstractPaymentMethodTest extends TestCase
 
         $orderRequest = new OrderRequest();
         $responses = [
-            'requestNewOrder' => function (OrderRequest $argument) use (&$orderRequest, $returnUrl) {
+            'requestNewOrder' => function (OrderRequest $argument) use (&$orderRequest) {
                 $orderRequest = $argument;
 
                 return (new TransactionMapper([
@@ -317,7 +318,7 @@ class AbstractPaymentMethodTest extends TestCase
         );
 
         $this->assertSame(
-            $redirectUri.'&status='.$state,
+            $redirectUri.'&return='.$state,
             $redirectResponse->getTargetUrl()
         );
 
@@ -326,7 +327,7 @@ class AbstractPaymentMethodTest extends TestCase
 
         $paymentMethod->finalize(
             $transaction,
-            new Request(['status' => $state]),
+            new Request(['return' => $state]),
             $this->createMock(SalesChannelContext::class)
         );
     }
@@ -336,6 +337,7 @@ class AbstractPaymentMethodTest extends TestCase
         $configTransaction = [
             'return_url' => 'foo.bar',
             'order' => [
+                'order_number' => 12_345,
                 'shipping_total' => 10,
                 'amount_total' => 100_000,
                 'amount_net' => 90_000,
@@ -519,6 +521,12 @@ class AbstractPaymentMethodTest extends TestCase
     {
         $this->assertEquals(
             $configTransaction['transaction']['id'],
+            $orderRequest->custom_data['transaction_id'],
+            'transaction_id missmatch'
+        );
+
+        $this->assertEquals(
+            $configTransaction['order']['order_number'].'-'.dechex(crc32($configTransaction['transaction']['id'])),
             $orderRequest->orderid,
             'orderid missmatch'
         );
@@ -730,15 +738,15 @@ class AbstractPaymentMethodTest extends TestCase
         );
 
         $this->assertSame(
-            ($orderRequest->forward_url ?? $configTransaction['return_url']).'&status=error',
+            ($orderRequest->forward_url ?? $configTransaction['return_url']).'&return=error',
             $orderRequest->decline_url
         );
         $this->assertSame(
-            ($orderRequest->forward_url ?? $configTransaction['return_url']).'&status=error',
+            ($orderRequest->forward_url ?? $configTransaction['return_url']).'&return=error',
             $orderRequest->exception_url
         );
         $this->assertSame(
-            ($orderRequest->forward_url ?? $configTransaction['return_url']).'&status=error',
+            ($orderRequest->forward_url ?? $configTransaction['return_url']).'&return=error',
             $orderRequest->cancel_url
         );
     }

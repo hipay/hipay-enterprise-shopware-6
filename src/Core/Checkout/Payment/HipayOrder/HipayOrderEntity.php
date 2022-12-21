@@ -4,6 +4,8 @@ namespace HiPay\Payment\Core\Checkout\Payment\HipayOrder;
 
 use HiPay\Payment\Core\Checkout\Payment\Capture\OrderCaptureCollection;
 use HiPay\Payment\Core\Checkout\Payment\Capture\OrderCaptureEntity;
+use HiPay\Payment\Core\Checkout\Payment\HipayStatusFlow\HipayStatusFlowCollection;
+use HiPay\Payment\Core\Checkout\Payment\HipayStatusFlow\HipayStatusFlowEntity;
 use HiPay\Payment\Core\Checkout\Payment\Refund\OrderRefundCollection;
 use HiPay\Payment\Core\Checkout\Payment\Refund\OrderRefundEntity;
 use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionEntity;
@@ -30,12 +32,11 @@ class HipayOrderEntity extends Entity
 
     protected string $transactionReference;
 
-    /** @var int[] */
-    protected array $transactionStatus = [];
-
     protected OrderCaptureCollection $captures;
 
     protected OrderRefundCollection $refunds;
+
+    protected HipayStatusFlowCollection $statusFlows;
 
     protected float $capturedAmount = 0;
 
@@ -49,20 +50,18 @@ class HipayOrderEntity extends Entity
     {
         $this->captures = new OrderCaptureCollection();
         $this->refunds = new OrderRefundCollection();
+        $this->statusFlows = new HipayStatusFlowCollection();
     }
 
     /**
      * Create a HiPay order object.
-     *
-     * @param int[] $transactionStatus
      */
-    public static function create(string $transactionReference, OrderEntity $order, OrderTransactionEntity $transaction, array $transactionStatus = []): self
+    public static function create(string $transactionReference, OrderEntity $order, OrderTransactionEntity $transaction): self
     {
         $hipayOrder = new static();
         $hipayOrder->setTransanctionReference($transactionReference);
         $hipayOrder->setOrder($order);
         $hipayOrder->setTransaction($transaction);
-        $hipayOrder->setTransactionStatus($transactionStatus);
 
         return $hipayOrder;
     }
@@ -119,25 +118,19 @@ class HipayOrderEntity extends Entity
         $this->transactionReference = $transactionReference;
     }
 
-    /**
-     * @return int[]
-     */
-    public function getTransactionStatus(): array
+    public function getStatusFlows(): HipayStatusFlowCollection
     {
-        return $this->transactionStatus;
+        return $this->statusFlows;
     }
 
-    public function addTransactionStatus(int $status): void
+    public function setStatusFlows(HipayStatusFlowCollection $statusFlows): void
     {
-        array_push($this->transactionStatus, $status);
+        $this->statusFlows = $statusFlows;
     }
 
-    /**
-     * @param int[] $transactionStatus
-     */
-    public function setTransactionStatus(array $transactionStatus): void
+    public function addStatusFlow(HipayStatusFlowEntity $statusFlow): void
     {
-        $this->transactionStatus = $transactionStatus;
+        $this->statusFlows->add($statusFlow);
     }
 
     public function getCaptures(): OrderCaptureCollection
@@ -232,6 +225,7 @@ class HipayOrderEntity extends Entity
         $hipayOrder['transaction'] = ['id' => $this->transactionId];
         $hipayOrder['captures'] = null;
         $hipayOrder['refunds'] = null;
+        $hipayOrder['statusFlows'] = null;
 
         return $hipayOrder;
     }

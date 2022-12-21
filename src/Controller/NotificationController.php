@@ -9,7 +9,6 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
-use Throwable;
 
 /**
  * Controller use to receive notifications from Hipay.
@@ -37,7 +36,7 @@ class NotificationController
     {
         try {
             $this->notificationService->saveNotificationRequest($request);
-        } catch (Throwable $e) {
+        } catch (\Throwable $e) {
             $message = 'Notification fail : '.$e->getMessage();
             $this->logger->error($message);
 

@@ -85,6 +85,7 @@ trait PaymentMethodMockTrait
         $order->setAmountTotal($config['order.amount_total'] ?? round(rand(1, PHP_INT_MAX), 2));
         $order->setShippingTotal($config['order.shipping_total'] ?? round(rand(1, PHP_INT_MAX), 2));
         $order->setAmountNet($config['order.amount_net'] ?? round(rand(1, PHP_INT_MAX), 2));
+        $order->setOrderNumber($config['order.order_number'] ?? rand(1, PHP_INT_MAX));
 
         // currency
         $currency = new CurrencyEntity();

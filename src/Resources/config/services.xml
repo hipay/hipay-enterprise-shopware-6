@@ -35,11 +35,11 @@
 
         <!-- Extension Entity -->
         <service id="HiPay\Payment\Extension\Order\OrderExtension">
-            <tag name="shopware.entity.extension"/>
+            <tag name="shopware.entity.extension" />
         </service>
 
         <service id="HiPay\Payment\Extension\Order\OrderTransactionExtension">
-            <tag name="shopware.entity.extension"/>
+            <tag name="shopware.entity.extension" />
         </service>
 
         <!-- Entity -->
@@ -57,6 +57,10 @@
 
         <service id="HiPay\Payment\Core\Checkout\Payment\Refund\OrderRefundDefinition">
             <tag name="shopware.entity.definition" entity="hipay_order_refund" />
+        </service>
+
+        <service id="HiPay\Payment\Core\Checkout\Payment\HipayStatusFlow\HipayStatusFlowDefinition">
+            <tag name="shopware.entity.definition" entity="hipay_status_flow" />
         </service>
 
         <!-- Controller-->
@@ -89,9 +93,9 @@
         </prototype>
 
         <!-- Subscriber -->
-        <service id="HiPay\Payment\Subscriber\HipayOrderSubscriber">
-            <tag name="kernel.event_subscriber"/>
-        </service>
+        <prototype namespace="HiPay\Payment\Subscriber\" resource="../../Subscriber/*Subscriber.php">
+            <tag>kernel.event_subscriber</tag>
+        </prototype>
 
     </services>
 </container>

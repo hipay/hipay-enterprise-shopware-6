@@ -1,6 +1,6 @@
 <?php
 
-namespace Hipay\Payment\Tests\Unit\Formatter\Request;
+namespace HiPay\Payment\Tests\Unit\Formatter\Request;
 
 use HiPay\Payment\Formatter\Request\MaintenanceRequestFormatter;
 use HiPay\Payment\HiPayPaymentPlugin;

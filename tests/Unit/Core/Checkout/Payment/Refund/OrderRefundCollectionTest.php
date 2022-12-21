@@ -1,6 +1,6 @@
 <?php
 
-namespace Hipay\Payment\Tests\Unit\Core\Checkout\Payment\Refund;
+namespace HiPay\Payment\Tests\Unit\Core\Checkout\Payment\Refund;
 
 use HiPay\Payment\Core\Checkout\Payment\Refund\OrderRefundCollection;
 use HiPay\Payment\Core\Checkout\Payment\Refund\OrderRefundEntity;

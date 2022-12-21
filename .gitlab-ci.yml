@@ -131,9 +131,17 @@ install-test:
 
 #### TEST ####
 
-sast:
+nodejs-scan-sast:
   rules:
-    - if: ! $ONLY_DEPLOY
+    - if: $ONLY_DEPLOY || $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: never
+    - when: on_success
+
+phpcs-security-audit-sast:
+  rules:
+    - if: $ONLY_DEPLOY || $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: never
+    - when: on_success
 
 # Code style
 code-style:
@@ -241,7 +249,7 @@ infection:
   script:
     - $PATH_VENDOR/bin/infection
       --logger-html=$PATH_REPORTS/infection.html
-      --min-covered-msi=90
+      --min-covered-msi=85
   artifacts:
     paths:
       - $PATH_REPORTS/infection.html

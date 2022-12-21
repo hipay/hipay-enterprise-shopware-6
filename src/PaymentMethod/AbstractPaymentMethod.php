@@ -112,8 +112,8 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
     ): void {
         $transaction = $transaction->getOrderTransaction();
 
-        if ($status = $request->query->getAlpha('status')) {
-            throw new AsyncPaymentFinalizeException($transaction->getId(), 'Payment '.$status);
+        if ($return = $request->query->getAlpha('return')) {
+            throw new AsyncPaymentFinalizeException($transaction->getId(), 'Payment '.$return);
         }
 
         $this->transactionStateHandler->process($transaction->getId(), Context::createDefaultContext());
@@ -133,7 +133,7 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
             );
 
             // error as main return
-            $redirect = $transaction->getReturnUrl().'&status='.TransactionState::ERROR;
+            $redirect = $transaction->getReturnUrl().'&return='.TransactionState::ERROR;
 
             switch ($response->getState()) {
                 case TransactionState::FORWARDING:
@@ -145,7 +145,7 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
                     break;
 
                 case TransactionState::DECLINED:
-                    $redirect = $transaction->getReturnUrl().'&status='.TransactionState::DECLINED;
+                    $redirect = $transaction->getReturnUrl().'&return='.TransactionState::DECLINED;
                     break;
             }
 
@@ -199,8 +199,8 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
         $isCaptureAuto = $this->config->isCaptureAuto();
         $order = $transaction->getOrder();
 
-        // Order data
-        $orderRequest->orderid = $transaction->getOrderTransaction()->getId();
+        $operationId = Uuid::uuid4()->toString();
+        $orderRequest->orderid = $order->getOrderNumber().'-'.dechex(crc32($transaction->getOrderTransaction()->getId()));
         $orderRequest->operation = $isCaptureAuto ? 'Sale' : 'Authorization';
         $orderRequest->description = $this->generateDescription($order->getLineItems(), 255, '...');
         // $orderRequest->basket = $this->generateBasket($transaction->getOrder());
@@ -228,22 +228,21 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
         $orderRequest->cid = $order->getOrderCustomer()->getId();
         $orderRequest->customerBillingInfo = $this->generateCustomerBillingInfo($order);
         $orderRequest->customerShippingInfo = $this->generateCustomerShippingInfo($order);
-
+        $customData = ['transaction_id' => $transaction->getOrderTransaction()->getId()];
         if ($isCaptureAuto) {
             // Create operation_id in custom_data if capture mode is auto
-            $orderRequest->custom_data = [
-                'operation_id' => Uuid::uuid4()->toString(),
-            ];
+            $customData['operation_id'] = $operationId;
         }
+        $orderRequest->custom_data = $customData;
 
         $orderRequest->merchant_risk_statement = $this->generateMerchantRiskStatement($order);
         $orderRequest->account_info = $this->generateAccountInfo($order);
 
         $orderRequest->accept_url = $transaction->getReturnUrl();
         $orderRequest->pending_url = $transaction->getReturnUrl();
-        $orderRequest->decline_url = $transaction->getReturnUrl().'&status='.TransactionState::ERROR;
-        $orderRequest->exception_url = $transaction->getReturnUrl().'&status='.TransactionState::ERROR;
-        $orderRequest->cancel_url = $transaction->getReturnUrl().'&status='.TransactionState::ERROR;
+        $orderRequest->decline_url = $transaction->getReturnUrl().'&return='.TransactionState::ERROR;
+        $orderRequest->exception_url = $transaction->getReturnUrl().'&return='.TransactionState::ERROR;
+        $orderRequest->cancel_url = $transaction->getReturnUrl().'&return='.TransactionState::ERROR;
 
         $orderRequest->notify_url = $this->request->getSchemeAndHttpHost().'/api/hipay/notify';
 

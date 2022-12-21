@@ -1,6 +1,6 @@
 <?php
 
-namespace Hipay\Payment\Tests\Unit\Controller;
+namespace HiPay\Payment\Tests\Unit\Controller;
 
 use Exception;
 use HiPay\Payment\Controller\NotificationController;

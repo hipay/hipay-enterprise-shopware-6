@@ -1,6 +1,6 @@
 <?php
 
-namespace Hipay\Payment\Tests\Unit\Controller;
+namespace HiPay\Payment\Tests\Unit\Controller;
 
 use HiPay\Fullservice\Gateway\Client\GatewayClient;
 use HiPay\Fullservice\Gateway\Model\Operation;

@@ -1,6 +1,6 @@
 <?php
 
-namespace Hipay\Payment\Tests\Unit\Service;
+namespace HiPay\Payment\Tests\Unit\Service;
 
 use HiPay\Payment\HiPayPaymentPlugin;
 use HiPay\Payment\Service\ReadHipayConfigService;
