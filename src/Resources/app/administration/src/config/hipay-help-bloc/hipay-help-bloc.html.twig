@@ -1,0 +1,32 @@
+<div class="hipay-help">
+  <div class="hipay-help-bloc">
+    <div class="hipay-help-bloc-item">
+      <sw-icon name="default-documentation-file"></sw-icon>
+      <a href="https://support.hipay.com"
+        class="sw-button sw-button--primary"
+        target="_blank"
+        rel="noopener"
+        :title="$tc('hipay.config.help.manual')">
+        {{ $tc('hipay.config.help.manual') }}
+      </a>
+    </div>
+
+    <div class="hipay-help-bloc-item">
+      <sw-icon name="default-text-code"></sw-icon>
+      <a href="https://github.com/hipay/hipay-enterprise-shopware-6"
+        class="sw-button sw-button--primary"
+        rel="noopener"
+        target="_blank"
+        :title="$tc('hipay.config.help.manual')">
+        {{ $tc('hipay.config.help.github') }}
+      </a>
+    </div>
+
+    <div class="hipay-help-bloc-item">
+      <sw-icon name="default-action-cloud-upload"></sw-icon>
+      <p class="version-text">
+        {{ $tc('hipay.config.help.version') }} : {{ version }}
+      </p>
+    </div>
+  </div>
+</div>

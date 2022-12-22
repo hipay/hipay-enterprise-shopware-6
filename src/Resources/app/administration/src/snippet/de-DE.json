@@ -1,0 +1,76 @@
+{
+  "hipay": {
+    "config": {
+      "help": {
+        "manual": "Online-Handbuch",
+        "github": "Meldung eines Fehler auf GitHub",
+        "version": "Versionsnummer"
+      },
+      "checkAccess": {
+        "title": "HiPay Configuration",
+        "success": "API-Anmeldeinformationen testen: Die API-Anmeldeinformationen von HiPay sind gültig.",
+        "failure": "Test API Credentials : Die API Credentials von HiPay sind nicht gültig.",
+        "button": "API-Anmeldedaten testen"
+      },
+      "capture-help": "<b>Automatich</b>: Alle Transaktionen werden automatisch erfasst.<br/><b>Manual</b>: Alle Transaktionen werden manuell in Ihrem HiPay- oder PrestaShop-Backoffice erfasst.",
+      "operation-help": "<b>Hostet Page</b>: Der Kunde wird zu einer sicheren, von HiPay gehosteten Zahlungsseite weitergeleitet. <b>Hosted Fields</b>: Der Kunde gibt seine Bankdaten direkt auf der Website des Händlers ein, die Felder des Formulars werden jedoch von HiPay gehostet. Dieser Modus ist nur für Kreditkarten gültig.",
+      "title": {
+        "privateKey": "Private Anmeldedaten",
+        "publicKey": "Öffentliche Anmeldedaten",
+        "notification": "Einstellungen für Benachrichtigungen"
+      },
+      "info": "Um Sie über Ereignisse im Zusammenhang mit Ihrem Zahlungssystem zu informieren, z. B. über eine neue Transaktion oder eine 3-D Secure-Transaktion, kann die HiPay Plattform Ihrer Anwendung eine Server-to-Server-Benachrichtigung senden. Loggen Sie sich bei HiPay Console ein, wählen Sie einen Account und klicken Sie Integration > Sicherheitseinstellungen um die geheime Passphrase abzurufen.",
+      "authenticationIndicator": "<b>3-D Secure-Authentifizierung obligatorisch :</b><br/>Zum Fortfahren ist eine Authentifizierung erforderlich (diese Authentifizierung kann entweder ein 3DSv2-Challenge-Flow oder ein reibungsloser 3DSv2-Flow sein, ohne dass eine Benutzereingabe erforderlich ist). <b>Schlägt die Authentifizierung fehl, wird die Transaktion abgelehnt und der Kunde wird nicht belastet.</b><br/><br/><b>3-D Secure-Authentifizierung, falls verfügbar :</b><br/>Wenn die Zahlungsmethode dies zulässt, wird ein Authentifizierungsprozess angefordert. Wenn die Authentifizierung jedoch fehlschlägt, wird die Transaktion nicht abgelehnt (<b>nur für den Rest der Welt</b>, da Transaktionen innerhalb der EURO-Zone PSD2 unterliegen und authentifiziert werden müssen).e. Falls von der Bank verlangt, führt der Kunde einen zusätzlichen Authentifizierungsschritt durch, damit die Belastung erfolgreich ist.",
+      "creditCards": {
+        "choice": "Kreditkarte auswählen"
+      }
+    },
+    "hosted-page": {
+      "redirect-message": "Sie werden auf eine externe Zahlungsseite weitergeleitet. Bitte aktualisieren Sie die Seite während des Vorgangs nicht"
+    },
+    "hosted-fields": {
+      "fullname": "Vollständiger Name",
+      "card-number": "Kartennummer",
+      "expiry-date": "Verfallsdatum",
+      "cvc": "CVC"
+    },
+    "action": {
+      "cancel": "Absagen",
+      "capture": "Erfassung",
+      "refund": "Erstattung",
+      "full_capture": "Vollständige Erfassung",
+      "full_refund": "Vollständige Erstattung"
+    },
+    "basket": {
+      "column": {
+        "product": "Produkt",
+        "quantity": "Menge",
+        "price": "Preis",
+        "shipping": "Versandkosten"
+      }
+    },
+    "field": {
+      "capture_amount": "Erfassungsbetrag",
+      "remaining_amount": "Restbetrag",
+      "order_amount": "Bestellbetrag",
+      "captured_amount": "Erfasster Betrag",
+      "refund_amount": "Rückerstattungsbetrag",
+      "refunded_amount": "Erstatteter Betrag"
+    },
+    "notification": {
+      "capture": {
+        "title": "Transaktionserfassung",
+        "success": "Transaktion erfolgreich erfasst",
+        "failure": "Fehler bei der Transaktionserfassung"
+      },
+      "refund": {
+        "title": "Transaktionsrückerstattung",
+        "success": "Transaktion erfolgreich zurückerstattet",
+        "failure": "Fehler bei der Transaktionsrückerstattung"
+      }
+    },
+    "transaction" : {
+      "title" : "HiPay-Transaktionslebenszyklus"
+    }
+  }
+}

@@ -1,0 +1,16 @@
+{% block sw_data_grid_columns_render_value %}
+  <template v-if="column.property === 'quantity'">
+    <sw-number-field class="quantityInp"
+      numberType="int"
+      :min="1"
+      :max="item.quantity"
+      :value="item.quantity"
+      :disabled="!item.good || item.shipping"
+      @change="onValueChange(item, $event)"></sw-number-field>
+  </template>
+  <template v-else>
+    <span class="sw-data-grid__cell-value">
+      {{ renderColumn(item, column) }}
+    </span>
+  </template>
+{% endblock %}

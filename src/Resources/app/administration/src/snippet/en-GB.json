@@ -1,0 +1,76 @@
+{
+  "hipay": {
+    "config": {
+      "help": {
+        "manual": "Online manual",
+        "github": "Report Errors on github",
+        "version": "Version number"
+      },
+      "checkAccess": {
+        "title": "HiPay Configuration",
+        "success": "Test API credentials: The HiPay API credentials are valid.",
+        "failure": "Test API credentials: The HiPay API credentials are not valid.",
+        "button": "Test API credentials"
+      },
+      "title": {
+        "privateKey": "Private credentials",
+        "publicKey": "Public credentials",
+        "notification": "Notification settings"
+      },
+      "capture-help":"<b>Automatic</b>: All transactions will be automatically captured.<br/><b>Manual</b>: All transactions will be captured manually in your HiPay or Shopware back office.",
+      "operation-help": "<b>Hosted page</b>: The customer is redirected to a secure payment page hosted by HiPay.<br/><b>Hosted fields</b>: The customer will fill in their banking information directly on the merchant's website but the form fields will be hosted by HiPay. This mode is only valid for credit cards",
+      "info": "To inform you about events related to your payment system, e.g. about a new transaction or a 3-D Secure transaction, the HiPay Enterprise platform can send your application a server-to-server notification. Login to Hipay Back Office, go to Integration > Security Settings module and get your HiPay merchant account passphrase.",
+      "authenticationIndicator": "<b>3-D Secure authentication mandatory :</b><br/>An authentication is required to proceed (This authentication can either be a 3DSv2 Challenge flow or a 3DSv2 frictionless flow, without any user input required). <b>If the authentication fails, the transaction will be refused and the client will not be charged.</b><br/><br/><b>3-D Secure authentication if available :</b><br/>If the Payment Method allows it, an authentication process is requested. However, if the authentication fails, the transaction will not be refused (<b>only for rest of the world transactions</b>, as transactions made inside the EURO zone are subject to PSD2 and must be authenticated).e. If required by the bank, the customer completes an additional authentication step for the charge to succeed.",
+      "creditCards": {
+        "choice": "Select credit card"
+      }
+    },
+    "hosted-page": {
+      "redirect-message": "You will be redirected to an external payment page. Please do not refresh the page during the process"
+    },
+    "hosted-fields": {
+      "fullname": "fullname",
+      "card-number": "Card number",
+      "expiry-date": "Expiry date",
+      "cvc": "CVC"
+    },
+    "action": {
+      "cancel": "Cancel",
+      "capture": "Capture",
+      "refund": "Refund",
+      "full_capture": "Full Capture",
+      "full_refund": "Full Refund"
+    },
+    "basket": {
+      "column": {
+        "product": "Product",
+        "quantity": "Quantity",
+        "price": "Price",
+        "shipping": "Shipping costs"
+      }
+    },
+    "field": {
+      "capture_amount": "Capture amount",
+      "remaining_amount": "Remaining amount",
+      "order_amount": "Order amount",
+      "captured_amount": "Captured amount",
+      "refund_amount": "Refund amount",
+      "refunded_amount": "Refunded amount"
+    },
+    "notification": {
+      "capture": {
+        "title": "Transaction capture",
+        "success": "Transaction successfully captured",
+        "failure": "Error during transaction capture"
+      },
+      "refund": {
+        "title": "Transaction refund",
+        "success": "Transaction successfully refunded",
+        "failure": "Error during transaction refund"
+      }
+    },
+    "transaction" : {
+      "title" : "HiPay transaction lifecycle"
+    }
+  }
+}

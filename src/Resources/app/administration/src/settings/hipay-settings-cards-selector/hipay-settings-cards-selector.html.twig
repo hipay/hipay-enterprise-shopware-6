@@ -1,0 +1,8 @@
+<sw-card position-identifier="sw-settings-payment-detail-content"
+  title="Credit cards available"
+  :is-loading="isLoading">
+  <sw-multi-select :label="$tc('hipay.config.creditCards.choice')"
+    :options="availableCards"
+    :value="paymentMethod.customFields?.cards || []"
+    @change="updateCardsValue"></sw-multi-select>
+</sw-card>

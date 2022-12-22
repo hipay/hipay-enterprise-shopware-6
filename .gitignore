@@ -6,7 +6,14 @@
 .vscode
 
 # Third party
+log
 web/
+log/
 .env
 vendor/
 composer.lock
+node_modules/
+yarn.lock
+reports/
+.php-cs-fixer.cache
+hipay_enterprise
