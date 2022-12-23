@@ -12,6 +12,7 @@ use HiPay\Fullservice\Gateway\Mapper\HostedPaymentPageMapper;
 use HiPay\Fullservice\Gateway\Mapper\TransactionMapper;
 use HiPay\Fullservice\Gateway\Request\Order\HostedPaymentPageRequest;
 use HiPay\Fullservice\Gateway\Request\Order\OrderRequest;
+use HiPay\Payment\Logger\HipayLogger;
 use HiPay\Payment\PaymentMethod\AbstractPaymentMethod;
 use HiPay\Payment\Service\HiPayHttpClientService;
 use HiPay\Payment\Service\ReadHipayConfigService;
@@ -161,7 +162,8 @@ class AbstractPaymentMethodTest extends TestCase
             $this->getClientService($responses),
             $this->getRequestStack(),
             $this->getLocaleProvider($locale),
-            $this->generateOrderCustomerRepo()
+            $this->generateOrderCustomerRepo(),
+            $this->createMock(HipayLogger::class)
         );
 
         $transaction = $this->generateTransaction($configTransaction);
@@ -240,7 +242,8 @@ class AbstractPaymentMethodTest extends TestCase
             $this->getClientService($responses),
             $this->getRequestStack(),
             $this->getLocaleProvider($locale),
-            $this->generateOrderCustomerRepo()
+            $this->generateOrderCustomerRepo(),
+            $this->createMock(HipayLogger::class)
         );
 
         $transaction = $this->generateTransaction();
@@ -306,7 +309,8 @@ class AbstractPaymentMethodTest extends TestCase
             $this->getClientService($responses),
             $this->getRequestStack(),
             $this->getLocaleProvider($locale),
-            $this->generateOrderCustomerRepo()
+            $this->generateOrderCustomerRepo(),
+            $this->createMock(HipayLogger::class)
         );
 
         $transaction = $this->generateTransaction($configTransaction);
@@ -418,7 +422,8 @@ class AbstractPaymentMethodTest extends TestCase
             $this->getClientService($responses),
             $this->getRequestStack(),
             $this->getLocaleProvider(),
-            $this->generateOrderCustomerRepo()
+            $this->generateOrderCustomerRepo(),
+            $this->createMock(HipayLogger::class)
         );
 
         /** @var RequestDataBag&MockObject */
@@ -466,7 +471,8 @@ class AbstractPaymentMethodTest extends TestCase
             $this->getClientService($responses),
             $this->getRequestStack(),
             $this->getLocaleProvider(),
-            $this->generateOrderCustomerRepo()
+            $this->generateOrderCustomerRepo(),
+            $this->createMock(HipayLogger::class)
         );
 
         $this->expectException(AsyncPaymentProcessException::class);
@@ -498,7 +504,8 @@ class AbstractPaymentMethodTest extends TestCase
             $this->getClientService(),
             $this->getRequestStack(),
             $this->getLocaleProvider(),
-            $this->generateOrderCustomerRepo()
+            $this->generateOrderCustomerRepo(),
+            $this->createMock(HipayLogger::class)
         );
 
         $this->expectException(AsyncPaymentProcessException::class);
@@ -796,7 +803,8 @@ class AbstractPaymentMethodTest extends TestCase
             $this->getClientService($responses),
             $this->getRequestStack(),
             $this->getLocaleProvider(),
-            $this->generateOrderCustomerRepo()
+            $this->generateOrderCustomerRepo(),
+            $this->createMock(HipayLogger::class)
         );
 
         /** @var RequestDataBag&MockObject */
@@ -862,7 +870,8 @@ class AbstractPaymentMethodTest extends TestCase
             $this->getClientService($responses),
             $this->getRequestStack(),
             $this->getLocaleProvider(),
-            $this->generateOrderCustomerRepo()
+            $this->generateOrderCustomerRepo(),
+            $this->createMock(HipayLogger::class)
         );
 
         /** @var RequestDataBag&MockObject */
@@ -951,7 +960,8 @@ class AbstractPaymentMethodTest extends TestCase
             $this->getClientService($responses),
             $this->getRequestStack(),
             $this->getLocaleProvider(),
-            $this->generateOrderCustomerRepo($orderCutomerConfig)
+            $this->generateOrderCustomerRepo($orderCutomerConfig),
+            $this->createMock(HipayLogger::class)
         );
 
         /** @var RequestDataBag&MockObject */
@@ -1020,7 +1030,8 @@ class AbstractPaymentMethodTest extends TestCase
             $this->getClientService($responses),
             $this->getRequestStack(),
             $this->getLocaleProvider(),
-            $this->generateOrderCustomerRepo()
+            $this->generateOrderCustomerRepo(),
+            $this->createMock(HipayLogger::class)
         );
 
         /** @var RequestDataBag&MockObject */
@@ -1097,7 +1108,8 @@ class AbstractPaymentMethodTest extends TestCase
             $this->getClientService($responses),
             $this->getRequestStack(),
             $this->getLocaleProvider(),
-            $this->generateOrderCustomerRepo($orderCutomerConfig)
+            $this->generateOrderCustomerRepo($orderCutomerConfig),
+            $this->createMock(HipayLogger::class)
         );
 
         /** @var RequestDataBag&MockObject */

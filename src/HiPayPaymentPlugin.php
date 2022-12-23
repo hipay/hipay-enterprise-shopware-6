@@ -50,6 +50,7 @@ class HiPayPaymentPlugin extends Plugin
         'PUBLIC_PASSWORD_STAGE' => 'HiPayPaymentPlugin.config.publicPasswordStage',
         'PASSPHRASE_STAGE' => 'HiPayPaymentPlugin.config.passphraseStage',
         'HASH_STAGE' => 'HiPayPaymentPlugin.config.hashStage',
+        'LOG_DEBUG' => 'HiPayPaymentPlugin.config.debugMode',
     ];
 
     private string $paymentMethodRepoName = 'payment_method.repository';
@@ -307,7 +308,7 @@ class HiPayPaymentPlugin extends Plugin
                 $deleteKeys[] = $paramName;
                 $validParams[] = [
                     'configurationKey' => $paramName,
-                    'configurationValue' => $value,
+                    'configurationValue' => $paramName === self::PARAMS['LOG_DEBUG'] ? boolval($value) : $value,
                 ];
             }
         }
@@ -317,7 +318,7 @@ class HiPayPaymentPlugin extends Plugin
             'system_config.repository'
         );
 
-        // Delete default fields when set bey env vars
+        // Delete default fields when set by env vars
         $critera = new Criteria();
         $critera->addFilter(
             new EqualsAnyFilter('configurationKey', $deleteKeys)
@@ -335,7 +336,6 @@ class HiPayPaymentPlugin extends Plugin
     }
 }
 
-if (file_exists(__DIR__ . '/../vendor/autoload.php')) {
-    require_once __DIR__ . '/../vendor/autoload.php';
+if (file_exists(dirname(__DIR__).'/vendor/autoload.php')) {
+    require_once dirname(__DIR__).'/vendor/autoload.php';
 }
-

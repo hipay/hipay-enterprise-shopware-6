@@ -13,10 +13,10 @@ use HiPay\Payment\Enum\CaptureStatus;
 use HiPay\Payment\Enum\RefundStatus;
 use HiPay\Payment\Formatter\Request\MaintenanceRequestFormatter;
 use HiPay\Payment\HiPayPaymentPlugin;
+use HiPay\Payment\Logger\HipayLogger;
 use HiPay\Payment\Service\HiPayHttpClientService;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Psr\Log\NullLogger;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Event\EntityWrittenContainerEvent;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
@@ -87,7 +87,7 @@ class AdminControllerTest extends TestCase
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
-            new NullLogger()
+            $this->createMock(HipayLogger::class)
         );
 
         $jsonResponse = json_decode(
@@ -115,7 +115,7 @@ class AdminControllerTest extends TestCase
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
-            new NullLogger()
+            $this->createMock(HipayLogger::class)
         );
 
         $jsonResponse = json_decode(
@@ -143,7 +143,7 @@ class AdminControllerTest extends TestCase
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
-            new NullLogger()
+            $this->createMock(HipayLogger::class)
         );
 
         $jsonResponse = json_decode(
@@ -168,7 +168,7 @@ class AdminControllerTest extends TestCase
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
-            new NullLogger()
+            $this->createMock(HipayLogger::class)
         );
 
         $jsonResponse = json_decode(
@@ -295,7 +295,7 @@ class AdminControllerTest extends TestCase
             $hipayOrderRepo,
             $hipayOrderCaptureRepo,
             $this->createMock(EntityRepository::class),
-            new NullLogger()
+            $this->createMock(HipayLogger::class)
         );
 
         $jsonResponse = json_decode(
@@ -331,7 +331,7 @@ class AdminControllerTest extends TestCase
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
-            new NullLogger()
+            $this->createMock(HipayLogger::class)
         );
 
         $jsonResponse = json_decode(
@@ -401,7 +401,7 @@ class AdminControllerTest extends TestCase
             $hipayOrderRepo,
             $this->createMock(EntityRepository::class),
             $hipayOrderRefundRepo,
-            new NullLogger()
+            $this->createMock(HipayLogger::class)
         );
 
         $jsonResponse = json_decode(
@@ -437,7 +437,7 @@ class AdminControllerTest extends TestCase
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
-            new NullLogger()
+            $this->createMock(HipayLogger::class)
         );
 
         $jsonResponse = json_decode(

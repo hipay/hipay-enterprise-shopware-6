@@ -16,7 +16,7 @@ use HiPay\Payment\Enum\CaptureStatus;
 use HiPay\Payment\Enum\RefundStatus;
 use HiPay\Payment\Exception\ExpiredNotificationException;
 use HiPay\Payment\Exception\SkipNotificationException;
-use Psr\Log\LoggerInterface;
+use HiPay\Payment\Logger\HipayLogger;
 use Ramsey\Uuid\Uuid;
 use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionEntity;
 use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStateHandler;
@@ -52,7 +52,7 @@ class NotificationService
 
     private OrderTransactionStateHandler $orderTransactionStateHandler;
 
-    private LoggerInterface $logger;
+    private HipayLogger $logger;
 
     /**
      * Hipay notification Status
@@ -97,7 +97,7 @@ class NotificationService
         EntityRepository $hipayOrderRefundRepository,
         ReadHipayConfigService $config,
         OrderTransactionStateHandler $orderTransactionStateHandler,
-        LoggerInterface $hipayNotificationLogger
+        HipayLogger $hipayLogger
     ) {
         $this->transactionRepo = $transactionRepository;
         $this->notificationRepo = $hipayNotificationRepository;
@@ -106,7 +106,7 @@ class NotificationService
         $this->hipayOrderRefundRepo = $hipayOrderRefundRepository;
         $this->config = $config;
         $this->orderTransactionStateHandler = $orderTransactionStateHandler;
-        $this->logger = $hipayNotificationLogger;
+        $this->logger = $hipayLogger->setChannel(HipayLogger::NOTIFICATION);
     }
 
     /**

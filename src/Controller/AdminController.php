@@ -9,6 +9,7 @@ use HiPay\Payment\Core\Checkout\Payment\HipayOrder\HipayOrderEntity;
 use HiPay\Payment\Core\Checkout\Payment\Refund\OrderRefundEntity;
 use HiPay\Payment\Formatter\Request\MaintenanceRequestFormatter;
 use HiPay\Payment\HiPayPaymentPlugin;
+use HiPay\Payment\Logger\HipayLogger;
 use HiPay\Payment\Service\HiPayHttpClientService;
 use Psr\Log\LoggerInterface;
 use Shopware\Core\Framework\Context;
@@ -41,12 +42,12 @@ class AdminController
         EntityRepository $hipayOrderRepository,
         EntityRepository $hipayOrderCaptureRepository,
         EntityRepository $hipayOrderRefundRepository,
-        LoggerInterface $hipayApiLogger
+        HipayLogger $hipayLogger
     ) {
         $this->hipayOrderRepo = $hipayOrderRepository;
         $this->hipayOrderCaptureRepo = $hipayOrderCaptureRepository;
         $this->hipayOrderRefundRepo = $hipayOrderRefundRepository;
-        $this->logger = $hipayApiLogger;
+        $this->logger = $hipayLogger->setChannel(HipayLogger::API);
     }
 
     /**

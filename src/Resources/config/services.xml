@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <container xmlns="http://symfony.com/schema/dic/services"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
 
     <imports>
         <import resource="packages/*" />
@@ -47,7 +48,8 @@
             <tag name="shopware.entity.definition" entity="hipay_order" />
         </service>
 
-        <service id="HiPay\Payment\Core\Checkout\Payment\HipayNotification\HipayNotificationDefinition">
+        <service
+            id="HiPay\Payment\Core\Checkout\Payment\HipayNotification\HipayNotificationDefinition">
             <tag name="shopware.entity.definition" entity="hipay_notification" />
         </service>
 
@@ -76,18 +78,21 @@
         </service>
 
         <!-- PaymentMethod -->
-        <prototype namespace="HiPay\Payment\PaymentMethod\" resource="../../PaymentMethod/*.php" exclude="../../PaymentMethod/*Interface.php">
+        <prototype namespace="HiPay\Payment\PaymentMethod\" resource="../../PaymentMethod/*.php"
+            exclude="../../PaymentMethod/*Interface.php">
             <argument key="$orderCustomerRepository" id="order_customer.repository" type="service"></argument>
             <tag>shopware.payment.method.async</tag>
         </prototype>
 
         <!-- Scheduled task -->
-        <prototype namespace="HiPay\Payment\ScheduledTask\" resource="../../ScheduledTask/**/*Task.php">
+        <prototype namespace="HiPay\Payment\ScheduledTask\"
+            resource="../../ScheduledTask/**/*Task.php">
             <tag>shopware.scheduled.task</tag>
         </prototype>
 
         <!-- Scheduled task handler -->
-        <prototype namespace="HiPay\Payment\ScheduledTask\" resource="../../ScheduledTask/**/*TaskHandler.php">
+        <prototype namespace="HiPay\Payment\ScheduledTask\"
+            resource="../../ScheduledTask/**/*TaskHandler.php">
             <argument type="service" id="scheduled_task.repository" />
             <tag>name="messenger.message_handler</tag>
         </prototype>
@@ -96,6 +101,10 @@
         <prototype namespace="HiPay\Payment\Subscriber\" resource="../../Subscriber/*Subscriber.php">
             <tag>kernel.event_subscriber</tag>
         </prototype>
+
+        <!-- Logger Handler -->
+        <service id="HiPay\Payment\Logger\HipayLogger" />
+
 
     </services>
 </container>

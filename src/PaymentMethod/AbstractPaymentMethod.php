@@ -21,6 +21,7 @@ use HiPay\Fullservice\Gateway\Request\Info\CustomerShippingInfoRequest;
 use HiPay\Fullservice\Gateway\Request\Order\HostedPaymentPageRequest;
 use HiPay\Fullservice\Gateway\Request\Order\OrderRequest;
 use HiPay\Payment\Helper\Source;
+use HiPay\Payment\Logger\HipayLogger;
 use HiPay\Payment\Service\HiPayHttpClientService;
 use HiPay\Payment\Service\ReadHipayConfigService;
 use Ramsey\Uuid\Uuid;
@@ -67,13 +68,16 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
 
     private EntityRepository $orderCustomerRepo;
 
+    protected HipayLogger $logger;
+
     public function __construct(
         OrderTransactionStateHandler $transactionStateHandler,
         ReadHipayConfigService $config,
         HiPayHttpClientService $clientService,
         RequestStack $requestStack,
         LocaleProvider $localeProvider,
-        EntityRepository $orderCustomerRepository
+        EntityRepository $orderCustomerRepository,
+        HipayLogger $hipayLogger
     ) {
         $this->transactionStateHandler = $transactionStateHandler;
         $this->config = $config;
@@ -81,6 +85,7 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
         $this->request = $requestStack->getCurrentRequest();
         $this->localeProvider = $localeProvider;
         $this->orderCustomerRepo = $orderCustomerRepository;
+        $this->logger = $hipayLogger->setChannel(HipayLogger::API);
     }
 
     /**
@@ -95,7 +100,9 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
             $locale = $this->localeProvider->getLocaleFromContext($salesChannelContext->getContext());
             $redirectUri = $this->getRedirectUri($transaction, $locale);
         } catch (\Exception $e) {
-            throw new AsyncPaymentProcessException($transaction->getOrderTransaction()->getId(), 'An error occurred during the communication with external payment gateway'.PHP_EOL.$e->getMessage());
+            $message = 'An error occurred during the communication with external payment gateway'.PHP_EOL.$e->getMessage();
+            $this->logger->error($message);
+            throw new AsyncPaymentProcessException($transaction->getOrderTransaction()->getId(), $message);
         }
 
         // Redirect to external gateway
@@ -128,9 +135,9 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
 
         if ($this->config->isHostedFields()) {
             // hosted fields
-            $response = $client->requestNewOrder(
-                $this->generateRequestHostedFields($transaction, $locale)
-            );
+            $request = $this->generateRequestHostedFields($transaction, $locale);
+            $this->logger->info('Sending an hosted fields request', ['request' => var_export($request, true)]);
+            $response = $client->requestNewOrder($request);
 
             // error as main return
             $redirect = $transaction->getReturnUrl().'&return='.TransactionState::ERROR;
@@ -154,9 +161,9 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
 
         if ($this->config->isHostedPage()) {
             // hosted page
-            $response = $client->requestHostedPaymentPage(
-                $this->generateRequestHostedPage($transaction, $locale)
-            );
+            $request = $this->generateRequestHostedPage($transaction, $locale);
+            $this->logger->info('Sending an hosted page request', ['request' => var_export($request, true)]);
+            $response = $client->requestHostedPaymentPage($request);
 
             return $response->getForwardUrl();
         }
