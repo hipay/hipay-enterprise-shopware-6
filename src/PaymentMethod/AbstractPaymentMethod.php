@@ -70,6 +70,8 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
 
     protected HipayLogger $logger;
 
+    protected static bool $haveHostedFields = false;
+
     public function __construct(
         OrderTransactionStateHandler $transactionStateHandler,
         ReadHipayConfigService $config,
@@ -100,7 +102,7 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
             $locale = $this->localeProvider->getLocaleFromContext($salesChannelContext->getContext());
             $redirectUri = $this->getRedirectUri($transaction, $locale);
         } catch (\Exception $e) {
-            $message = 'An error occurred during the communication with external payment gateway'.PHP_EOL.$e->getMessage();
+            $message = 'An error occurred during the communication with external payment gateway : '.$e->getMessage();
             $this->logger->error($message);
             throw new AsyncPaymentProcessException($transaction->getOrderTransaction()->getId(), $message);
         }
@@ -592,7 +594,9 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
      */
     public static function addDefaultCustomFields(): array
     {
-        return [];
+        return [
+            'haveHostedFields' => static::$haveHostedFields,
+        ];
     }
 
     /**

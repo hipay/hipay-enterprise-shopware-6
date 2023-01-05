@@ -8,6 +8,7 @@ use Composer\InstalledVersions;
 use HiPay\Fullservice\Exception\UnexpectedValueException;
 use HiPay\Payment\PaymentMethod\CreditCard;
 use HiPay\Payment\PaymentMethod\PaymentMethodInterface;
+use HiPay\Payment\PaymentMethod\Paypal;
 use HiPay\Payment\Service\ImageImportService;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
@@ -53,6 +54,11 @@ class HiPayPaymentPlugin extends Plugin
         'LOG_DEBUG' => 'HiPayPaymentPlugin.config.debugMode',
     ];
 
+    private const PAYMENT_METHODS = [
+        CreditCard::class => 'credit_card.svg',
+        Paypal::class => 'paypal.svg',
+    ];
+
     private string $paymentMethodRepoName = 'payment_method.repository';
 
     /**
@@ -92,9 +98,7 @@ class HiPayPaymentPlugin extends Plugin
 
     public function install(InstallContext $context): void
     {
-        $paymentMethods = [CreditCard::class];
-
-        foreach ($paymentMethods as $paymentMethod) {
+        foreach (self::PAYMENT_METHODS as $paymentMethod => $image) {
             $this->addPaymentMethod($paymentMethod, $context->getContext());
         }
 
@@ -105,32 +109,39 @@ class HiPayPaymentPlugin extends Plugin
     {
         // Only set the payment method to inactive when uninstalling. Removing the payment method would
         // cause data consistency issues, since the payment method might have been used in several orders
-        $this->setPaymentMethodIsActive(
-            false,
-            CreditCard::class,
-            $context->getContext()
-        );
+
+        foreach (self::PAYMENT_METHODS as $paymentMethod => $image) {
+            $this->setPaymentMethodIsActive(
+                false,
+                $paymentMethod,
+                $context->getContext()
+            );
+        }
     }
 
     public function activate(ActivateContext $context): void
     {
-        $this->setPaymentMethodIsActive(
-            true,
-            CreditCard::class,
-            $context->getContext(),
-            'credit_card.svg',
-            'administration/media'
-        );
+        foreach (self::PAYMENT_METHODS as $paymentMethod => $image) {
+            $this->setPaymentMethodIsActive(
+                true,
+                $paymentMethod,
+                $context->getContext(),
+                $image,
+                'administration/media'
+            );
+        }
         parent::activate($context);
     }
 
     public function deactivate(DeactivateContext $context): void
     {
-        $this->setPaymentMethodIsActive(
-            false,
-            CreditCard::class,
-            $context->getContext()
-        );
+        foreach (self::PAYMENT_METHODS as $paymentMethod => $image) {
+            $this->setPaymentMethodIsActive(
+                false,
+                $paymentMethod,
+                $context->getContext()
+            );
+        }
         parent::deactivate($context);
     }
 

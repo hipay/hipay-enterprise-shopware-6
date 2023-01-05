@@ -83,7 +83,10 @@ class CreditCardTest extends TestCase
     public function testStatic()
     {
         $this->assertEquals(
-            ['cards' => ['cb', 'visa', 'mastercard', 'american-express', 'bcmc', 'maestro']],
+            [
+                'cards' => ['cb', 'visa', 'mastercard', 'american-express', 'bcmc', 'maestro'],
+                'haveHostedFields' => true,
+            ],
             CreditCard::addDefaultCustomFields()
         );
 

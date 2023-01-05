@@ -19,6 +19,7 @@ use HiPay\Payment\Service\ReadHipayConfigService;
 use HiPay\Payment\Tests\Tools\PaymentMethodMockTrait;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStateHandler;
 use Shopware\Core\Checkout\Payment\Cart\AsyncPaymentTransactionStruct;
 use Shopware\Core\Checkout\Payment\Exception\AsyncPaymentFinalizeException;
@@ -40,9 +41,33 @@ class AbstractPaymentMethodTest extends TestCase
         HiPayHttpClientService $clientService,
         RequestStack $requestStack,
         LocaleProvider $localeProvider,
-        EntityRepository $orderCustomerRepository
+        EntityRepository $orderCustomerRepository,
+        LoggerInterface $logger,
+        bool $haveHostedFields = false
     ) {
         return $subClass = new class(...func_get_args()) extends AbstractPaymentMethod {
+            public function __construct(
+                OrderTransactionStateHandler $transactionStateHandler,
+                ReadHipayConfigService $config,
+                HiPayHttpClientService $clientService,
+                RequestStack $requestStack,
+                LocaleProvider $localeProvider,
+                EntityRepository $orderCustomerRepository,
+                LoggerInterface $logger,
+                bool $haveHostedFields = false
+            ) {
+                static::$haveHostedFields = $haveHostedFields;
+                parent::__construct(
+                    $transactionStateHandler,
+                    $config,
+                    $clientService,
+                    $requestStack,
+                    $localeProvider,
+                    $orderCustomerRepository,
+                    $logger
+                );
+            }
+
             public static function getName(string $code): string
             {
                 return static::class;
@@ -163,7 +188,8 @@ class AbstractPaymentMethodTest extends TestCase
             $this->getRequestStack(),
             $this->getLocaleProvider($locale),
             $this->generateOrderCustomerRepo(),
-            $this->createMock(HipayLogger::class)
+            $this->createMock(HipayLogger::class),
+            true
         );
 
         $transaction = $this->generateTransaction($configTransaction);
@@ -243,7 +269,8 @@ class AbstractPaymentMethodTest extends TestCase
             $this->getRequestStack(),
             $this->getLocaleProvider($locale),
             $this->generateOrderCustomerRepo(),
-            $this->createMock(HipayLogger::class)
+            $this->createMock(HipayLogger::class),
+            true
         );
 
         $transaction = $this->generateTransaction();
@@ -310,7 +337,8 @@ class AbstractPaymentMethodTest extends TestCase
             $this->getRequestStack(),
             $this->getLocaleProvider($locale),
             $this->generateOrderCustomerRepo(),
-            $this->createMock(HipayLogger::class)
+            $this->createMock(HipayLogger::class),
+            true
         );
 
         $transaction = $this->generateTransaction($configTransaction);
@@ -476,7 +504,7 @@ class AbstractPaymentMethodTest extends TestCase
         );
 
         $this->expectException(AsyncPaymentProcessException::class);
-        $this->expectExceptionMessage('An error occurred during the communication with external payment gateway'.PHP_EOL.'Random Exception');
+        $this->expectExceptionMessage('An error occurred during the communication with external payment gateway : Random Exception');
 
         /** @var RequestDataBag&MockObject */
         $dataBag = $this->createMock(RequestDataBag::class);
@@ -505,11 +533,12 @@ class AbstractPaymentMethodTest extends TestCase
             $this->getRequestStack(),
             $this->getLocaleProvider(),
             $this->generateOrderCustomerRepo(),
-            $this->createMock(HipayLogger::class)
+            $this->createMock(HipayLogger::class),
+            true
         );
 
         $this->expectException(AsyncPaymentProcessException::class);
-        $this->expectExceptionMessage('An error occurred during the communication with external payment gateway'.PHP_EOL.'Configuration mode "Foobar" is invalid');
+        $this->expectExceptionMessage('An error occurred during the communication with external payment gateway : Configuration mode "Foobar" is invalid');
 
         /** @var RequestDataBag&MockObject */
         $dataBag = $this->createMock(RequestDataBag::class);
@@ -804,7 +833,8 @@ class AbstractPaymentMethodTest extends TestCase
             $this->getRequestStack(),
             $this->getLocaleProvider(),
             $this->generateOrderCustomerRepo(),
-            $this->createMock(HipayLogger::class)
+            $this->createMock(HipayLogger::class),
+            true
         );
 
         /** @var RequestDataBag&MockObject */
@@ -871,7 +901,8 @@ class AbstractPaymentMethodTest extends TestCase
             $this->getRequestStack(),
             $this->getLocaleProvider(),
             $this->generateOrderCustomerRepo(),
-            $this->createMock(HipayLogger::class)
+            $this->createMock(HipayLogger::class),
+            true
         );
 
         /** @var RequestDataBag&MockObject */
@@ -961,7 +992,8 @@ class AbstractPaymentMethodTest extends TestCase
             $this->getRequestStack(),
             $this->getLocaleProvider(),
             $this->generateOrderCustomerRepo($orderCutomerConfig),
-            $this->createMock(HipayLogger::class)
+            $this->createMock(HipayLogger::class),
+            true
         );
 
         /** @var RequestDataBag&MockObject */
@@ -1031,7 +1063,8 @@ class AbstractPaymentMethodTest extends TestCase
             $this->getRequestStack(),
             $this->getLocaleProvider(),
             $this->generateOrderCustomerRepo(),
-            $this->createMock(HipayLogger::class)
+            $this->createMock(HipayLogger::class),
+            true
         );
 
         /** @var RequestDataBag&MockObject */
@@ -1109,7 +1142,8 @@ class AbstractPaymentMethodTest extends TestCase
             $this->getRequestStack(),
             $this->getLocaleProvider(),
             $this->generateOrderCustomerRepo($orderCutomerConfig),
-            $this->createMock(HipayLogger::class)
+            $this->createMock(HipayLogger::class),
+            true
         );
 
         /** @var RequestDataBag&MockObject */

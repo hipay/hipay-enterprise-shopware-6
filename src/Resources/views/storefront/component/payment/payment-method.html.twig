@@ -10,7 +10,9 @@
           'frontend.account.edit-order.page',
           'frontend.checkout.confirm.page'
         ] %}
-    {% if config('HiPayPaymentPlugin.config.operationMode') == 'hostedFields' %}
+    {% if
+      config('HiPayPaymentPlugin.config.operationMode') == 'hostedFields'
+        and payment.customFields.haveHostedFields %}
       <script src="https://libs.hipay.com/js/sdkjs.js"></script>
       {% set environment = config('HiPayPaymentPlugin.config.environment') %}
       {% set hipayConfig = {

@@ -14,6 +14,8 @@ use Symfony\Component\HttpFoundation\Exception\BadRequestException;
  */
 class CreditCard extends AbstractPaymentMethod
 {
+    public static bool $haveHostedFields = true;
+
     /** {@inheritDoc} */
     public static function getName(string $lang): ?string
     {
@@ -39,7 +41,7 @@ class CreditCard extends AbstractPaymentMethod
     /** {@inheritDoc} */
     public static function addDefaultCustomFields(): array
     {
-        return [
+        return parent::addDefaultCustomFields() + [
             'cards' => ['cb', 'visa', 'mastercard', 'american-express', 'bcmc', 'maestro'],
         ];
     }
