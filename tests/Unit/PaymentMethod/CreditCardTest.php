@@ -5,6 +5,7 @@ namespace HiPay\Payment\Tests\Unit\PaymentMethod;
 use HiPay\Payment\PaymentMethod\CreditCard;
 use HiPay\Payment\Tests\Tools\PaymentMethodMockTrait;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class CreditCardTest extends TestCase
 {
@@ -15,7 +16,7 @@ class CreditCardTest extends TestCase
         $response = [
             'token' => static::class,
             'payment_product' => 'foo,bar',
-            'device_fingerprint' => md5(statis::class),
+            'device_fingerprint' => md5(static::class),
             'browser_info' => [
                 'http_user_agent' => 'PhpUnit',
                 'java_enabled' => false,
@@ -114,6 +115,16 @@ class CreditCardTest extends TestCase
                 'de-DE' => CreditCard::getName('de-DE'),
                 'fo-FO' => CreditCard::getName('fo-FO'),
             ]
+        );
+
+        $this->assertSame(
+            'credit_card.svg',
+            CreditCard::getImage()
+        );
+
+        $this->assertSame(
+            null,
+            CreditCard::getRule($this->createMock(ContainerInterface::class))
         );
     }
 }

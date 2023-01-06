@@ -9,31 +9,40 @@ export default class HipayHostedFieldsPlugin extends Plugin {
     password: null,
     environment: null,
     lang: null,
-    idCardHolder: 'hipay-card-holder',
-    idCardNumber: 'hipay-card-number',
-    idExpiryDate: 'hipay-expiry-date',
-    idCvc: 'hipay-cvc',
     idResponse: 'hipay-response',
     cvcHelp: false,
     errorClass: 'is-invalid',
     errorPrefix: 'error',
     styles: null
-  };
+  }
+ 
 
   /**
    * Plugin initialisation
    */
   init() {
-    this._configHostedFields = this._getConfigHostedFields();
+    // ensure is a abstract class
+    if (this.constructor === HipayHostedFieldsPlugin) {
+      throw new TypeError('Class "HipayHostedFieldsPlugin" cannot be instantiated directly');
+    }
+
+    this.options = {
+      ...this.getPaymentDefaultOption(),
+      ...this.options
+    }
+
+    console.log({ ...this.options});
+    this._configHostedFields = this.getConfigHostedFields();
     this._form = document.querySelector('#' + this.options.idResponse).form;
 
     this._cardInstance = HiPay(this.options).create(
-      'card',
+      this.getPaymentName(),
       this._configHostedFields
     );
 
     this._registerEvents();
   }
+
 
   _registerEvents() {
     this._cardInstance.on('ready', () => {
@@ -98,32 +107,14 @@ export default class HipayHostedFieldsPlugin extends Plugin {
     ).innerHTML = errorMessage;
   }
 
+  getPaymentName() {
+    throw new Error('Method "getPaymentName" must be implemented');
+  }
+
   /**
    * Generate hosted fields configuration
    */
-  _getConfigHostedFields() {
-    const config = {
-      fields: {
-        cardHolder: {
-          selector: this.options.idCardHolder
-        },
-        cardNumber: {
-          selector: this.options.idCardNumber
-        },
-        expiryDate: {
-          selector: this.options.idExpiryDate
-        },
-        cvc: {
-          selector: this.options.idCvc,
-          helpButton: this.options.cvcHelp
-        }
-      }
-    };
-
-    if (this.options.styles) {
-      config.styles = this.options.styles;
-    }
-
-    return config;
+  getConfigHostedFields() {
+    throw new Error('Method "getConfigHostedFields" must be implemented');
   }
 }

@@ -4,10 +4,15 @@
       "redirect-message": "You will be redirected to an external payment page. Please do not refresh the page during the process"
     },
     "hosted-fields": {
-      "fullname": "fullname",
-      "card-number": "Card number",
-      "expiry-date": "Expiry date",
-      "cvc": "CVC"
+      "creditcard": {
+        "fullname": "Vollständiger Name",
+        "card-number": "Kartennummer",
+        "expiry-date": "Verfallsdatum",
+        "cvc": "CVC"
+      },
+      "giropay": {
+        "bic": "BIC"
+      }
     }
   }
 }

@@ -5,6 +5,7 @@ namespace HiPay\Payment\Tests\Unit\PaymentMethod;
 use HiPay\Payment\PaymentMethod\Paypal;
 use HiPay\Payment\Tests\Tools\PaymentMethodMockTrait;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class PaypalTest extends TestCase
 {
@@ -17,6 +18,18 @@ class PaypalTest extends TestCase
         $this->assertSame(
             'paypal',
             $hostedPaymentPageRequest->payment_product_list
+        );
+    }
+
+    public function testhydrateFields()
+    {
+        $response = ['payment_product' => 'paypal'];
+
+        $orderRequest = $this->getHostedFiledsOrderRequest(Paypal::class, $response);
+
+        $this->assertSame(
+            'paypal',
+            $orderRequest->payment_product
         );
     }
 
@@ -51,6 +64,16 @@ class PaypalTest extends TestCase
                 'de-DE' => Paypal::getName('de-DE'),
                 'fo-FO' => Paypal::getName('fo-FO'),
             ]
+        );
+
+        $this->assertSame(
+            'paypal.svg',
+            Paypal::getImage()
+        );
+
+        $this->assertSame(
+            null,
+            Paypal::getRule($this->createMock(ContainerInterface::class))
         );
     }
 }

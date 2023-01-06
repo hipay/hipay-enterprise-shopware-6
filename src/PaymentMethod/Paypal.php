@@ -5,6 +5,7 @@ namespace HiPay\Payment\PaymentMethod;
 use HiPay\Fullservice\Gateway\Request\Order\HostedPaymentPageRequest;
 use HiPay\Fullservice\Gateway\Request\Order\OrderRequest;
 use Shopware\Core\Checkout\Payment\Cart\AsyncPaymentTransactionStruct;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Paypal payment Methods.
@@ -35,10 +36,22 @@ class Paypal extends AbstractPaymentMethod
         return $descriptions[$lang] ?? null;
     }
 
+    /** {@inheritDoc} */
+    public static function getImage(): ?string
+    {
+        return 'paypal.svg';
+    }
+
+    /** {@inheritDoc} */
+    public static function getRule(ContainerInterface $container): ?array
+    {
+        return null;
+    }
+
     /**
      * {@inheritDoc}
      */
-    protected function hydrateHostedFields(OrderRequest $orderRequest): OrderRequest
+    protected function hydrateHostedFields(OrderRequest $orderRequest, array $payload): OrderRequest
     {
         $orderRequest->payment_product = 'paypal';
 

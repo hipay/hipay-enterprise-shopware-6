@@ -7,6 +7,7 @@ namespace HiPay\Payment;
 use Composer\InstalledVersions;
 use HiPay\Fullservice\Exception\UnexpectedValueException;
 use HiPay\Payment\PaymentMethod\CreditCard;
+use HiPay\Payment\PaymentMethod\Giropay;
 use HiPay\Payment\PaymentMethod\PaymentMethodInterface;
 use HiPay\Payment\PaymentMethod\Paypal;
 use HiPay\Payment\Service\ImageImportService;
@@ -55,8 +56,9 @@ class HiPayPaymentPlugin extends Plugin
     ];
 
     private const PAYMENT_METHODS = [
-        CreditCard::class => 'credit_card.svg',
-        Paypal::class => 'paypal.svg',
+        CreditCard::class,
+        Paypal::class,
+        Giropay::class,
     ];
 
     private string $paymentMethodRepoName = 'payment_method.repository';
@@ -98,7 +100,7 @@ class HiPayPaymentPlugin extends Plugin
 
     public function install(InstallContext $context): void
     {
-        foreach (self::PAYMENT_METHODS as $paymentMethod => $image) {
+        foreach (self::PAYMENT_METHODS as $paymentMethod) {
             $this->addPaymentMethod($paymentMethod, $context->getContext());
         }
 
@@ -110,7 +112,7 @@ class HiPayPaymentPlugin extends Plugin
         // Only set the payment method to inactive when uninstalling. Removing the payment method would
         // cause data consistency issues, since the payment method might have been used in several orders
 
-        foreach (self::PAYMENT_METHODS as $paymentMethod => $image) {
+        foreach (self::PAYMENT_METHODS as $paymentMethod) {
             $this->setPaymentMethodIsActive(
                 false,
                 $paymentMethod,
@@ -121,13 +123,11 @@ class HiPayPaymentPlugin extends Plugin
 
     public function activate(ActivateContext $context): void
     {
-        foreach (self::PAYMENT_METHODS as $paymentMethod => $image) {
+        foreach (self::PAYMENT_METHODS as $paymentMethod) {
             $this->setPaymentMethodIsActive(
                 true,
                 $paymentMethod,
-                $context->getContext(),
-                $image,
-                'administration/media'
+                $context->getContext()
             );
         }
         parent::activate($context);
@@ -135,7 +135,7 @@ class HiPayPaymentPlugin extends Plugin
 
     public function deactivate(DeactivateContext $context): void
     {
-        foreach (self::PAYMENT_METHODS as $paymentMethod => $image) {
+        foreach (self::PAYMENT_METHODS as $paymentMethod) {
             $this->setPaymentMethodIsActive(
                 false,
                 $paymentMethod,
@@ -153,16 +153,16 @@ class HiPayPaymentPlugin extends Plugin
      * @throws ServiceNotFoundException
      */
     private function addPaymentMethod(
-        string $paymentClassname,
+        string $classname,
         Context $context
     ): void {
         // Check implementation
-        if (!is_subclass_of($paymentClassname, PaymentMethodInterface::class)) {
-            throw new UnexpectedValueException('The payment method "'.$paymentClassname.'" must implement interface "'.PaymentMethodInterface::class.'"');
+        if (!is_subclass_of($classname, PaymentMethodInterface::class)) {
+            throw new UnexpectedValueException('The payment method "'.$classname.'" must implement interface "'.PaymentMethodInterface::class.'"');
         }
 
         // Payment method exists already
-        if ($this->getPaymentMethodId($paymentClassname)) {
+        if ($this->getPaymentMethodId($classname)) {
             return;
         }
 
@@ -179,16 +179,14 @@ class HiPayPaymentPlugin extends Plugin
         foreach ($this->getLanguages() as $lang) {
             $translations[] = [
                 'languageId' => $lang['id'],
-                'name' => $paymentClassname::getName($lang['code']),
-                'description' => $paymentClassname::getDescription(
-                    $lang['code']
-                ),
-                'customFields' => $paymentClassname::addDefaultCustomFields(),
+                'name' => $classname::getName($lang['code']),
+                'description' => $classname::getDescription($lang['code']),
+                'customFields' => $classname::addDefaultCustomFields(),
             ];
         }
 
         $paymentMethod = [
-            'handlerIdentifier' => $paymentClassname,
+            'handlerIdentifier' => $classname,
             'translations' => $translations,
             'afterOrderEnabled' => true,
             'pluginId' => $this->pluginId,
@@ -208,15 +206,14 @@ class HiPayPaymentPlugin extends Plugin
      */
     private function setPaymentMethodIsActive(
         bool $active,
-        string $paymentClassname,
+        string $classname,
         Context $context,
-        ?string $filename = null,
-        string $directory = ''
+        string $directory = 'administration/media'
     ): void {
         /** @var EntityRepository $paymentRepository */
         $paymentRepository = $this->container->get($this->paymentMethodRepoName);
 
-        $paymentMethodId = $this->getPaymentMethodId($paymentClassname);
+        $paymentMethodId = $this->getPaymentMethodId($classname);
 
         // Payment does not even exist, so nothing to (de-)activate here
         if (!$paymentMethodId) {
@@ -228,8 +225,15 @@ class HiPayPaymentPlugin extends Plugin
             'active' => $active,
         ];
 
-        if ($filename && $mediaId = $this->addImageToPaymentMethod($filename, $directory, $context)) {
-            $paymentMethod['mediaId'] = $mediaId;
+        if ($active) {
+            $filename = $classname::getImage();
+            if ($filename && $mediaId = $this->addImageToPaymentMethod($filename, $directory, $context)) {
+                $paymentMethod['mediaId'] = $mediaId;
+            }
+
+            if ($rule = $classname::getRule($this->container)) {
+                $paymentMethod['availabilityRule'] = $rule;
+            }
         }
 
         $paymentRepository->update([$paymentMethod], $context);
@@ -241,14 +245,14 @@ class HiPayPaymentPlugin extends Plugin
      * @throws ServiceCircularReferenceException
      * @throws ServiceNotFoundException
      */
-    private function getPaymentMethodId(string $paymentClassname): ?string
+    private function getPaymentMethodId(string $classname): ?string
     {
         /** @var EntityRepository $paymentRepository */
         $paymentRepository = $this->container->get($this->paymentMethodRepoName);
 
         // Fetch ID for update
         $paymentCriteria = (new Criteria())->addFilter(
-            new EqualsFilter('handlerIdentifier', $paymentClassname)
+            new EqualsFilter('handlerIdentifier', $classname)
         );
 
         return $paymentRepository
@@ -303,7 +307,6 @@ class HiPayPaymentPlugin extends Plugin
         /** @var ImageImportService $imageImportService */
         $imageImportService = $this->container->get(ImageImportService::class);
 
-        // Upload credit card image to media library
         return $imageImportService->addImageToMediaFromFile($filename, $directory, 'payment_method', $context);
     }
 

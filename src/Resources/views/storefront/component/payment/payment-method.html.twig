@@ -1,97 +1,49 @@
-{% sw_extends '@Storefront/storefront/component/payment/payment-method.html.twig'
-%}
+{% sw_extends '@Storefront/storefront/component/payment/payment-method.html.twig' %}
 {% block component_payment_method_description %}
   {{ parent() }}
-  {% if
-    payment.id is same as(selectedPaymentMethodId)
+  {% if payment.id is same as(selectedPaymentMethodId)
       and 'handler_hipay_' in payment.formattedHandlerIdentifier
-      and activeRoute
-        in [
-          'frontend.account.edit-order.page',
-          'frontend.checkout.confirm.page'
-        ] %}
-    {% if
-      config('HiPayPaymentPlugin.config.operationMode') == 'hostedFields'
-        and payment.customFields.haveHostedFields %}
+      and activeRoute in ['frontend.account.edit-order.page', 'frontend.checkout.confirm.page']
+  %}
+    {% if config('HiPayPaymentPlugin.config.operationMode') == 'hostedFields'
+        and payment.customFields.haveHostedFields 
+    %}
       <script src="https://libs.hipay.com/js/sdkjs.js"></script>
       {% set environment = config('HiPayPaymentPlugin.config.environment') %}
+     
       {% set hipayConfig = {
-        username: config('HiPayPaymentPlugin.config.publicLogin' ~ environment),
-        password: config(
-          'HiPayPaymentPlugin.config.publicPassword' ~ environment
-        ),
-        environment: environment|lower,
-        lang: page.header.activeLanguage.translationCode.code|slice(0, 2),
-        styles: {
-          base: {
-            color: config('HiPayPaymentPlugin.config.hostedFieldsTextColor'),
-            fontSize: config('HiPayPaymentPlugin.config.hostedFieldsFontSize'),
-            fontFamily: config(
-              'HiPayPaymentPlugin.config.hostedFieldsFontFamilly'
-            ),
-            fontWeight: config(
-              'HiPayPaymentPlugin.config.hostedFieldsFontWeight'
-            ),
-            placeholderColor: config(
-              'HiPayPaymentPlugin.config.hostedFieldsPlaceholderColor'
-            ),
-            iconColor: config(
-              'HiPayPaymentPlugin.config.hostedFieldsIconColor'
-            ),
-            caretColor: config(
-              'HiPayPaymentPlugin.config.hostedFieldsCaretColor'
-            )
+          username: config('HiPayPaymentPlugin.config.publicLogin' ~ environment),
+          password: config('HiPayPaymentPlugin.config.publicPassword' ~ environment),
+          environment: environment|lower,
+          lang: page.header.activeLanguage.translationCode.code|slice(0, 2),
+          styles: {
+            base: {
+              color: config('HiPayPaymentPlugin.config.hostedFieldsTextColor'),
+              fontSize: config('HiPayPaymentPlugin.config.hostedFieldsFontSize'),
+              fontFamily: config('HiPayPaymentPlugin.config.hostedFieldsFontFamilly'),
+              fontWeight: config('HiPayPaymentPlugin.config.hostedFieldsFontWeight'),
+              placeholderColor: config('HiPayPaymentPlugin.config.hostedFieldsPlaceholderColor'),
+              iconColor: config('HiPayPaymentPlugin.config.hostedFieldsIconColor'),
+              caretColor: config('HiPayPaymentPlugin.config.hostedFieldsCaretColor')
+            }
           }
         }
-      } %}
+      %}
+      {% block hipay_hosted_fields_html %}
+        <input type="text"
+          name="hipay-response"
+          id="hipay-response"
+          form="confirmOrderForm"            
+          style="position: absolute; visibility: hidden;"
+          required
+        />
+       
+        {% set componentName = payment.formattedHandlerIdentifier|replace({'_':'-'}) %}     
+        {% sw_include '@HiPayPaymentPlugin/storefront/component/payment/hosted-fields/' ~ componentName ~ '.html.twig' %}
+      {% endblock %}
 
-      <div hipay-hosted-fields-plugin
-        data-hipay-hosted-fields-plugin-options="{{ hipayConfig|json_encode }}">
-        {% block hipay_hosted_fields_html %}
-          <input type="text"
-            name="hipay-response"
-            id="hipay-response"
-            form="confirmOrderForm"
-            required
-            style="position: absolute; visibility : hidden;" />
-
-          <div class="form-group">
-            <label class="form-label" for="hipay-card-holder">
-              {{ 'hipay.hosted-fields.fullname'|trans }}
-            </label>
-            <div class="hostedfield form-control" id="hipay-card-holder"></div>
-            <div class="invalid-feedback" id="error-hipay-card-holder"></div>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="hipay-card-number">
-              {{ 'hipay.hosted-fields.card-number'|trans }}
-            </label>
-            <div class="hostedfield form-control" id="hipay-card-number"></div>
-            <div class="invalid-feedback" id="error-hipay-card-number"></div>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="hipay-expiry-date">
-              {{ 'hipay.hosted-fields.expiry-date'|trans }}
-            </label>
-            <div class="hostedfield form-control" id="hipay-expiry-date"></div>
-            <div class="invalid-feedback" id="error-hipay-expiry-date"></div>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="hipay-cvc">
-              {{ 'hipay.hosted-fields.cvc'|trans }}
-            </label>
-            <div class="hostedfield form-control" id="hipay-cvc"></div>
-            <div class="invalid-feedback" id="error-hipay-cvc"></div>
-          </div>
-        {% endblock %}
-      </div>
     {% else %}
-      <p>
-        {{ 'hipay.hosted-page.redirect-message'|trans }}
-      </p>
+      <p>{{ 'hipay.hosted-page.redirect-message'|trans }}</p>
     {% endif %}
   {% endif %}
 {% endblock %}

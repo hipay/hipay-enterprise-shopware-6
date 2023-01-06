@@ -14,6 +14,7 @@ use HiPay\Fullservice\Gateway\Model\Request\ThreeDSTwo\AccountInfo\Customer;
 use HiPay\Fullservice\Gateway\Model\Request\ThreeDSTwo\AccountInfo\Payment;
 use HiPay\Fullservice\Gateway\Model\Request\ThreeDSTwo\AccountInfo\Purchase;
 use HiPay\Fullservice\Gateway\Model\Request\ThreeDSTwo\AccountInfo\Shipping;
+use HiPay\Fullservice\Gateway\Model\Request\ThreeDSTwo\BrowserInfo;
 use HiPay\Fullservice\Gateway\Model\Request\ThreeDSTwo\MerchantRiskStatement;
 use HiPay\Fullservice\Gateway\Model\Request\ThreeDSTwo\MerchantRiskStatement\GiftCard;
 use HiPay\Fullservice\Gateway\Request\Info\CustomerBillingInfoRequest;
@@ -101,7 +102,7 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
         try {
             $locale = $this->localeProvider->getLocaleFromContext($salesChannelContext->getContext());
             $redirectUri = $this->getRedirectUri($transaction, $locale);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $message = 'An error occurred during the communication with external payment gateway : '.$e->getMessage();
             $this->logger->error($message);
             throw new AsyncPaymentProcessException($transaction->getOrderTransaction()->getId(), $message);
@@ -190,11 +191,33 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
     /**
      * Generate the request on hosted fields mode.
      */
-    private function generateRequestHostedFields(AsyncPaymentTransactionStruct $transaction, string $locale): OrderRequest
-    {
-        return $this->hydrateHostedFields(
-            $this->hydrateGenericOrderRequest(new OrderRequest(), $transaction, $locale)
-        );
+    private function generateRequestHostedFields(
+        AsyncPaymentTransactionStruct $transaction,
+        string $locale
+    ): OrderRequest {
+        $orderRequest = $this->hydrateGenericOrderRequest(new OrderRequest(), $transaction, $locale);
+
+        if (!empty($payload = json_decode($this->request->get('hipay-response', '[]'), true))) {
+            $requestInfo = $payload['browser_info'] ?? [];
+
+            $browserInfo = new BrowserInfo();
+            $browserInfo->ipaddr = $this->request->getClientIp();
+            $browserInfo->http_accept = 'application/json';
+            $browserInfo->http_user_agent = $requestInfo['http_user_agent'] ?? null;
+            $browserInfo->java_enabled = $requestInfo['java_enabled'] ?? null;
+            $browserInfo->javascript_enabled = $requestInfo['javascript_enabled'] ?? false;
+            $browserInfo->language = $requestInfo['language'] ?? null;
+            $browserInfo->color_depth = $requestInfo['color_depth'] ?? null;
+            $browserInfo->screen_height = $requestInfo['screen_height'] ?? null;
+            $browserInfo->screen_width = $requestInfo['screen_width'] ?? null;
+            $browserInfo->timezone = $requestInfo['timezone'] ?? null;
+
+            $orderRequest->browser_info = $browserInfo;
+            $orderRequest->device_fingerprint = $payload['device_fingerprint'] ?? null;
+            $orderRequest->payment_product = $payload['payment_product'];
+        }
+
+        return $this->hydrateHostedFields($orderRequest, $payload);
     }
 
     /**
@@ -601,8 +624,13 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
 
     /**
      * Configure hosted fields request for the current payment method.
+     *
+     * @param array<string,mixed> $payload
      */
-    abstract protected function hydrateHostedFields(OrderRequest $orderRequest): OrderRequest;
+    abstract protected function hydrateHostedFields(
+        OrderRequest $orderRequest,
+        array $payload
+    ): OrderRequest;
 
     /**
      * Configure hosted page request for the current payment method.

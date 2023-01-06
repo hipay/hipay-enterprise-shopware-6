@@ -1,0 +1,35 @@
+<div {{componentName}}-plugin data-{{componentName}}-plugin-options="{{ hipayConfig|json_encode }}">
+    {% block hipay_creditcard_html %}
+    <div class="form-group">
+        <label class="form-label" for="hipay-card-holder">
+            {{ 'hipay.hosted-fields.creditcard.fullname'|trans }}
+        </label>
+        <div class="hostedfield form-control" id="hipay-card-holder"></div>
+        <div class="invalid-feedback" id="error-hipay-card-holder"></div>
+    </div>
+
+    <div class="form-group">
+        <label class="form-label" for="hipay-card-number">
+            {{ 'hipay.hosted-fields.creditcard.card-number'|trans }}
+        </label>
+        <div class="hostedfield form-control" id="hipay-card-number"></div>
+        <div class="invalid-feedback" id="error-hipay-card-number"></div>
+    </div>
+
+    <div class="form-group">
+        <label class="form-label" for="hipay-expiry-date">
+            {{ 'hipay.hosted-fields.creditcard.expiry-date'|trans }}
+        </label>
+        <div class="hostedfield form-control" id="hipay-expiry-date"></div>
+        <div class="invalid-feedback" id="error-hipay-expiry-date"></div>
+    </div>
+
+    <div class="form-group">
+        <label class="form-label" for="hipay-cvc">
+            {{ 'hipay.hosted-fields.creditcard.cvc'|trans }}
+        </label>
+        <div class="hostedfield form-control" id="hipay-cvc"></div>
+        <div class="invalid-feedback" id="error-hipay-cvc"></div>
+    </div>
+    {% endblock %}
+</div>

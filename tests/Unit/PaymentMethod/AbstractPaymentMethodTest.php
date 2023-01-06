@@ -28,6 +28,7 @@ use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\Store\Authentication\LocaleProvider;
 use Shopware\Core\Framework\Validation\DataBag\RequestDataBag;
 use Shopware\Core\System\SalesChannel\SalesChannelContext;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -78,7 +79,7 @@ class AbstractPaymentMethodTest extends TestCase
                 return static::class;
             }
 
-            protected function hydrateHostedFields(OrderRequest $orderRequest): OrderRequest
+            protected function hydrateHostedFields(OrderRequest $orderRequest, array $payload): OrderRequest
             {
                 return $orderRequest;
             }
@@ -86,6 +87,16 @@ class AbstractPaymentMethodTest extends TestCase
             protected function hydrateHostedPage(HostedPaymentPageRequest $orderRequest, AsyncPaymentTransactionStruct $transaction): HostedPaymentPageRequest
             {
                 return $orderRequest;
+            }
+
+            public static function getImage(): ?string
+            {
+                return null;
+            }
+
+            public static function getRule(ContainerInterface $container): ?array
+            {
+                return null;
             }
         };
 
