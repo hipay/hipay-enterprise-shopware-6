@@ -1,12 +1,12 @@
 {
   "name": "hipay/hipay-enterprise-shopware-6",
-  "description": "HiPay enterprise module for Shopware",
+  "description": "HiPay enterprise plugin for Shopware 6",
   "license": "Apache-2.0",
   "version": "0.0.1",
   "authors": [
     {
       "email": "support.tpp@hipay.com",
-      "homepage": "http://www.hipay.com",
+      "homepage": "https://www.hipay.com",
       "name": "HiPay"
     }
   ],
