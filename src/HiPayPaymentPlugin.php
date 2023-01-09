@@ -8,6 +8,7 @@ use Composer\InstalledVersions;
 use HiPay\Fullservice\Exception\UnexpectedValueException;
 use HiPay\Payment\PaymentMethod\CreditCard;
 use HiPay\Payment\PaymentMethod\Giropay;
+use HiPay\Payment\PaymentMethod\Mybank;
 use HiPay\Payment\PaymentMethod\PaymentMethodInterface;
 use HiPay\Payment\PaymentMethod\Paypal;
 use HiPay\Payment\Service\ImageImportService;
@@ -59,6 +60,7 @@ class HiPayPaymentPlugin extends Plugin
         CreditCard::class,
         Paypal::class,
         Giropay::class,
+        Mybank::class,
     ];
 
     private string $paymentMethodRepoName = 'payment_method.repository';
@@ -234,6 +236,10 @@ class HiPayPaymentPlugin extends Plugin
             if ($rule = $classname::getRule($this->container)) {
                 $paymentMethod['availabilityRule'] = $rule;
             }
+        }
+
+        if ($rule = $classname::getRule($this->container)) {
+            $paymentMethod['availabilityRule'] = $rule;
         }
 
         $paymentRepository->update([$paymentMethod], $context);

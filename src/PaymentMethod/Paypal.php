@@ -12,6 +12,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class Paypal extends AbstractPaymentMethod
 {
+    public const PAYMENT_NAME = 'paypal';
+
     public static bool $haveHostedFields = false;
 
     /** {@inheritDoc} */
@@ -53,7 +55,7 @@ class Paypal extends AbstractPaymentMethod
      */
     protected function hydrateHostedFields(OrderRequest $orderRequest, array $payload): OrderRequest
     {
-        $orderRequest->payment_product = 'paypal';
+        $orderRequest->payment_product = static::PAYMENT_NAME;
 
         return $orderRequest;
     }
@@ -63,7 +65,7 @@ class Paypal extends AbstractPaymentMethod
      */
     protected function hydrateHostedPage(HostedPaymentPageRequest $orderRequest, AsyncPaymentTransactionStruct $transaction): HostedPaymentPageRequest
     {
-        $orderRequest->payment_product_list = 'paypal';
+        $orderRequest->payment_product_list = static::PAYMENT_NAME;
 
         return $orderRequest;
     }
