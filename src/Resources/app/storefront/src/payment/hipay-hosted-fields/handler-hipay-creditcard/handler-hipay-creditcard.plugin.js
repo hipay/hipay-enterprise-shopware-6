@@ -9,7 +9,9 @@ export default class HandlerHipayCreditcardPlugin extends HipayHostedFieldsPlugi
       idCardHolder: 'hipay-card-holder',
       idCardNumber: 'hipay-card-number',
       idExpiryDate: 'hipay-expiry-date',
-      idCvc: 'hipay-cvc'
+      idCvc: 'hipay-cvc',
+      firstnameValue: '',
+      lastnameValue: ''
     };
   }
 
@@ -24,7 +26,9 @@ export default class HandlerHipayCreditcardPlugin extends HipayHostedFieldsPlugi
     const config = {
       fields: {
         cardHolder: {
-          selector: this.options.idCardHolder
+          selector: this.options.idCardHolder,
+          defaultFirstname: this.options.firstnameValue,
+          defaultLastname: this.options.lastnameValue
         },
         cardNumber: {
           selector: this.options.idCardNumber

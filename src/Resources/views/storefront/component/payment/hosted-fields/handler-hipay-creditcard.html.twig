@@ -1,3 +1,8 @@
+
+{% set hipayConfig = hipayConfig|merge({
+    firstnameValue: context.customer.firstname,
+    lastnameValue: context.customer.lastname 
+}) %}
 <div {{componentName}}-plugin data-{{componentName}}-plugin-options="{{ hipayConfig|json_encode }}">
     {% block hipay_creditcard_html %}
     <div class="form-group">

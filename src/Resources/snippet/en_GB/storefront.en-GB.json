@@ -5,13 +5,19 @@
     },
     "hosted-fields": {
       "creditcard": {
-        "fullname": "Vollständiger Name",
-        "card-number": "Kartennummer",
-        "expiry-date": "Verfallsdatum",
+        "fullname": "Fullname",
+        "card-number": "Card number",
+        "expiry-date": "Expiry date",
         "cvc": "CVC"
       },
       "giropay": {
         "bic": "BIC"
+      },
+      "sdd": {
+        "firstname": "Firstname",
+        "lastname": "Lastname",
+        "bank-name": "Bank name",
+        "iban": "IBAN"
       }
     }
   }

@@ -14,8 +14,7 @@ export default class HipayHostedFieldsPlugin extends Plugin {
     errorClass: 'is-invalid',
     errorPrefix: 'error',
     styles: null
-  }
- 
+  } 
 
   /**
    * Plugin initialisation
@@ -102,9 +101,10 @@ export default class HipayHostedFieldsPlugin extends Plugin {
       node.classList.remove(this.options.errorClass);
     }
 
-    document.querySelector(
-      '#' + this.options.errorPrefix + '-' + targetId
-    ).innerHTML = errorMessage;
+    const errorNode = document.querySelector('#' + this.options.errorPrefix + '-' + targetId);
+    if(errorNode) {
+      errorNode.innerHTML= errorMessage;
+    }
   }
 
   getPaymentName() {

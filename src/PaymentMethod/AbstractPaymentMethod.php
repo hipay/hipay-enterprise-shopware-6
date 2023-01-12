@@ -216,7 +216,7 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
 
             $orderRequest->browser_info = $browserInfo;
             $orderRequest->device_fingerprint = $payload['device_fingerprint'] ?? null;
-            $orderRequest->payment_product = $payload['payment_product'];
+            $orderRequest->payment_product = $payload['payment_product'] ?? null;
         }
 
         return $this->hydrateHostedFields($orderRequest, $payload);
@@ -262,12 +262,10 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
         $orderRequest->cid = $order->getOrderCustomer()->getId();
         $orderRequest->customerBillingInfo = $this->generateCustomerBillingInfo($order);
         $orderRequest->customerShippingInfo = $this->generateCustomerShippingInfo($order);
-        $customData = ['transaction_id' => $transaction->getOrderTransaction()->getId()];
-        if ($isCaptureAuto) {
-            // Create operation_id in custom_data if capture mode is auto
-            $customData['operation_id'] = $operationId;
-        }
-        $orderRequest->custom_data = $customData;
+        $orderRequest->custom_data = [
+            'transaction_id' => $transaction->getOrderTransaction()->getId(),
+            'operation_id' => $operationId,
+        ];
 
         $orderRequest->merchant_risk_statement = $this->generateMerchantRiskStatement($order);
         $orderRequest->account_info = $this->generateAccountInfo($order);
