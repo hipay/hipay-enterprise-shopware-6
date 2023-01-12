@@ -46,7 +46,6 @@
           :value="getCaptureAmount"
           :allowEmpty="true"
           :required="true"
-
           :disabled="!canPartialCapture"
           :isInvalid="isInvalidCaptureAmount"
           @change="onManualCaptureAmount"
@@ -85,6 +84,7 @@
         :columns="basketColumns"
         :showActions="false"
         :isRecordSelectable="isProductSelectable"
+        :showSelection="canPartialRefund"
         @selection-change="onSelectProductForRefund"
         @quantity-change="onQuantityChangeForRefund"
         @hook:mounted="selectAllProducts"></sw-data-grid>
@@ -109,6 +109,7 @@
           :allowEmpty="true"
           :required="true"
           :isInvalid="isInvalidRefundAmount"
+          :disabled="!canPartialRefund"
           @change="onManualRefundAmount"
           :placeholder="refundAmountPlaceholder ? formatCurrency(refundAmountPlaceholder) : null"></sw-number-field>
       </div>
@@ -117,6 +118,7 @@
           {{ $tc('hipay.action.cancel') }}
         </sw-button>
         <sw-button variant="primary"
+        v-if="canPartialRefund"
           @click="refundOrder"
           :disabled="isInvalidRefundAmount">
           {{ $tc('hipay.action.refund') }}

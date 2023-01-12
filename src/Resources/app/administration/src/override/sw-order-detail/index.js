@@ -58,6 +58,9 @@ Shopware.Component.override('sw-order-detail', {
         this.lastTransaction?.stateMachineState?.technicalName
       );
     },
+    canPartialRefund() {
+      return this.canRefund && this.lastTransaction?.paymentMethod?.customFields?.allowPartialRefund !== false;
+    },
     orderBasket() {
       // Returns lineItems as source to data grid & show currency next to totalPrice
       for (const lineItem of this.lineItems) {
