@@ -22,6 +22,7 @@
         :columns="basketColumns"
         :showActions="false"
         :isRecordSelectable="isProductSelectable"
+        :showSelection="canPartialCapture"
         @selection-change="onSelectProductForCapture"
         @quantity-change="onQuantityChangeForCapture"
         @hook:mounted="selectAllProducts"></sw-data-grid>
@@ -45,6 +46,8 @@
           :value="getCaptureAmount"
           :allowEmpty="true"
           :required="true"
+
+          :disabled="!canPartialCapture"
           :isInvalid="isInvalidCaptureAmount"
           @change="onManualCaptureAmount"
           :placeholder="captureAmountPlaceholder ? formatCurrency(captureAmountPlaceholder) : null"></sw-number-field>
@@ -54,6 +57,7 @@
           {{ $tc('hipay.action.cancel') }}
         </sw-button>
         <sw-button variant="primary"
+          v-if="canPartialCapture"
           @click="captureOrder"
           :disabled="isInvalidCaptureAmount">
           {{ $tc('hipay.action.capture') }}

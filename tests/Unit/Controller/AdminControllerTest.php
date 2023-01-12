@@ -17,6 +17,11 @@ use HiPay\Payment\Logger\HipayLogger;
 use HiPay\Payment\Service\HiPayHttpClientService;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Shopware\Core\Checkout\Cart\Price\Struct\CalculatedPrice;
+use Shopware\Core\Checkout\Cart\Tax\Struct\CalculatedTaxCollection;
+use Shopware\Core\Checkout\Cart\Tax\Struct\TaxRuleCollection;
+use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionEntity;
+use Shopware\Core\Checkout\Payment\PaymentMethodEntity;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Event\EntityWrittenContainerEvent;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
@@ -265,10 +270,27 @@ class AdminControllerTest extends TestCase
 
         $captures = [];
 
+        /** @var PaymentMethodEntity&MockObject */
+        $paymentMethod = $this->createMock(PaymentMethodEntity::class);
+        $paymentMethod->method('getCustomFields')->willReturn(['allowPartialCapture' => true]);
+
+        $amount = new CalculatedPrice(
+            10.0,
+            10.0,
+            $this->createMock(CalculatedTaxCollection::class),
+            $this->createMock(TaxRuleCollection::class),
+        );
+
+        /** @var OrderTransactionEntity&MockObject */
+        $transaction = $this->createMock(OrderTransactionEntity::class);
+        $transaction->method('getPaymentMethod')->willReturn($paymentMethod);
+        $transaction->method('getAmount')->willReturn($amount);
+
         /** @var HipayOrderEntity&MockObject */
         $hipayOrderEntity = $this->createMock(HipayOrderEntity::class);
         $hipayOrderEntity->method('getCapturesToArray')->willReturn($captures);
         $hipayOrderEntity->method('getCapturedAmount')->willReturn(10.00);
+        $hipayOrderEntity->method('getTransaction')->willReturn($transaction);
 
         /** @var EntityRepository&MockObject */
         $hipayOrderRepo = $this->createMock(EntityRepository::class);

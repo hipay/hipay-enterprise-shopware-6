@@ -73,6 +73,8 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
 
     protected static bool $haveHostedFields = false;
 
+    protected static bool $allowPartialCapture = true;
+
     public function __construct(
         OrderTransactionStateHandler $transactionStateHandler,
         ReadHipayConfigService $config,
@@ -619,6 +621,7 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
     {
         return [
             'haveHostedFields' => static::$haveHostedFields,
+            'allowPartialCapture' => static::$allowPartialCapture,
         ];
     }
 

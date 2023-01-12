@@ -11,6 +11,7 @@ use HiPay\Payment\PaymentMethod\Giropay;
 use HiPay\Payment\PaymentMethod\Mybank;
 use HiPay\Payment\PaymentMethod\PaymentMethodInterface;
 use HiPay\Payment\PaymentMethod\Paypal;
+use HiPay\Payment\PaymentMethod\Przelewy24;
 use HiPay\Payment\Service\ImageImportService;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
@@ -61,6 +62,7 @@ class HiPayPaymentPlugin extends Plugin
         Paypal::class,
         Giropay::class,
         Mybank::class,
+        Przelewy24::class,
     ];
 
     private string $paymentMethodRepoName = 'payment_method.repository';

@@ -19,6 +19,7 @@ use Shopware\Core\Framework\Validation\DataBag\RequestDataBag;
 use Symfony\Component\HttpFoundation\Exception\JsonException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Exception\InvalidParameterException;
 
 /**
  * @Route(defaults={"_routeScope"={"administration"}})
@@ -93,20 +94,28 @@ class AdminController
             }
 
             $hipayOrderData = json_decode($params->get('hipayOrder'));
-
-            $maintenanceRequestFormatter = new MaintenanceRequestFormatter();
-            $maintenanceRequest = $maintenanceRequestFormatter->makeRequest([
-                'amount' => $params->get('amount'),
-                'operation' => Operation::CAPTURE,
-            ]);
+            $captureAmount = $params->get('amount');
 
             $context = Context::createDefaultContext();
 
             // Search HiPay order entity by ID
             $hipayOrderCriteria = new Criteria([$hipayOrderData->id]);
-            $hipayOrderCriteria->addAssociation('captures');
+            $hipayOrderCriteria->addAssociations(['captures', 'transaction.paymentMethod']);
             /** @var HipayOrderEntity */
             $hipayOrder = $this->hipayOrderRepo->search($hipayOrderCriteria, $context)->first();
+
+            $customFields = $hipayOrder->getTransaction()->getPaymentMethod()->getCustomFields();
+            $totalTransaction = $hipayOrder->getTransaction()->getAmount()->getTotalPrice();
+
+            if (!boolval($customFields['allowPartialCapture']) && $captureAmount !== $totalTransaction) {
+                throw new InvalidParameterException('Only the full capture is allowed');
+            }
+
+            $maintenanceRequestFormatter = new MaintenanceRequestFormatter();
+            $maintenanceRequest = $maintenanceRequestFormatter->makeRequest([
+                'amount' => $captureAmount,
+                'operation' => Operation::CAPTURE,
+            ]);
 
             // Create HiPay capture related to this transaction
             $capture = OrderCaptureEntity::create($maintenanceRequest->operation_id, floatval($maintenanceRequest->amount), $hipayOrder);

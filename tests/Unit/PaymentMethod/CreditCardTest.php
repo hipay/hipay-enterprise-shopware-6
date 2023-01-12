@@ -87,6 +87,7 @@ class CreditCardTest extends TestCase
             [
                 'cards' => ['cb', 'visa', 'mastercard', 'american-express', 'bcmc', 'maestro'],
                 'haveHostedFields' => true,
+                'allowPartialCapture' => true
             ],
             CreditCard::addDefaultCustomFields()
         );

@@ -50,6 +50,9 @@ Shopware.Component.override('sw-order-detail', {
         this.lastTransaction?.stateMachineState?.technicalName
       );
     },
+    canPartialCapture() {
+      return this.canCapture && this.lastTransaction?.paymentMethod?.customFields?.allowPartialCapture !== false;
+    },
     canRefund() {
       return ['paid_partially', 'paid', 'refunded_partially'].includes(
         this.lastTransaction?.stateMachineState?.technicalName
@@ -59,7 +62,9 @@ Shopware.Component.override('sw-order-detail', {
       // Returns lineItems as source to data grid & show currency next to totalPrice
       for (const lineItem of this.lineItems) {
         lineItem.totalPrice = this.formatCurrency(lineItem.unitPrice * lineItem.currentQuantity);
+        lineItem.editable = this.canPartialCapture;
       }
+
       return this.lineItems;
     },
     orderAmount() {

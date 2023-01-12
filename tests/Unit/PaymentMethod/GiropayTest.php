@@ -59,7 +59,7 @@ class GyropayTest extends TestCase
     public function testStatic()
     {
         $this->assertEquals(
-            ['haveHostedFields' => true],
+            ['haveHostedFields' => true, 'allowPartialCapture' => true],
             Giropay::addDefaultCustomFields()
         );
 

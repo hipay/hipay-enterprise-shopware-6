@@ -2,7 +2,7 @@
 
 namespace HiPay\Payment\Tests\Unit\PaymentMethod;
 
-use HiPay\Payment\PaymentMethod\Mybank;
+use HiPay\Payment\PaymentMethod\Przelewy24;
 use HiPay\Payment\Tests\Tools\PaymentMethodMockTrait;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -11,7 +11,7 @@ use Shopware\Core\Framework\DataAbstractionLayer\Search\IdSearchResult;
 use Shopware\Core\Framework\Rule\Rule;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
-class MybankTest extends TestCase
+class Przelewy24Test extends TestCase
 {
     use PaymentMethodMockTrait;
 
@@ -19,20 +19,20 @@ class MybankTest extends TestCase
     {
         $response = [];
 
-        $orderRequest = $this->getHostedFiledsOrderRequest(Mybank::class, $response);
+        $orderRequest = $this->getHostedFiledsOrderRequest(Przelewy24::class, $response);
 
         $this->assertSame(
-            'mybank',
+            'przelewy24',
             $orderRequest->payment_product
         );
     }
 
     public function testhydratePage()
     {
-        $hostedPaymentPageRequest = $this->getHostedPagePaymentRequest(Mybank::class);
+        $hostedPaymentPageRequest = $this->getHostedPagePaymentRequest(Przelewy24::class);
 
         $this->assertSame(
-            'mybank',
+            'przelewy24',
             $hostedPaymentPageRequest->payment_product_list
         );
     }
@@ -40,43 +40,43 @@ class MybankTest extends TestCase
     public function testStatic()
     {
         $this->assertEquals(
-            ['haveHostedFields' => false,  'allowPartialCapture' => true],
-            Mybank::addDefaultCustomFields()
+            ['haveHostedFields' => false,  'allowPartialCapture' => false],
+            Przelewy24::addDefaultCustomFields()
         );
 
         $this->assertSame(
             [
-                'en-GB' => 'Pay your order by bank transfert with MyBank.',
-                'de-DE' => 'Bezahlen Sie Ihre Bestellung per Banküberweisung mit MyBank.',
+                'en-GB' => 'Pay your order by bank transfert with Przelewy24.',
+                'de-DE' => 'Bezahlen Sie Ihre Bestellung per Banküberweisung mit Przelewy24.',
                 'fo-FO' => null,
             ],
             [
-                'en-GB' => Mybank::getDescription('en-GB'),
-                'de-DE' => Mybank::getDescription('de-DE'),
-                'fo-FO' => Mybank::getDescription('fo-FO'),
+                'en-GB' => Przelewy24::getDescription('en-GB'),
+                'de-DE' => Przelewy24::getDescription('de-DE'),
+                'fo-FO' => Przelewy24::getDescription('fo-FO'),
             ]
         );
 
         $this->assertSame(
             [
-                'en-GB' => 'MyBank',
-                'de-DE' => 'MyBank',
+                'en-GB' => 'Przelewy24',
+                'de-DE' => 'Przelewy24',
                 'fo-FO' => null,
             ],
             [
-                'en-GB' => Mybank::getName('en-GB'),
-                'de-DE' => Mybank::getName('de-DE'),
-                'fo-FO' => Mybank::getName('fo-FO'),
+                'en-GB' => Przelewy24::getName('en-GB'),
+                'de-DE' => Przelewy24::getName('de-DE'),
+                'fo-FO' => Przelewy24::getName('fo-FO'),
             ]
         );
 
         $this->assertSame(
-            'mybank.svg',
-            Mybank::getImage()
+            'przelewy24.svg',
+            Przelewy24::getImage()
         );
 
-        $currencyId = 'EURO';
-        $countryId = 'ITALY';
+        $currencyId = 'ZŁOTY';
+        $countryId = 'POLAND';
 
         $repoStack = [];
         foreach (['currency.repository' => $currencyId, 'country.repository' => $countryId] as $repoName => $value) {
@@ -97,13 +97,13 @@ class MybankTest extends TestCase
             return $repoStack[$repoName];
         });
 
-        $rule = Mybank::getRule($container);
+        $rule = Przelewy24::getRule($container);
         $andId = $rule['conditions'][0]['id'];
 
         $this->assertSame(
             [
-                'name' => 'MyBank rule (only EUR from Italy)',
-                'description' => 'Specific rule for MyBank : currency in Euro for Italy only',
+                'name' => 'Przelewy24 rule (only PLN from Poland)',
+                'description' => 'Specific rule for Przelewy24 : currency in Złoty for Poland only',
                 'priority' => 1,
                 'conditions' => [
                     [
