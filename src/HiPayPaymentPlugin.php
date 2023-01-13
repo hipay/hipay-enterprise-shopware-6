@@ -6,6 +6,7 @@ namespace HiPay\Payment;
 
 use Composer\InstalledVersions;
 use HiPay\Fullservice\Exception\UnexpectedValueException;
+use HiPay\Payment\PaymentMethod\Bancontact;
 use HiPay\Payment\PaymentMethod\CreditCard;
 use HiPay\Payment\PaymentMethod\Giropay;
 use HiPay\Payment\PaymentMethod\Mybank;
@@ -60,13 +61,14 @@ class HiPayPaymentPlugin extends Plugin
     ];
 
     private const PAYMENT_METHODS = [
+        Bancontact::class,
         CreditCard::class,
-        Paypal::class,
         Giropay::class,
+        Paypal::class,
         Mybank::class,
         Przelewy24::class,
         SepaDirectDebit::class,
-        Sofort::class
+        Sofort::class,
     ];
 
     private string $paymentMethodRepoName = 'payment_method.repository';
