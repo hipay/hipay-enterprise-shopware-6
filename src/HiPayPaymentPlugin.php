@@ -13,6 +13,7 @@ use HiPay\Payment\PaymentMethod\PaymentMethodInterface;
 use HiPay\Payment\PaymentMethod\Paypal;
 use HiPay\Payment\PaymentMethod\Przelewy24;
 use HiPay\Payment\PaymentMethod\SepaDirectDebit;
+use HiPay\Payment\PaymentMethod\Sofort;
 use HiPay\Payment\Service\ImageImportService;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
@@ -65,6 +66,7 @@ class HiPayPaymentPlugin extends Plugin
         Mybank::class,
         Przelewy24::class,
         SepaDirectDebit::class,
+        Sofort::class
     ];
 
     private string $paymentMethodRepoName = 'payment_method.repository';
