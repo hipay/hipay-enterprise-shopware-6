@@ -13,6 +13,9 @@
       "giropay": {
         "bic": "BIC"
       },
+      "ideal": {
+        "bic": "Wählen Sie Ihre Bank"
+      },
       "sdd": {
         "firstname": "Vorname",
         "lastname": "Nachname",

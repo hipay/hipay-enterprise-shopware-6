@@ -9,6 +9,7 @@ use HiPay\Fullservice\Exception\UnexpectedValueException;
 use HiPay\Payment\PaymentMethod\Bancontact;
 use HiPay\Payment\PaymentMethod\CreditCard;
 use HiPay\Payment\PaymentMethod\Giropay;
+use HiPay\Payment\PaymentMethod\Ideal;
 use HiPay\Payment\PaymentMethod\Mybank;
 use HiPay\Payment\PaymentMethod\PaymentMethodInterface;
 use HiPay\Payment\PaymentMethod\Paypal;
@@ -64,6 +65,7 @@ class HiPayPaymentPlugin extends Plugin
         Bancontact::class,
         CreditCard::class,
         Giropay::class,
+        Ideal::class,
         Paypal::class,
         Mybank::class,
         Przelewy24::class,
