@@ -25,6 +25,8 @@ use HiPay\Payment\Helper\Source;
 use HiPay\Payment\Logger\HipayLogger;
 use HiPay\Payment\Service\HiPayHttpClientService;
 use HiPay\Payment\Service\ReadHipayConfigService;
+use libphonenumber\PhoneNumberFormat;
+use libphonenumber\PhoneNumberUtil;
 use Ramsey\Uuid\Uuid;
 use Shopware\Core\Checkout\Order\Aggregate\OrderAddress\OrderAddressEntity;
 use Shopware\Core\Checkout\Order\Aggregate\OrderCustomer\OrderCustomerCollection;
@@ -143,8 +145,9 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
         if ($this->config->isHostedFields()) {
             // hosted fields
             $request = $this->generateRequestHostedFields($transaction, $locale);
-            $this->logger->info('Sending an hosted fields request', ['request' => var_export($request, true)]);
+            $this->logger->info('Sending an hosted fields request', [$request]);
             $response = $client->requestNewOrder($request);
+            $this->logger->info('Hosted fields response received', $response->toArray());
 
             // error as main return
             $redirect = $transaction->getReturnUrl().'&return='.TransactionState::ERROR;
@@ -169,8 +172,9 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
         if ($this->config->isHostedPage()) {
             // hosted page
             $request = $this->generateRequestHostedPage($transaction, $locale);
-            $this->logger->info('Sending an hosted page request', ['request' => var_export($request, true)]);
+            $this->logger->info('Sending an hosted page request', [$request]);
             $response = $client->requestHostedPaymentPage($request);
+            $this->logger->info('Hosted Page response received', $response->toArray());
 
             return $response->getForwardUrl();
         }
@@ -337,8 +341,11 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
         $billingInfo->firstname = $billingAddress->getFirstName();
         $billingInfo->lastname = $billingAddress->getLastName();
         $billingInfo->email = $order->getOrderCustomer()->getEmail();
-        $billingInfo->phone = $billingAddress->getPhoneNumber();
         $billingInfo->gender = $this->generateGender($billingAddress->getSalutation());
+        $billingInfo->phone = $this->formatPhoneNumber(
+            $billingAddress->getPhoneNumber(),
+            $billingAddress->getCountry()->getIso()
+        );
 
         // Postal data
         $billingInfo->recipientinfo = $billingAddress->getCompany();
@@ -371,6 +378,10 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
             $shippingInfo->shipto_lastname = $shippingAddress->getLastName();
             $shippingInfo->shipto_gender = $this->generateGender($shippingAddress->getSalutation());
             $shippingInfo->shipto_phone = $shippingAddress->getPhoneNumber();
+            $shippingInfo->shipto_phone = $this->formatPhoneNumber(
+                $shippingAddress->getPhoneNumber(),
+                $shippingAddress->getCountry()->getIso()
+            );
 
             // Postal data
             $shippingInfo->shipto_recipientinfo = $shippingAddress->getCompany();
@@ -612,6 +623,29 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
                 Context::createDefaultContext()
             )->getEntities()
         );
+    }
+
+    /**
+     * Format a phone number.
+     *
+     * @param int $format libphonenumber\PhoneNumberFormat\PhoneNumberFormat const
+     */
+    protected function formatPhoneNumber(?string $phoneNumber, ?string $isoCountry = null, int $format = PhoneNumberFormat::E164): ?string
+    {
+        try {
+            $phoneUtil = PhoneNumberUtil::getInstance();
+
+            if ($phoneUtil->isValidNumber($parsed = $phoneUtil->parse($phoneNumber, $isoCountry))) {
+                return str_replace(' ', '', $phoneUtil->format($parsed, $format));
+            }
+        } catch (\Throwable $e) {
+            if ($phoneNumber) {
+                $this->logger->error('Error on parsing phone number "'.$phoneNumber.'"');
+            }
+            unset($e);
+        }
+
+        return null;
     }
 
     /**

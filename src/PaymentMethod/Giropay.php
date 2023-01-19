@@ -22,6 +22,12 @@ class Giropay extends AbstractPaymentMethod
     public static bool $haveHostedFields = true;
 
     /** {@inheritDoc} */
+    public static function getPosition(): int
+    {
+        return 40;
+    }
+
+    /** {@inheritDoc} */
     public static function getName(string $lang): ?string
     {
         $names = [

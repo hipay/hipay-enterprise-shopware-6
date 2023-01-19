@@ -10,6 +10,7 @@ use HiPay\Payment\PaymentMethod\Bancontact;
 use HiPay\Payment\PaymentMethod\CreditCard;
 use HiPay\Payment\PaymentMethod\Giropay;
 use HiPay\Payment\PaymentMethod\Ideal;
+use HiPay\Payment\PaymentMethod\Mbway;
 use HiPay\Payment\PaymentMethod\Mybank;
 use HiPay\Payment\PaymentMethod\PaymentMethodInterface;
 use HiPay\Payment\PaymentMethod\Paypal;
@@ -67,6 +68,7 @@ class HiPayPaymentPlugin extends Plugin
         Giropay::class,
         Ideal::class,
         Paypal::class,
+        Mbway::class,
         Mybank::class,
         Przelewy24::class,
         SepaDirectDebit::class,
@@ -203,6 +205,7 @@ class HiPayPaymentPlugin extends Plugin
             'afterOrderEnabled' => true,
             'pluginId' => $this->pluginId,
             'salesChannels' => $this->getSalesChannelIds(),
+            'position' => $classname::getPosition(),
         ];
 
         /** @var EntityRepository $paymentRepository */

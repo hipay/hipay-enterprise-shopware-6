@@ -16,6 +16,9 @@
       "ideal": {
         "bic": "Wählen Sie Ihre Bank"
       },
+      "mbway": {
+        "phone": "Telefon"
+      },
       "sdd": {
         "firstname": "Vorname",
         "lastname": "Nachname",

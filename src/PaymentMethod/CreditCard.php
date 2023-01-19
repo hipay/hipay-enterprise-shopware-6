@@ -17,6 +17,12 @@ class CreditCard extends AbstractPaymentMethod
     public static bool $haveHostedFields = true;
 
     /** {@inheritDoc} */
+    public static function getPosition(): int
+    {
+        return 10;
+    }
+
+    /** {@inheritDoc} */
     public static function getName(string $lang): ?string
     {
         $names = [

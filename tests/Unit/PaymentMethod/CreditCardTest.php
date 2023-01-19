@@ -84,11 +84,16 @@ class CreditCardTest extends TestCase
     public function testStatic()
     {
         $this->assertEquals(
+            10,
+            CreditCard::getPosition()
+        );
+
+        $this->assertEquals(
             [
                 'cards' => ['cb', 'visa', 'mastercard', 'american-express', 'bcmc', 'maestro'],
                 'haveHostedFields' => true,
                 'allowPartialCapture' => true,
-                'allowPartialRefund' => true
+                'allowPartialRefund' => true,
             ],
             CreditCard::addDefaultCustomFields()
         );

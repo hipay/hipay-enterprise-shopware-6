@@ -80,6 +80,11 @@ class SepaDirectDebitTest extends TestCase
             SepaDirectDebit::addDefaultCustomFields()
         );
 
+        $this->assertEquals(
+            30,
+            SepaDirectDebit::getPosition()
+        );
+
         $this->assertSame(
             [
                 'en-GB' => 'We\'ll automatically debit the amount from your bank account.',

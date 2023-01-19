@@ -2,7 +2,7 @@
 
 namespace HiPay\Payment\Tests\Unit\PaymentMethod;
 
-use HiPay\Payment\PaymentMethod\Przelewy24;
+use HiPay\Payment\PaymentMethod\Mbway;
 use HiPay\Payment\Tests\Tools\PaymentMethodMockTrait;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -11,28 +11,40 @@ use Shopware\Core\Framework\DataAbstractionLayer\Search\IdSearchResult;
 use Shopware\Core\Framework\Rule\Rule;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
-class Przelewy24Test extends TestCase
+class MbwayTest extends TestCase
 {
     use PaymentMethodMockTrait;
 
     public function testhydrateFields()
     {
-        $response = [];
+        $response = [
+            'phone' => '+351289094089',
+        ];
 
-        $orderRequest = $this->getHostedFiledsOrderRequest(Przelewy24::class, $response);
+        $orderRequest = $this->getHostedFiledsOrderRequest(Mbway::class, $response);
 
         $this->assertSame(
-            'przelewy24',
+            Mbway::PAYMENT_NAME,
             $orderRequest->payment_product
+        );
+
+        $this->assertSame(
+            '289094089',
+            $orderRequest->paymentMethod->phone
+        );
+
+        $this->assertSame(
+            '289094089',
+            $orderRequest->customerBillingInfo->phone
         );
     }
 
     public function testhydratePage()
     {
-        $hostedPaymentPageRequest = $this->getHostedPagePaymentRequest(Przelewy24::class);
+        $hostedPaymentPageRequest = $this->getHostedPagePaymentRequest(Mbway::class);
 
         $this->assertSame(
-            'przelewy24',
+            Mbway::PAYMENT_NAME,
             $hostedPaymentPageRequest->payment_product_list
         );
     }
@@ -40,48 +52,48 @@ class Przelewy24Test extends TestCase
     public function testStatic()
     {
         $this->assertEquals(
-            ['haveHostedFields' => false,  'allowPartialCapture' => false, 'allowPartialRefund' => false],
-            Przelewy24::addDefaultCustomFields()
+            ['haveHostedFields' => true, 'allowPartialCapture' => true, 'allowPartialRefund' => true],
+            Mbway::addDefaultCustomFields()
         );
 
         $this->assertEquals(
-            100,
-            Przelewy24::getPosition()
+            70,
+            Mbway::getPosition()
         );
 
         $this->assertSame(
             [
-                'en-GB' => 'Pay your order by bank transfert with Przelewy24.',
-                'de-DE' => 'Bezahlen Sie Ihre Bestellung per Banküberweisung mit Przelewy24.',
+                'en-GB' => 'Pay your order with the MB Way application',
+                'de-DE' => 'Bezahlen Sie Ihre Bestellung mit der MB Way Anwendung',
                 'fo-FO' => null,
             ],
             [
-                'en-GB' => Przelewy24::getDescription('en-GB'),
-                'de-DE' => Przelewy24::getDescription('de-DE'),
-                'fo-FO' => Przelewy24::getDescription('fo-FO'),
+                'en-GB' => Mbway::getDescription('en-GB'),
+                'de-DE' => Mbway::getDescription('de-DE'),
+                'fo-FO' => Mbway::getDescription('fo-FO'),
             ]
         );
 
         $this->assertSame(
             [
-                'en-GB' => 'Przelewy24',
-                'de-DE' => 'Przelewy24',
+                'en-GB' => 'MB Way',
+                'de-DE' => 'MB Way',
                 'fo-FO' => null,
             ],
             [
-                'en-GB' => Przelewy24::getName('en-GB'),
-                'de-DE' => Przelewy24::getName('de-DE'),
-                'fo-FO' => Przelewy24::getName('fo-FO'),
+                'en-GB' => Mbway::getName('en-GB'),
+                'de-DE' => Mbway::getName('de-DE'),
+                'fo-FO' => Mbway::getName('fo-FO'),
             ]
         );
 
         $this->assertSame(
-            'przelewy24.svg',
-            Przelewy24::getImage()
+            'mbway.svg',
+            Mbway::getImage()
         );
 
-        $currencyId = 'ZŁOTY';
-        $countryId = 'POLAND';
+        $currencyId = 'EURO';
+        $countryId = 'PL';
 
         $repoStack = [];
         foreach (['currency.repository' => $currencyId, 'country.repository' => $countryId] as $repoName => $value) {
@@ -102,13 +114,13 @@ class Przelewy24Test extends TestCase
             return $repoStack[$repoName];
         });
 
-        $rule = Przelewy24::getRule($container);
+        $rule = Mbway::getRule($container);
         $andId = $rule['conditions'][0]['id'];
 
         $this->assertSame(
             [
-                'name' => 'Przelewy24 rule (only PLN from Poland)',
-                'description' => 'Specific rule for Przelewy24 : currency in Złoty for Poland only',
+                'name' => 'MB way rule (only EUR from Portugal)',
+            'description' => 'Specific rule for giropay : currency in Euro for Portugal only',
                 'priority' => 1,
                 'conditions' => [
                     [

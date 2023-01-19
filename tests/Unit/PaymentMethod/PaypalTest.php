@@ -40,6 +40,11 @@ class PaypalTest extends TestCase
             Paypal::addDefaultCustomFields()
         );
 
+        $this->assertEquals(
+            20,
+            Paypal::getPosition()
+        );
+
         $this->assertSame(
             [
                 'en-GB' => 'PayPal is an American company offering an online payment service system worldwide',

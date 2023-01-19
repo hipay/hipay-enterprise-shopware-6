@@ -40,6 +40,11 @@ class MybankTest extends TestCase
     public function testStatic()
     {
         $this->assertEquals(
+            90,
+            Mybank::getPosition()
+        );
+
+        $this->assertEquals(
             ['haveHostedFields' => false,  'allowPartialCapture' => true, 'allowPartialRefund' => true],
             Mybank::addDefaultCustomFields()
         );

@@ -24,6 +24,12 @@ class Ideal extends AbstractPaymentMethod
     public const PAYMENT_NAME = 'ideal';
 
     /** {@inheritDoc} */
+    public static function getPosition(): int
+    {
+        return 60;
+    }
+
+    /** {@inheritDoc} */
     public static function getName(string $lang): ?string
     {
         $names = [

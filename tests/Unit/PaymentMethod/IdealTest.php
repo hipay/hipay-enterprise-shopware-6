@@ -2,7 +2,8 @@
 
 namespace HiPay\Payment\Tests\Unit\PaymentMethod;
 
-use HiPay\Payment\PaymentMethod\Przelewy24;
+use HiPay\Fullservice\Gateway\Request\PaymentMethod\IssuerBankIDPaymentMethod;
+use HiPay\Payment\PaymentMethod\Ideal;
 use HiPay\Payment\Tests\Tools\PaymentMethodMockTrait;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -11,28 +12,46 @@ use Shopware\Core\Framework\DataAbstractionLayer\Search\IdSearchResult;
 use Shopware\Core\Framework\Rule\Rule;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
-class Przelewy24Test extends TestCase
+class IdealTest extends TestCase
 {
     use PaymentMethodMockTrait;
 
     public function testhydrateFields()
     {
-        $response = [];
+        $response = [
+            'issuer_bank_id' => static::class,
+            'payment_product' => 'Ideal',
+            'device_fingerprint' => md5(static::class),
+            'browser_info' => [
+                'http_user_agent' => 'PhpUnit',
+                'java_enabled' => false,
+                'javascript_enabled' => false,
+                'language' => 'en-GB',
+                'color_depth' => '64bits',
+                'screen_height' => 768,
+                'screen_width' => 1024,
+                'timezone' => -120,
+            ],
+        ];
 
-        $orderRequest = $this->getHostedFiledsOrderRequest(Przelewy24::class, $response);
+        $orderRequest = $this->getHostedFiledsOrderRequest(Ideal::class, $response);
+        $this->assertInstanceOf(
+            IssuerBankIDPaymentMethod::class,
+            $orderRequest->paymentMethod
+        );
 
         $this->assertSame(
-            'przelewy24',
-            $orderRequest->payment_product
+            static::class,
+            $orderRequest->paymentMethod->issuer_bank_id
         );
     }
 
     public function testhydratePage()
     {
-        $hostedPaymentPageRequest = $this->getHostedPagePaymentRequest(Przelewy24::class);
+        $hostedPaymentPageRequest = $this->getHostedPagePaymentRequest(Ideal::class);
 
         $this->assertSame(
-            'przelewy24',
+            Ideal::PAYMENT_NAME,
             $hostedPaymentPageRequest->payment_product_list
         );
     }
@@ -40,48 +59,48 @@ class Przelewy24Test extends TestCase
     public function testStatic()
     {
         $this->assertEquals(
-            ['haveHostedFields' => false,  'allowPartialCapture' => false, 'allowPartialRefund' => false],
-            Przelewy24::addDefaultCustomFields()
+            60,
+            Ideal::getPosition()
         );
 
         $this->assertEquals(
-            100,
-            Przelewy24::getPosition()
+            ['haveHostedFields' => true, 'allowPartialCapture' => true, 'allowPartialRefund' => true],
+            Ideal::addDefaultCustomFields()
         );
 
         $this->assertSame(
             [
-                'en-GB' => 'Pay your order by bank transfert with Przelewy24.',
-                'de-DE' => 'Bezahlen Sie Ihre Bestellung per Banküberweisung mit Przelewy24.',
+                'en-GB' => 'Pay your order by bank transfert with iDEAL',
+                'de-DE' => 'Bezahlen Sie Ihre Bestellung per Banküberweisung mit iDEAL',
                 'fo-FO' => null,
             ],
             [
-                'en-GB' => Przelewy24::getDescription('en-GB'),
-                'de-DE' => Przelewy24::getDescription('de-DE'),
-                'fo-FO' => Przelewy24::getDescription('fo-FO'),
+                'en-GB' => Ideal::getDescription('en-GB'),
+                'de-DE' => Ideal::getDescription('de-DE'),
+                'fo-FO' => Ideal::getDescription('fo-FO'),
             ]
         );
 
         $this->assertSame(
             [
-                'en-GB' => 'Przelewy24',
-                'de-DE' => 'Przelewy24',
+                'en-GB' => 'Ideal',
+                'de-DE' => 'Ideal',
                 'fo-FO' => null,
             ],
             [
-                'en-GB' => Przelewy24::getName('en-GB'),
-                'de-DE' => Przelewy24::getName('de-DE'),
-                'fo-FO' => Przelewy24::getName('fo-FO'),
+                'en-GB' => Ideal::getName('en-GB'),
+                'de-DE' => Ideal::getName('de-DE'),
+                'fo-FO' => Ideal::getName('fo-FO'),
             ]
         );
 
         $this->assertSame(
-            'przelewy24.svg',
-            Przelewy24::getImage()
+            'ideal.svg',
+            Ideal::getImage()
         );
 
-        $currencyId = 'ZŁOTY';
-        $countryId = 'POLAND';
+        $currencyId = 'EURO';
+        $countryId = 'NETHERLANDS';
 
         $repoStack = [];
         foreach (['currency.repository' => $currencyId, 'country.repository' => $countryId] as $repoName => $value) {
@@ -102,13 +121,13 @@ class Przelewy24Test extends TestCase
             return $repoStack[$repoName];
         });
 
-        $rule = Przelewy24::getRule($container);
+        $rule = Ideal::getRule($container);
         $andId = $rule['conditions'][0]['id'];
 
         $this->assertSame(
             [
-                'name' => 'Przelewy24 rule (only PLN from Poland)',
-                'description' => 'Specific rule for Przelewy24 : currency in Złoty for Poland only',
+                'name' => 'Ideal rule (only EUR from Netherlands)',
+                'description' => 'Specific rule for Ideal : currency in Euro for Netherlands only',
                 'priority' => 1,
                 'conditions' => [
                     [

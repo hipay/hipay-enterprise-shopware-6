@@ -27,6 +27,12 @@ class Przelewy24 extends AbstractPaymentMethod
     protected static bool $allowPartialRefund = false;
 
     /** {@inheritDoc} */
+    public static function getPosition(): int
+    {
+        return 100;
+    }
+
+    /** {@inheritDoc} */
     public static function getName(string $lang): ?string
     {
         $names = [

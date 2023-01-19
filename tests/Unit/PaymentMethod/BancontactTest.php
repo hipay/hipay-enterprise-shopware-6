@@ -40,6 +40,11 @@ class BancontactTest extends TestCase
     public function testStatic()
     {
         $this->assertEquals(
+            110,
+            Bancontact::getPosition()
+        );
+
+        $this->assertEquals(
             ['haveHostedFields' => false, 'allowPartialCapture' => true, 'allowPartialRefund' => true],
             Bancontact::addDefaultCustomFields()
         );

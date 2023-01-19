@@ -34,4 +34,9 @@ interface PaymentMethodInterface
      * @return array<string,mixed>
      */
     public static function getRule(ContainerInterface $container): ?array;
+
+    /**
+     * Return the initial position of the payment method.
+     */
+    public static function getPosition(): int;
 }

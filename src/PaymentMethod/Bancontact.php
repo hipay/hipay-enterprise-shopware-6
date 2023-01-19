@@ -23,6 +23,12 @@ class Bancontact extends AbstractPaymentMethod
     public static bool $haveHostedFields = false;
 
     /** {@inheritDoc} */
+    public static function getPosition(): int
+    {
+        return 110;
+    }
+
+    /** {@inheritDoc} */
     public static function getName(string $lang): ?string
     {
         $names = [

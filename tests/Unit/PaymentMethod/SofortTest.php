@@ -44,6 +44,11 @@ class SofortTest extends TestCase
             Sofort::addDefaultCustomFields()
         );
 
+        $this->assertEquals(
+            50,
+            Sofort::getPosition()
+        );
+
         $this->assertSame(
             [
                 'en-GB' => 'Pay your order by bank transfert with Sofort.',

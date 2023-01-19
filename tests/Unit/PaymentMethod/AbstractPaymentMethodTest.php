@@ -98,6 +98,11 @@ class AbstractPaymentMethodTest extends TestCase
             {
                 return null;
             }
+
+            public static function getPosition(): int
+            {
+                return 0;
+            }
         };
 
         return $subClass;
@@ -125,7 +130,7 @@ class AbstractPaymentMethodTest extends TestCase
                 'billing' => [
                     'first_name' => 'Donald',
                     'last_name' => 'Duck',
-                    'phone_number' => '+C01N C01N',
+                    'phone_number' => '+4930932107754',
                     'company' => 'compagny_donald',
                     'street' => '23 rue des canards',
                     'additional_address_line1' => ' dans les roseaux ',
@@ -134,14 +139,14 @@ class AbstractPaymentMethodTest extends TestCase
                     'city' => 'CANARDVILLE',
                     'salutation.salutation_key' => 'mr',
                     'gender_expected' => 'M',
-                    'country.iso' => 'DY',
+                    'country.iso' => 'DE',
                     'state.name' => 'MikeyState',
                     'state_expected' => null,
                 ],
                 'shipping' => [
                     'first_name' => 'Daisy',
                     'last_name' => 'Duck',
-                    'phone_number' => '+N01C N01C',
+                    'phone_number' => '+16135550165',
                     'company' => 'compagny_daisy',
                     'street' => '75 rue du pain mouilllé',
                     'additional_address_line1' => ' dans la mare ',
@@ -395,7 +400,7 @@ class AbstractPaymentMethodTest extends TestCase
                 'billing' => [
                     'first_name' => 'Donald',
                     'last_name' => 'Duck',
-                    'phone_number' => '+C01N C01N',
+                    'phone_number' => '+4930932107754',
                     'company' => 'compagny_donald',
                     'street' => '23 rue des canards',
                     'additional_address_line1' => '  ',
@@ -404,14 +409,14 @@ class AbstractPaymentMethodTest extends TestCase
                     'city' => 'CANARDVILLE',
                     'salutation.salutation_key' => 'mr',
                     'gender_expected' => 'M',
-                    'country.iso' => 'DY',
+                    'country.iso' => 'DE',
                     'state.name' => 'MikeyState',
                     'state_expected' => null,
                 ],
                 'shipping' => [
                     'first_name' => 'Daisy',
                     'last_name' => 'Duck',
-                    'phone_number' => '+N01C N01C',
+                    'phone_number' => '+16135550165',
                     'company' => 'compagny_daisy',
                     'street' => '75 rue du pain mouilllé',
                     'additional_address_line1' => ' dans la mare ',
