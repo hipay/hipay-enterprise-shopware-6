@@ -1,6 +1,7 @@
 {
   "hipay": {
     "config": {
+      "days": "days",
       "help": {
         "manual": "Online manual",
         "github": "Report Errors on github",
@@ -24,9 +25,6 @@
       "creditCards": {
         "choice": "Select credit card"
       }
-    },
-    "hosted-page": {
-      "redirect-message": "You will be redirected to an external payment page. Please do not refresh the page during the process"
     },
     "action": {
       "cancel": "Cancel",
@@ -65,6 +63,14 @@
     },
     "transaction": {
       "title": "HiPay transaction lifecycle"
+    },
+    "settings": {
+      "multibanco": {
+        "title": "Payment expiration limit"
+      },
+      "creditcard": {
+        "title": "Credit cards available"
+      }
     }
   }
 }

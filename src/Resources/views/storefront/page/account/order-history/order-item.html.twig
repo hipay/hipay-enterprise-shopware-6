@@ -1,0 +1,32 @@
+{% sw_extends '@Storefront/storefront/page/account/order-history/order-item.html.twig' %}
+
+{% set ORDER_TRANSACTION_STATE_IN_PROGRESS = constant('Shopware\\Core\\Checkout\\Order\\Aggregate\\OrderTransaction\\OrderTransactionStates::STATE_IN_PROGRESS') %}
+
+{% block page_account_order_item_order_table_header_col %}
+
+    {% if order.transactions.last.paymentMethod.formattedHandlerIdentifier == 'handler_hipay_multibanco'
+        && order.transactions.last.customFields.reference_to_pay
+        && orderPaymentState == ORDER_TRANSACTION_STATE_IN_PROGRESS
+    %}
+    <h3 class="text-center">{{ 'hipay.finish-details.multibanco.title'|trans }}</h3>
+    <div class="row justify-content-center">
+        <div class="col-12">
+            <table class="table table-striped ">
+                <tr>
+                    <th>{{ 'hipay.finish-details.multibanco.reference'|trans }}</th>
+                    <td>{{ order.transactions.last.customFields.reference_to_pay.reference }}</td>
+                </tr>
+                 <tr>
+                    <th>{{ 'hipay.finish-details.multibanco.amount'|trans }}</th>
+                    <td>{{ order.transactions.last.customFields.reference_to_pay.amount|floatval|currency }}</td>
+                </tr>
+                 <tr>
+                    <th>{{ 'hipay.finish-details.multibanco.expiration'|trans }}</th>
+                    <td>{{ order.transactions.last.customFields.reference_to_pay.expirationDate|date }}</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+    {{ parent() }}    
+{% endblock %}

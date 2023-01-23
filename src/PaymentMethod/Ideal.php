@@ -109,7 +109,7 @@ class Ideal extends AbstractPaymentMethod
     /**
      * {@inheritDoc}
      */
-    protected function hydrateHostedFields(OrderRequest $orderRequest, array $payload): OrderRequest
+    protected function hydrateHostedFields(OrderRequest $orderRequest, array $payload, AsyncPaymentTransactionStruct $transaction): OrderRequest
     {
         $paymentMethod = new IssuerBankIDPaymentMethod();
         $paymentMethod->issuer_bank_id = $payload['issuer_bank_id'];

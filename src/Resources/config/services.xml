@@ -82,6 +82,12 @@
             <tag>shopware.payment.method.async</tag>
         </prototype>
 
+        <service id="HiPay\Payment\PaymentMethod\Multibanco">
+            <argument key="$orderCustomerRepository" id="order_customer.repository" type="service"></argument>
+            <argument key="$orderTransactionRepository" id="order_transaction.repository" type="service"></argument>
+            <tag>shopware.payment.method.async</tag>
+        </service>
+
         <!-- Scheduled task -->
         <prototype namespace="HiPay\Payment\ScheduledTask\" resource="../../ScheduledTask/**/*Task.php">
             <tag>shopware.scheduled.task</tag>

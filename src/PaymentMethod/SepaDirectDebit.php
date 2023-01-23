@@ -127,7 +127,7 @@ class SepaDirectDebit extends AbstractPaymentMethod
     /**
      * {@inheritDoc}
      */
-    protected function hydrateHostedFields(OrderRequest $orderRequest, array $payload): OrderRequest
+    protected function hydrateHostedFields(OrderRequest $orderRequest, array $payload, AsyncPaymentTransactionStruct $transaction): OrderRequest
     {
         $paymentMethod = new SEPADirectDebitPaymentMethod();
 

@@ -1,0 +1,17 @@
+<sw-card position-identifier="sw-settings-payment-detail-content"
+  :title="$tc('hipay.settings.multibanco.title')"
+  :is-loading="isLoading">
+   <sw-field
+        type="select"
+        :value="paymentMethod.customFields?.expiration_limit || '3'"
+        @change="updateLimitValue"
+    >
+      <option
+          v-for="limit in availableLimits"
+          :value="limit.value"
+          :selected="paymentMethod.customFields?.expiration_limit === limit.value"
+      >
+          {{ limit.label }}
+      </option>
+    </sw-field>
+</sw-card>

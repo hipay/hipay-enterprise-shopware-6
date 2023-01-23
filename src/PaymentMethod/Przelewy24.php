@@ -112,7 +112,7 @@ class Przelewy24 extends AbstractPaymentMethod
     /**
      * {@inheritDoc}
      */
-    protected function hydrateHostedFields(OrderRequest $orderRequest, array $payload): OrderRequest
+    protected function hydrateHostedFields(OrderRequest $orderRequest, array $payload, AsyncPaymentTransactionStruct $transaction): OrderRequest
     {
         $orderRequest->payment_product = static::PAYMENT_NAME;
 

@@ -78,7 +78,7 @@ class Mbway extends AbstractPaymentMethod
 
         return [
             'name' => 'MB way rule (only EUR from Portugal)',
-            'description' => 'Specific rule for giropay : currency in Euro for Portugal only',
+            'description' => 'Specific rule for MB way : currency in Euro for Portugal only',
             'priority' => 1,
             'conditions' => [
                 [
@@ -113,7 +113,7 @@ class Mbway extends AbstractPaymentMethod
      *
      * @throws BadRequestException
      */
-    protected function hydrateHostedFields(OrderRequest $orderRequest, array $payload): OrderRequest
+    protected function hydrateHostedFields(OrderRequest $orderRequest, array $payload, AsyncPaymentTransactionStruct $transaction): OrderRequest
     {
         $paymentMethod = new PhonePaymentMethod();
         $paymentMethod->phone = $this->formatPhoneNumber(

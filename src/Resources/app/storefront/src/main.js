@@ -20,15 +20,15 @@ PluginManager.register(
 );
 
 PluginManager.register(
-  'HandlerHipayMbwayPlugin',
-  HandlerHipayMbwayPlugin,
-  '[handler-hipay-mbway-plugin]'
-);
-
-PluginManager.register(
   'HandlerHipayIdealPlugin',
   HandlerHipayIdealPlugin,
   '[handler-hipay-ideal-plugin]'
+);
+
+PluginManager.register(
+  'HandlerHipayMbwayPlugin',
+  HandlerHipayMbwayPlugin,
+  '[handler-hipay-mbway-plugin]'
 );
 
 PluginManager.register(

@@ -9,6 +9,7 @@ use HiPay\Fullservice\Enum\ThreeDSTwo\ReorderIndicator;
 use HiPay\Fullservice\Enum\ThreeDSTwo\ShippingIndicator;
 use HiPay\Fullservice\Enum\Transaction\TransactionState;
 use HiPay\Fullservice\Exception\UnexpectedValueException;
+use HiPay\Fullservice\Gateway\Model\HostedPaymentPage;
 use HiPay\Fullservice\Gateway\Model\Request\ThreeDSTwo\AccountInfo;
 use HiPay\Fullservice\Gateway\Model\Request\ThreeDSTwo\AccountInfo\Customer;
 use HiPay\Fullservice\Gateway\Model\Request\ThreeDSTwo\AccountInfo\Payment;
@@ -17,6 +18,7 @@ use HiPay\Fullservice\Gateway\Model\Request\ThreeDSTwo\AccountInfo\Shipping;
 use HiPay\Fullservice\Gateway\Model\Request\ThreeDSTwo\BrowserInfo;
 use HiPay\Fullservice\Gateway\Model\Request\ThreeDSTwo\MerchantRiskStatement;
 use HiPay\Fullservice\Gateway\Model\Request\ThreeDSTwo\MerchantRiskStatement\GiftCard;
+use HiPay\Fullservice\Gateway\Model\Transaction;
 use HiPay\Fullservice\Gateway\Request\Info\CustomerBillingInfoRequest;
 use HiPay\Fullservice\Gateway\Request\Info\CustomerShippingInfoRequest;
 use HiPay\Fullservice\Gateway\Request\Order\HostedPaymentPageRequest;
@@ -146,37 +148,22 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
             // hosted fields
             $request = $this->generateRequestHostedFields($transaction, $locale);
             $this->logger->info('Sending an hosted fields request', [$request]);
+
             $response = $client->requestNewOrder($request);
             $this->logger->info('Hosted fields response received', $response->toArray());
 
-            // error as main return
-            $redirect = $transaction->getReturnUrl().'&return='.TransactionState::ERROR;
-
-            switch ($response->getState()) {
-                case TransactionState::FORWARDING:
-                    $redirect = $response->getForwardUrl();
-                    break;
-                case TransactionState::COMPLETED:
-                case TransactionState::PENDING:
-                    $redirect = $transaction->getReturnUrl();
-                    break;
-
-                case TransactionState::DECLINED:
-                    $redirect = $transaction->getReturnUrl().'&return='.TransactionState::DECLINED;
-                    break;
-            }
-
-            return $redirect;
+            return $this->handleHostedFieldResponse($transaction, $response);
         }
 
         if ($this->config->isHostedPage()) {
             // hosted page
             $request = $this->generateRequestHostedPage($transaction, $locale);
             $this->logger->info('Sending an hosted page request', [$request]);
+
             $response = $client->requestHostedPaymentPage($request);
             $this->logger->info('Hosted Page response received', $response->toArray());
 
-            return $response->getForwardUrl();
+            return $this->handleHostedPageResponse($transaction, $response);
         }
 
         throw new UnexpectedValueException('Configuration mode "'.$this->config->getOperationMode().'" is invalid');
@@ -225,7 +212,7 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
             $orderRequest->payment_product = $payload['payment_product'] ?? null;
         }
 
-        return $this->hydrateHostedFields($orderRequest, $payload);
+        return $this->hydrateHostedFields($orderRequest, $payload, $transaction);
     }
 
     /**
@@ -649,6 +636,39 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
     }
 
     /**
+     * Handle hosted fields response and return the redirect url.
+     */
+    protected function handleHostedFieldResponse(AsyncPaymentTransactionStruct $transaction, Transaction $response): string
+    {
+        // error as main return
+        $redirect = $transaction->getReturnUrl().'&return='.TransactionState::ERROR;
+
+        switch ($response->getState()) {
+            case TransactionState::FORWARDING:
+                $redirect = $response->getForwardUrl();
+                break;
+            case TransactionState::COMPLETED:
+            case TransactionState::PENDING:
+                $redirect = $transaction->getReturnUrl();
+                break;
+
+            case TransactionState::DECLINED:
+                $redirect = $transaction->getReturnUrl().'&return='.TransactionState::DECLINED;
+                break;
+        }
+
+        return $redirect;
+    }
+
+    /**
+     * Handle hosted page response and return the redirect url.
+     */
+    protected function handleHostedPageResponse(AsyncPaymentTransactionStruct $transaction, HostedPaymentPage $response): string
+    {
+        return $response->getForwardUrl();
+    }
+
+    /**
      * {@inheritDoc}
      */
     public static function addDefaultCustomFields(): array
@@ -667,7 +687,8 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
      */
     abstract protected function hydrateHostedFields(
         OrderRequest $orderRequest,
-        array $payload
+        array $payload,
+        AsyncPaymentTransactionStruct $transaction
     ): OrderRequest;
 
     /**

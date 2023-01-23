@@ -11,6 +11,7 @@ use HiPay\Payment\PaymentMethod\CreditCard;
 use HiPay\Payment\PaymentMethod\Giropay;
 use HiPay\Payment\PaymentMethod\Ideal;
 use HiPay\Payment\PaymentMethod\Mbway;
+use HiPay\Payment\PaymentMethod\Multibanco;
 use HiPay\Payment\PaymentMethod\Mybank;
 use HiPay\Payment\PaymentMethod\PaymentMethodInterface;
 use HiPay\Payment\PaymentMethod\Paypal;
@@ -69,6 +70,7 @@ class HiPayPaymentPlugin extends Plugin
         Ideal::class,
         Paypal::class,
         Mbway::class,
+        Multibanco::class,
         Mybank::class,
         Przelewy24::class,
         SepaDirectDebit::class,

@@ -37,12 +37,14 @@
           style="position: absolute; visibility: hidden;"
           required
         />
-       
-        {% set componentName = payment.formattedHandlerIdentifier|replace({'_':'-'}) %}     
-        {% sw_include '@HiPayPaymentPlugin/storefront/component/payment/hosted-fields/' ~ componentName ~ '.html.twig' %}
       {% endblock %}
+       
+      {% set componentName = payment.formattedHandlerIdentifier|replace({'_':'-'}) %}     
+      {% sw_include '@HiPayPaymentPlugin/storefront/component/payment/hosted-fields/' ~ componentName ~ '.html.twig' %}
+      
 
-    {% else %}
+    {% elseif payment.formattedHandlerIdentifier != 'handler_hipay_multibanco' || config('HiPayPaymentPlugin.config.operationMode') != 'hostedFields' 
+    %}
       <p>{{ 'hipay.hosted-page.redirect-message'|trans }}</p>
     {% endif %}
   {% endif %}

@@ -6,6 +6,7 @@ import './config/hipay-help-info';
 import './config/hipay-check-server-access';
 
 import './settings/hipay-settings-cards-selector';
+import './settings/hipay-settings-multibanco';
 
 import './override/sw-data-grid';
 import './override/sw-order-detail-base';

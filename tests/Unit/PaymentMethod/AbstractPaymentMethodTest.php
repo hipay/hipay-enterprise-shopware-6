@@ -79,7 +79,7 @@ class AbstractPaymentMethodTest extends TestCase
                 return static::class;
             }
 
-            protected function hydrateHostedFields(OrderRequest $orderRequest, array $payload): OrderRequest
+            protected function hydrateHostedFields(OrderRequest $orderRequest, array $payload,  AsyncPaymentTransactionStruct $transaction): OrderRequest
             {
                 return $orderRequest;
             }

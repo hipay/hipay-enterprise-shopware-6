@@ -25,6 +25,14 @@
         "bank-name": "Bank name",
         "iban": "IBAN"
       }
+    },
+    "finish-details": {
+      "multibanco": {
+        "title": "Multibanco Informations",
+        "reference": "Reference",
+        "amount": "Amount",
+        "expiration": "Expiration"
+      }
     }
   }
 }

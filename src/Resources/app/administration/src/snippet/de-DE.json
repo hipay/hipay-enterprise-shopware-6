@@ -1,6 +1,7 @@
 {
   "hipay": {
     "config": {
+      "days": "Tage",
       "help": {
         "manual": "Online-Handbuch",
         "github": "Meldung eines Fehler auf GitHub",
@@ -24,9 +25,6 @@
       "creditCards": {
         "choice": "Kreditkarte auswählen"
       }
-    },
-    "hosted-page": {
-      "redirect-message": "Sie werden auf eine externe Zahlungsseite weitergeleitet. Bitte aktualisieren Sie die Seite während des Vorgangs nicht"
     },
     "action": {
       "cancel": "Absagen",
@@ -65,6 +63,14 @@
     },
     "transaction": {
       "title": "HiPay-Transaktionslebenszyklus"
+    },
+    "settings": {
+      "multibanco": {
+        "title": "Zahlungsablauflimit"
+      },
+      "creditcard": {
+        "title": "Kreditkarten verfügbar"
+      }
     }
   }
 }
