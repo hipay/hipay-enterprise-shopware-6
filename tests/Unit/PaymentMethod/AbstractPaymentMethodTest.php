@@ -2,6 +2,7 @@
 
 namespace HiPay\Payment\Tests\Unit\PaymentMethod;
 
+use HiPay\Fullservice\Data\PaymentProduct;
 use HiPay\Fullservice\Enum\ThreeDSTwo\DeliveryTimeFrame;
 use HiPay\Fullservice\Enum\ThreeDSTwo\DeviceChannel;
 use HiPay\Fullservice\Enum\ThreeDSTwo\PurchaseIndicator;
@@ -47,6 +48,12 @@ class AbstractPaymentMethodTest extends TestCase
         bool $haveHostedFields = false
     ) {
         return $subClass = new class(...func_get_args()) extends AbstractPaymentMethod {
+            protected const PAYMENT_POSITION = 1;
+
+            protected static bool $haveHostedFields = false;
+            protected static bool $allowPartialCapture = true;
+            protected static bool $allowPartialRefund = true;
+
             public function __construct(
                 OrderTransactionStateHandler $transactionStateHandler,
                 ReadHipayConfigService $config,
@@ -69,6 +76,19 @@ class AbstractPaymentMethodTest extends TestCase
                 );
             }
 
+            public static function getProductCode(): string
+            {
+                return 'foobar';
+            }
+
+            protected static function loadPaymentConfig(): PaymentProduct
+            {
+                return new PaymentProduct([
+                    'allowPartialCapture' => static::$allowPartialCapture,
+                    'allowPartialRefund' => static::$allowPartialRefund,
+                ]);
+            }
+
             public static function getName(string $code): string
             {
                 return static::class;
@@ -79,7 +99,7 @@ class AbstractPaymentMethodTest extends TestCase
                 return static::class;
             }
 
-            protected function hydrateHostedFields(OrderRequest $orderRequest, array $payload,  AsyncPaymentTransactionStruct $transaction): OrderRequest
+            protected function hydrateHostedFields(OrderRequest $orderRequest, array $payload, AsyncPaymentTransactionStruct $transaction): OrderRequest
             {
                 return $orderRequest;
             }

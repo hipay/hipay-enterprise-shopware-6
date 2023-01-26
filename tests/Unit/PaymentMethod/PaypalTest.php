@@ -5,7 +5,6 @@ namespace HiPay\Payment\Tests\Unit\PaymentMethod;
 use HiPay\Payment\PaymentMethod\Paypal;
 use HiPay\Payment\Tests\Tools\PaymentMethodMockTrait;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class PaypalTest extends TestCase
 {
@@ -78,7 +77,12 @@ class PaypalTest extends TestCase
 
         $this->assertSame(
             null,
-            Paypal::getRule($this->createMock(ContainerInterface::class))
+            Paypal::getCountries()
+        );
+
+        $this->assertSame(
+            null,
+            Paypal::getCurrencies()
         );
     }
 }

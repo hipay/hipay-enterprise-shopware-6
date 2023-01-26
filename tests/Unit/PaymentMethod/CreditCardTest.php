@@ -5,7 +5,6 @@ namespace HiPay\Payment\Tests\Unit\PaymentMethod;
 use HiPay\Payment\PaymentMethod\CreditCard;
 use HiPay\Payment\Tests\Tools\PaymentMethodMockTrait;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class CreditCardTest extends TestCase
 {
@@ -31,7 +30,7 @@ class CreditCardTest extends TestCase
 
         $response2 = [
             'token' => static::class,
-            'payment_product' => 'foo,bar',
+            'payment_product' => 'foo',
         ];
 
         $orderRequest = $this->getHostedFiledsOrderRequest(CreditCard::class, $response);
@@ -131,7 +130,12 @@ class CreditCardTest extends TestCase
 
         $this->assertSame(
             null,
-            CreditCard::getRule($this->createMock(ContainerInterface::class))
+            CreditCard::getCountries()
+        );
+
+        $this->assertSame(
+            null,
+            CreditCard::getCurrencies()
         );
     }
 }

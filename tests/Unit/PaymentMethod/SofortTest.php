@@ -4,12 +4,7 @@ namespace HiPay\Payment\Tests\Unit\PaymentMethod;
 
 use HiPay\Payment\PaymentMethod\Sofort;
 use HiPay\Payment\Tests\Tools\PaymentMethodMockTrait;
-use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
-use Shopware\Core\Framework\DataAbstractionLayer\Search\IdSearchResult;
-use Shopware\Core\Framework\Rule\Rule;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class SofortTest extends TestCase
 {
@@ -22,7 +17,7 @@ class SofortTest extends TestCase
         $orderRequest = $this->getHostedFiledsOrderRequest(Sofort::class, $response);
 
         $this->assertSame(
-            Sofort::PAYMENT_NAME,
+            Sofort::getProductCode(),
             $orderRequest->payment_product
         );
     }
@@ -32,7 +27,7 @@ class SofortTest extends TestCase
         $hostedPaymentPageRequest = $this->getHostedPagePaymentRequest(Sofort::class);
 
         $this->assertSame(
-            Sofort::PAYMENT_NAME,
+            Sofort::getProductCode(),
             $hostedPaymentPageRequest->payment_product_list
         );
     }
@@ -80,74 +75,14 @@ class SofortTest extends TestCase
             Sofort::getImage()
         );
 
-        $currencyId = 'EURO';
-        $countryIds = ['countryIds'];
-
-        $repoStack = [];
-
-        /** @var IdSearchResult&MockObject */
-        $result = $this->createMock(IdSearchResult::class);
-        $result->method('firstId')->willreturn($currencyId);
-
-        /** @var EntityRepository&MockObject */
-        $repo = $this->createMock(EntityRepository::class);
-        $repo->method('searchIds')->willreturn($result);
-
-        $repoStack['currency.repository'] = $repo;
-
-        /** @var IdSearchResult&MockObject */
-        $result = $this->createMock(IdSearchResult::class);
-        $result->method('getIds')->willreturn($countryIds);
-
-        /** @var EntityRepository&MockObject */
-        $repo = $this->createMock(EntityRepository::class);
-        $repo->method('searchIds')->willreturn($result);
-
-        $repoStack['country.repository'] = $repo;
-
-        /** @var ContainerInterface&MockObject */
-        $container = $this->createMock(ContainerInterface::class);
-        $container->method('get')->willReturncallback(function ($repoName) use ($repoStack) {
-            return $repoStack[$repoName];
-        });
-
-        $rule = Sofort::getRule($container);
-        $andId = $rule['conditions'][0]['id'];
+        $this->assertSame(
+            ['BE', 'FR', 'GP', 'GF', 'IT', 'RE', 'MA', 'MC', 'PT', 'MQ', 'YT', 'NC', 'SP', 'CH'],
+            Sofort::getCountries()
+        );
 
         $this->assertSame(
-            [
-                'name' => 'Sofort rule (only EUR, country in description)',
-                'description' => 'Specific rule for Sofort : currency in Euro for Belgium, France, Guadeloupe, '
-                    .'French Guyana, Italy, Reunion Island, Morocco, Monaco, Portugal, Martinique, Mayotte, New Caledonia, '
-                    .' Spain and Switzerland only',
-                'priority' => 1,
-                'conditions' => [
-                    [
-                        'id' => $andId,
-                        'type' => 'andContainer',
-                        'position' => 0,
-                    ],
-                    [
-                        'type' => 'currency',
-                        'position' => 0,
-                        'value' => [
-                            'operator' => Rule::OPERATOR_EQ,
-                            'currencyIds' => [$currencyId],
-                        ],
-                        'parentId' => $andId,
-                    ],
-                    [
-                        'type' => 'customerBillingCountry',
-                        'position' => 1,
-                        'value' => [
-                            'operator' => Rule::OPERATOR_EQ,
-                            'countryIds' => $countryIds,
-                        ],
-                        'parentId' => $andId,
-                    ],
-                ],
-            ],
-            $rule
+            ['EUR'],
+            Sofort::getCurrencies()
         );
     }
 }

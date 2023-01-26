@@ -22,14 +22,18 @@ use HiPay\Payment\Service\ImageImportService;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
+use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\ContainsFilter;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsAnyFilter;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
+use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\OrFilter;
 use Shopware\Core\Framework\Plugin;
 use Shopware\Core\Framework\Plugin\Context\ActivateContext;
 use Shopware\Core\Framework\Plugin\Context\DeactivateContext;
 use Shopware\Core\Framework\Plugin\Context\InstallContext;
 use Shopware\Core\Framework\Plugin\Context\UninstallContext;
 use Shopware\Core\Framework\Plugin\Util\PluginIdProvider;
+use Shopware\Core\Framework\Rule\Rule;
+use Shopware\Core\Framework\Uuid\Uuid;
 use Shopware\Core\System\Language\LanguageEntity;
 use Symfony\Component\DependencyInjection\Exception\ServiceCircularReferenceException;
 use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
@@ -248,13 +252,9 @@ class HiPayPaymentPlugin extends Plugin
                 $paymentMethod['mediaId'] = $mediaId;
             }
 
-            if ($rule = $classname::getRule($this->container)) {
+            if ($rule = $this->getRule($classname)) {
                 $paymentMethod['availabilityRule'] = $rule;
             }
-        }
-
-        if ($rule = $classname::getRule($this->container)) {
-            $paymentMethod['availabilityRule'] = $rule;
         }
 
         $paymentRepository->update([$paymentMethod], $context);
@@ -368,6 +368,82 @@ class HiPayPaymentPlugin extends Plugin
         }
 
         $systemConfigRepository->create($validParams, $context);
+    }
+
+    /**
+     * Add the rule for the payement method.
+     *
+     * @return array<string,mixed>|null
+     */
+    private function getRule(string $classname): ?array
+    {
+        $context = Context::createDefaultContext();
+
+        /** @var EntityRepository */
+        $ruleRepo = $this->container->get('rule.repository');
+        $ruleCriteria = (new Criteria())->addFilter(new ContainsFilter('customFields', $classname::getProductCode()));
+
+        // Existing rule
+        if ($ruleId = $ruleRepo->searchIds($ruleCriteria, $context)->firstId()) {
+            return ['id' => $ruleId];
+        }
+
+        $countries = $classname::getCountries();
+        $currencies = $classname::getCurrencies();
+
+        // No rule
+        if (!$countries && !$currencies) {
+            return null;
+        }
+
+        $conditions = [[
+            'id' => $andId = Uuid::randomHex(),
+            'type' => 'andContainer',
+            'position' => 0,
+        ]];
+
+        if ($countries) {
+            $filter = new OrFilter();
+            foreach ($countries as $country) {
+                $filter->addQuery(new EqualsFilter('iso', $country));
+            }
+
+            /** @var EntityRepository */
+            $countryRepo = $this->container->get('country.repository');
+            $countryIds = $countryRepo->searchIds((new Criteria())->addFilter($filter), $context)->getIds();
+
+            $conditions[] = [
+                'type' => 'customerBillingCountry',
+                'position' => 1,
+                'value' => ['operator' => Rule::OPERATOR_EQ, 'countryIds' => $countryIds],
+                'parentId' => $andId,
+            ];
+        }
+
+        if ($currencies) {
+            $filter = new OrFilter();
+            foreach ($currencies as $currency) {
+                $filter->addQuery(new EqualsFilter('isoCode', $currency));
+            }
+
+            /** @var EntityRepository */
+            $currencyRepo = $this->container->get('currency.repository');
+            $currencyIds = $currencyRepo->searchIds((new Criteria())->addFilter($filter), $context)->getIds();
+
+            $conditions[] = [
+                'type' => 'currency',
+                'position' => 0,
+                'value' => ['operator' => Rule::OPERATOR_EQ, 'currencyIds' => $currencyIds],
+                'parentId' => $andId,
+            ];
+        }
+
+        return [
+            'name' => $classname::getName('en-GB').' rule',
+            'priority' => 1,
+            'customFields' => ['hipay-payment' => $classname::getProductCode()],
+            'conditions' => $conditions,
+        ];
     }
 }
 

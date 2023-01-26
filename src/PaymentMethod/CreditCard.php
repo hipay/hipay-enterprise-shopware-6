@@ -2,27 +2,42 @@
 
 namespace HiPay\Payment\PaymentMethod;
 
+use HiPay\Fullservice\Data\PaymentProduct;
 use HiPay\Fullservice\Gateway\Request\Order\HostedPaymentPageRequest;
 use HiPay\Fullservice\Gateway\Request\Order\OrderRequest;
 use HiPay\Fullservice\Gateway\Request\PaymentMethod\CardTokenPaymentMethod;
 use Shopware\Core\Checkout\Payment\Cart\AsyncPaymentTransactionStruct;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 
 /**
  * Credit card payment Methods.
  */
 class CreditCard extends AbstractPaymentMethod
 {
-    public static bool $haveHostedFields = true;
+    /** {@inheritDoc} */
+    protected const PAYMENT_POSITION = 10;
 
     /** {@inheritDoc} */
-    public static function getPosition(): int
+    protected const PAYMENT_IMAGE = 'credit_card.svg';
+
+    /** {@inheritDoc} */
+    protected static PaymentProduct $paymentConfig;
+
+    /**
+     * {@inheritDoc}
+     */
+    protected static function loadPaymentConfig(): PaymentProduct
     {
-        return 10;
+        return new PaymentProduct([
+            'productCode' => 'cb,visa,mastercard,american-express,bcmc,maestro',
+            'additionalFields' => true,
+            'canManualCapturePartially' => true,
+            'canRefundPartially' => true,
+        ]);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     public static function getName(string $lang): ?string
     {
         $names = [
@@ -33,7 +48,9 @@ class CreditCard extends AbstractPaymentMethod
         return $names[$lang] ?? null;
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     public static function getDescription(string $lang): ?string
     {
         $descriptions = [
@@ -44,19 +61,9 @@ class CreditCard extends AbstractPaymentMethod
         return $descriptions[$lang] ?? null;
     }
 
-    /** {@inheritDoc} */
-    public static function getImage(): ?string
-    {
-        return 'credit_card.svg';
-    }
-
-    /** {@inheritDoc} */
-    public static function getRule(ContainerInterface $container): ?array
-    {
-        return null;
-    }
-
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     public static function addDefaultCustomFields(): array
     {
         return parent::addDefaultCustomFields() + [
@@ -66,8 +73,6 @@ class CreditCard extends AbstractPaymentMethod
 
     /**
      * {@inheritDoc}
-     *
-     * @throws BadRequestException
      */
     protected function hydrateHostedFields(OrderRequest $orderRequest, array $payload, AsyncPaymentTransactionStruct $transaction): OrderRequest
     {
@@ -78,14 +83,13 @@ class CreditCard extends AbstractPaymentMethod
 
         // @phpstan-ignore-next-line
         $orderRequest->paymentMethod = $paymentMethod;
+        $orderRequest->payment_product = $payload['payment_product'];
 
         return $orderRequest;
     }
 
     /**
      * {@inheritDoc}
-     *
-     * @throws BadRequestException
      */
     protected function hydrateHostedPage(HostedPaymentPageRequest $orderRequest, AsyncPaymentTransactionStruct $transaction): HostedPaymentPageRequest
     {

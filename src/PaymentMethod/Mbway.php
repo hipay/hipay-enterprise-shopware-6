@@ -2,36 +2,33 @@
 
 namespace HiPay\Payment\PaymentMethod;
 
+use HiPay\Fullservice\Data\PaymentProduct;
 use HiPay\Fullservice\Gateway\Request\Order\HostedPaymentPageRequest;
 use HiPay\Fullservice\Gateway\Request\Order\OrderRequest;
 use HiPay\Fullservice\Gateway\Request\PaymentMethod\PhonePaymentMethod;
 use libphonenumber\PhoneNumberFormat;
 use Shopware\Core\Checkout\Payment\Cart\AsyncPaymentTransactionStruct;
-use Shopware\Core\Framework\Context;
-use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
-use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
-use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
-use Shopware\Core\Framework\Rule\Rule;
-use Shopware\Core\Framework\Uuid\Uuid;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 
 /**
- * Credit card payment Methods.
+ * Mbway payment Methods.
  */
 class Mbway extends AbstractPaymentMethod
 {
-    public const PAYMENT_NAME = 'mbway';
-
-    public static bool $haveHostedFields = true;
+    /** {@inheritDoc} */
+    protected const PAYMENT_CODE = 'mbway';
 
     /** {@inheritDoc} */
-    public static function getPosition(): int
-    {
-        return 70;
-    }
+    protected const PAYMENT_POSITION = 70;
 
     /** {@inheritDoc} */
+    protected const PAYMENT_IMAGE = 'mbway.svg';
+
+    /** {@inheritDoc} */
+    protected static PaymentProduct $paymentConfig;
+
+    /**
+     * {@inheritDoc}
+     */
     public static function getName(string $lang): ?string
     {
         $names = [
@@ -42,7 +39,9 @@ class Mbway extends AbstractPaymentMethod
         return $names[$lang] ?? null;
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     public static function getDescription(string $lang): ?string
     {
         $descriptions = [
@@ -53,65 +52,24 @@ class Mbway extends AbstractPaymentMethod
         return $descriptions[$lang] ?? null;
     }
 
-    /** {@inheritDoc} */
-    public static function getImage(): ?string
+    /**
+     * {@inheritDoc}
+     */
+    public static function getCurrencies(): ?array
     {
-        return 'mbway.svg';
-    }
-
-    /** {@inheritDoc} */
-    public static function getRule(ContainerInterface $container): ?array
-    {
-        /** @var EntityRepository */
-        $currencyRepo = $container->get('currency.repository');
-        $currencyId = $currencyRepo->searchIds(
-            (new Criteria())->addFilter(new EqualsFilter('isoCode', 'EUR')),
-            Context::createDefaultContext()
-        )->firstId();
-
-        /** @var EntityRepository */
-        $countryRepo = $container->get('country.repository');
-        $countryId = $countryRepo->searchIds(
-            (new Criteria())->addFilter(new EqualsFilter('iso', 'PT')),
-            Context::createDefaultContext()
-        )->firstId();
-
-        return [
-            'name' => 'MB way rule (only EUR from Portugal)',
-            'description' => 'Specific rule for MB way : currency in Euro for Portugal only',
-            'priority' => 1,
-            'conditions' => [
-                [
-                    'id' => $andId = Uuid::randomHex(),
-                    'type' => 'andContainer',
-                    'position' => 0,
-                ],
-                [
-                    'type' => 'currency',
-                    'position' => 0,
-                    'value' => [
-                            'operator' => Rule::OPERATOR_EQ,
-                            'currencyIds' => [$currencyId],
-                        ],
-                    'parentId' => $andId,
-                ],
-                [
-                    'type' => 'customerBillingCountry',
-                    'position' => 1,
-                    'value' => [
-                            'operator' => Rule::OPERATOR_EQ,
-                            'countryIds' => [$countryId],
-                        ],
-                    'parentId' => $andId,
-                ],
-            ],
-        ];
+        return ['EUR'];
     }
 
     /**
      * {@inheritDoc}
-     *
-     * @throws BadRequestException
+     */
+    public static function getCountries(): ?array
+    {
+        return ['PT'];
+    }
+
+    /**
+     * {@inheritDoc}
      */
     protected function hydrateHostedFields(OrderRequest $orderRequest, array $payload, AsyncPaymentTransactionStruct $transaction): OrderRequest
     {
@@ -123,7 +81,6 @@ class Mbway extends AbstractPaymentMethod
         );
         // @phpstan-ignore-next-line
         $orderRequest->paymentMethod = $paymentMethod;
-        $orderRequest->payment_product = static::PAYMENT_NAME;
 
         $orderRequest->customerBillingInfo->phone = $paymentMethod->phone;
 
@@ -132,8 +89,6 @@ class Mbway extends AbstractPaymentMethod
 
     /**
      * {@inheritDoc}
-     *
-     * @throws BadRequestException
      */
     protected function hydrateHostedPage(HostedPaymentPageRequest $orderRequest, AsyncPaymentTransactionStruct $transaction): HostedPaymentPageRequest
     {
@@ -142,7 +97,6 @@ class Mbway extends AbstractPaymentMethod
             $orderRequest->customerBillingInfo->country,
             PhoneNumberFormat::NATIONAL
         );
-        $orderRequest->payment_product_list = static::PAYMENT_NAME;
 
         return $orderRequest;
     }

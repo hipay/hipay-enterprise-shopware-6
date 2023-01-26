@@ -2,27 +2,28 @@
 
 namespace HiPay\Payment\PaymentMethod;
 
-use HiPay\Fullservice\Gateway\Request\Order\HostedPaymentPageRequest;
-use HiPay\Fullservice\Gateway\Request\Order\OrderRequest;
-use Shopware\Core\Checkout\Payment\Cart\AsyncPaymentTransactionStruct;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use HiPay\Fullservice\Data\PaymentProduct;
 
 /**
  * Paypal payment Methods.
  */
 class Paypal extends AbstractPaymentMethod
 {
-    public const PAYMENT_NAME = 'paypal';
-
-    public static bool $haveHostedFields = false;
+    /** {@inheritDoc} */
+    protected const PAYMENT_CODE = 'paypal';
 
     /** {@inheritDoc} */
-    public static function getPosition(): int
-    {
-        return 20;
-    }
+    protected const PAYMENT_POSITION = 20;
 
     /** {@inheritDoc} */
+    protected const PAYMENT_IMAGE = 'paypal.svg';
+
+    /** {@inheritDoc} */
+    protected static PaymentProduct $paymentConfig;
+
+    /**
+     * {@inheritDoc}
+     */
     public static function getName(string $lang): ?string
     {
         $names = [
@@ -33,7 +34,9 @@ class Paypal extends AbstractPaymentMethod
         return $names[$lang] ?? null;
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     public static function getDescription(string $lang): ?string
     {
         $descriptions = [
@@ -42,37 +45,5 @@ class Paypal extends AbstractPaymentMethod
         ];
 
         return $descriptions[$lang] ?? null;
-    }
-
-    /** {@inheritDoc} */
-    public static function getImage(): ?string
-    {
-        return 'paypal.svg';
-    }
-
-    /** {@inheritDoc} */
-    public static function getRule(ContainerInterface $container): ?array
-    {
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    protected function hydrateHostedFields(OrderRequest $orderRequest, array $payload, AsyncPaymentTransactionStruct $transaction): OrderRequest
-    {
-        $orderRequest->payment_product = static::PAYMENT_NAME;
-
-        return $orderRequest;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    protected function hydrateHostedPage(HostedPaymentPageRequest $orderRequest, AsyncPaymentTransactionStruct $transaction): HostedPaymentPageRequest
-    {
-        $orderRequest->payment_product_list = static::PAYMENT_NAME;
-
-        return $orderRequest;
     }
 }

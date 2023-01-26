@@ -605,7 +605,8 @@ class NotificationService
      */
     private function addHipayStatusFlow(HipayOrderEntity $order, int $code, string $message, float $amount, string $hash): void
     {
-        $this->hipayOrderRepo->update([
+        $this->hipayOrderRepo->update(
+            [
                 [
                     'id' => $order->getId(),
                     'statusFlows' => [HipayStatusFlowEntity::create($order, $code, $message, $amount, $hash)->toArray()],

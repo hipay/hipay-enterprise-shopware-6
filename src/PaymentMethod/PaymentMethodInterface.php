@@ -2,8 +2,6 @@
 
 namespace HiPay\Payment\PaymentMethod;
 
-use Symfony\Component\DependencyInjection\ContainerInterface;
-
 interface PaymentMethodInterface
 {
     /**
@@ -29,11 +27,18 @@ interface PaymentMethodInterface
     public static function getImage(): ?string;
 
     /**
-     * Specific rule of the payment method.
+     * Get the ISO currencies rules.
      *
-     * @return array<string,mixed>
+     * @return array<string>|null
      */
-    public static function getRule(ContainerInterface $container): ?array;
+    public static function getCurrencies(): ?array;
+
+    /**
+     * Get the ISO countries rules.
+     *
+     * @return array<string>|null
+     */
+    public static function getCountries(): ?array;
 
     /**
      * Return the initial position of the payment method.

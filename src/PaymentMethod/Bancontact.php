@@ -2,33 +2,28 @@
 
 namespace HiPay\Payment\PaymentMethod;
 
-use HiPay\Fullservice\Gateway\Request\Order\HostedPaymentPageRequest;
-use HiPay\Fullservice\Gateway\Request\Order\OrderRequest;
-use Shopware\Core\Checkout\Payment\Cart\AsyncPaymentTransactionStruct;
-use Shopware\Core\Framework\Context;
-use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
-use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
-use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
-use Shopware\Core\Framework\Rule\Rule;
-use Shopware\Core\Framework\Uuid\Uuid;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use HiPay\Fullservice\Data\PaymentProduct;
 
 /**
  * Bancontact payment Methods.
  */
 class Bancontact extends AbstractPaymentMethod
 {
-    public const PAYMENT_NAME = 'bancontact';
-
-    public static bool $haveHostedFields = false;
+    /** {@inheritDoc} */
+    protected const PAYMENT_CODE = 'bancontact';
 
     /** {@inheritDoc} */
-    public static function getPosition(): int
-    {
-        return 110;
-    }
+    protected const PAYMENT_POSITION = 110;
 
     /** {@inheritDoc} */
+    protected const PAYMENT_IMAGE = 'bancontact.svg';
+
+    /** {@inheritDoc} */
+    protected static PaymentProduct $paymentConfig;
+
+    /**
+     * {@inheritDoc}
+     */
     public static function getName(string $lang): ?string
     {
         $names = [
@@ -39,7 +34,9 @@ class Bancontact extends AbstractPaymentMethod
         return $names[$lang] ?? null;
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     public static function getDescription(string $lang): ?string
     {
         $descriptions = [
@@ -50,78 +47,19 @@ class Bancontact extends AbstractPaymentMethod
         return $descriptions[$lang] ?? null;
     }
 
-    /** {@inheritDoc} */
-    public static function getImage(): ?string
+    /**
+     * {@inheritDoc}
+     */
+    public static function getCurrencies(): ?array
     {
-        return 'bancontact.svg';
-    }
-
-    /** {@inheritDoc} */
-    public static function getRule(ContainerInterface $container): ?array
-    {
-        /** @var EntityRepository */
-        $currencyRepo = $container->get('currency.repository');
-        $currencyId = $currencyRepo->searchIds(
-            (new Criteria())->addFilter(new EqualsFilter('isoCode', 'EUR')),
-            Context::createDefaultContext()
-        )->firstId();
-
-        /** @var EntityRepository */
-        $countryRepo = $container->get('country.repository');
-        $countryId = $countryRepo->searchIds(
-            (new Criteria())->addFilter(new EqualsFilter('iso', 'BE')),
-            Context::createDefaultContext()
-        )->firstId();
-
-        return [
-            'name' => 'Bancontact rule (only EUR in Belgium)',
-            'description' => 'Specific rule for Bancontact : currency in Euro for Belgium',
-            'priority' => 1,
-            'conditions' => [
-                [
-                    'id' => $andId = Uuid::randomHex(),
-                    'type' => 'andContainer',
-                    'position' => 0,
-                ],
-                [
-                    'type' => 'currency',
-                    'position' => 0,
-                    'value' => [
-                            'operator' => Rule::OPERATOR_EQ,
-                            'currencyIds' => [$currencyId],
-                        ],
-                    'parentId' => $andId,
-                ],
-                [
-                    'type' => 'customerBillingCountry',
-                    'position' => 1,
-                    'value' => [
-                            'operator' => Rule::OPERATOR_EQ,
-                            'countryIds' => [$countryId],
-                        ],
-                    'parentId' => $andId,
-                ],
-            ],
-        ];
+        return ['EUR'];
     }
 
     /**
      * {@inheritDoc}
      */
-    protected function hydrateHostedFields(OrderRequest $orderRequest, array $payload, AsyncPaymentTransactionStruct $transaction): OrderRequest
+    public static function getCountries(): ?array
     {
-        $orderRequest->payment_product = static::PAYMENT_NAME;
-
-        return $orderRequest;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    protected function hydrateHostedPage(HostedPaymentPageRequest $orderRequest, AsyncPaymentTransactionStruct $transaction): HostedPaymentPageRequest
-    {
-        $orderRequest->payment_product_list = static::PAYMENT_NAME;
-
-        return $orderRequest;
+        return ['BE'];
     }
 }

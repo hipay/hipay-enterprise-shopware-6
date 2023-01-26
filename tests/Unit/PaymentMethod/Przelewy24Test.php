@@ -4,12 +4,7 @@ namespace HiPay\Payment\Tests\Unit\PaymentMethod;
 
 use HiPay\Payment\PaymentMethod\Przelewy24;
 use HiPay\Payment\Tests\Tools\PaymentMethodMockTrait;
-use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
-use Shopware\Core\Framework\DataAbstractionLayer\Search\IdSearchResult;
-use Shopware\Core\Framework\Rule\Rule;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class Przelewy24Test extends TestCase
 {
@@ -80,63 +75,14 @@ class Przelewy24Test extends TestCase
             Przelewy24::getImage()
         );
 
-        $currencyId = 'ZŁOTY';
-        $countryId = 'POLAND';
-
-        $repoStack = [];
-        foreach (['currency.repository' => $currencyId, 'country.repository' => $countryId] as $repoName => $value) {
-            /** @var IdSearchResult&MockObject */
-            $result = $this->createMock(IdSearchResult::class);
-            $result->method('firstId')->willreturn($value);
-
-            /** @var EntityRepository&MockObject */
-            $repo = $this->createMock(EntityRepository::class);
-            $repo->method('searchIds')->willreturn($result);
-
-            $repoStack[$repoName] = $repo;
-        }
-
-        /** @var ContainerInterface&MockObject */
-        $container = $this->createMock(ContainerInterface::class);
-        $container->method('get')->willReturncallback(function ($repoName) use ($repoStack) {
-            return $repoStack[$repoName];
-        });
-
-        $rule = Przelewy24::getRule($container);
-        $andId = $rule['conditions'][0]['id'];
+        $this->assertSame(
+            ['PL'],
+            Przelewy24::getCountries()
+        );
 
         $this->assertSame(
-            [
-                'name' => 'Przelewy24 rule (only PLN from Poland)',
-                'description' => 'Specific rule for Przelewy24 : currency in Złoty for Poland only',
-                'priority' => 1,
-                'conditions' => [
-                    [
-                        'id' => $andId,
-                        'type' => 'andContainer',
-                        'position' => 0,
-                    ],
-                    [
-                        'type' => 'currency',
-                        'position' => 0,
-                        'value' => [
-                            'operator' => Rule::OPERATOR_EQ,
-                            'currencyIds' => [$currencyId],
-                        ],
-                        'parentId' => $andId,
-                    ],
-                    [
-                        'type' => 'customerBillingCountry',
-                        'position' => 1,
-                        'value' => [
-                            'operator' => Rule::OPERATOR_EQ,
-                            'countryIds' => [$countryId],
-                        ],
-                        'parentId' => $andId,
-                    ],
-                ],
-            ],
-            $rule
+            ['PLN'],
+            Przelewy24::getCurrencies()
         );
     }
 }
