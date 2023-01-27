@@ -29,6 +29,20 @@ class ApiHiPay extends ApiService {
       });
   }
 
+  cancelTransaction(hipayOrder) {
+    const headers = this.getBasicHeaders({});
+
+    return this.httpClient
+      .post(
+        `/_action/${this.getApiBasePath()}/cancel`,
+        { hipayOrder: JSON.stringify(hipayOrder) },
+        { headers }
+      )
+      .then((response) => {
+        return ApiService.handleResponse(response);
+      });
+  }
+
   captureTransaction(hipayOrder, amount) {
     const headers = this.getBasicHeaders({});
 

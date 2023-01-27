@@ -228,6 +228,61 @@ class AdminController
     }
 
     /**
+     * @Route(path="/api/_action/hipay/cancel")
+     */
+    public function cancel(RequestDataBag $params, HiPayHttpClientService $clientService): JsonResponse
+    {
+        try {
+            if (!is_string($params->get('hipayOrder'))) {
+                throw new JsonException('HiPay Order parameter is mandatory');
+            }
+
+            $hipayOrderData = json_decode($params->get('hipayOrder'));
+
+            $maintenanceRequestFormatter = new MaintenanceRequestFormatter();
+            $maintenanceRequest = $maintenanceRequestFormatter->makeRequest([
+                'operation' => Operation::CANCEL,
+            ]);
+
+            $context = Context::createDefaultContext();
+
+            // Search HiPay order entity by ID
+            $hipayOrderCriteria = new Criteria([$hipayOrderData->id]);
+            /** @var HipayOrderEntity */
+            $hipayOrder = $this->hipayOrderRepo->search($hipayOrderCriteria, $context)->first();
+
+            /* @infection-ignore-all */
+            $this->logger->info(
+                'Payload for Maintenance cancel request',
+                (array) $maintenanceRequest
+            );
+
+            // Make HiPay Maintenance request to refund transaction
+            $maintenanceResponse = $clientService
+                ->getConfiguredClient()
+                ->requestMaintenanceOperation(
+                    $maintenanceRequest->operation,
+                    $hipayOrder->getTransanctionReference()
+                );
+
+            /* @infection-ignore-all */
+            $this->logger->info(
+                'Response of Maintenance cancel request',
+                (array) $maintenanceResponse
+            );
+
+            return new JsonResponse([
+                'success' => true,
+            ]);
+        } catch (\Exception $e) {
+            /* @infection-ignore-all */
+            $this->logger->error($e->getCode().' : '.$e->getMessage());
+
+            return new JsonResponse(['success' => false]);
+        }
+    }
+
+    /**
      * Extract Configuration for SimpleHTTPClient from the plugin config data.
      */
     private function extractConfigurationFromPluginConfig(RequestDataBag $params, string $scope): Configuration

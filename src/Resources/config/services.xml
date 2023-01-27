@@ -107,6 +107,11 @@
         <!-- Logger Handler -->
         <service id="HiPay\Payment\Logger\HipayLogger" />
 
+        <!-- Command-->
+        <prototype namespace="HiPay\Payment\Command\" resource="../../Command/*Command.php">
+            <tag>console.command</tag>
+        </prototype>
+
 
     </services>
 </container>

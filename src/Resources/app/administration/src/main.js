@@ -12,6 +12,7 @@ import './override/sw-data-grid';
 import './override/sw-order-detail-base';
 import './override/sw-order-detail';
 import './override/sw-settings-payment-detail';
+import './override/sw-order-state-history-card';
 
 import localeEn from './snippet/en-GB.json';
 import localeDe from './snippet/de-DE.json';

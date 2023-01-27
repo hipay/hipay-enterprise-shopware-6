@@ -36,6 +36,7 @@ Shopware.Component.override('sw-order-detail', {
       fullRefund: true,
       showOrderStateForCapture: false,
       showOrderStateForRefund: false,
+      showOrderStateForCancel: false,
       isLoadingRequest: false
     };
   },
@@ -43,6 +44,11 @@ Shopware.Component.override('sw-order-detail', {
     showOnHipayMethod() {
       return /hipay/.test(
         this.lastTransaction?.paymentMethod?.formattedHandlerIdentifier
+      );
+    },
+    canCancel() {
+      return ['authorized'].includes(
+        this.lastTransaction?.stateMachineState?.technicalName
       );
     },
     canCapture() {
@@ -133,6 +139,10 @@ Shopware.Component.override('sw-order-detail', {
       console.log(JSON.parse(JSON.stringify(this.hipayOrderData)));
       this.showOrderRefund = true;
     },
+    openCancel() {
+      console.log(JSON.parse(JSON.stringify(this.hipayOrderData)));
+      this.showOrderStateForCancel = true;
+    },
     createdComponent() {
       this.$super('createdComponent');
       this.$root.$on('order-loaded', this.orderLoaded);
@@ -189,6 +199,9 @@ Shopware.Component.override('sw-order-detail', {
       for (const index in this.lineItems) {
         this.lineItems[index].currentQuantity = this.lineItems[index].quantity;
       }
+    },
+    closeCancelModal() {
+      this.showOrderStateForCancel = false;
     },
     onSelectProductForCapture(selections) {
       // Calcul capture amount according to selected products + current quantity
@@ -269,6 +282,30 @@ Shopware.Component.override('sw-order-detail', {
     closeOrderStateModal() {
       this.showOrderStateForCapture = false;
       this.showOrderStateForRefund = false;
+    },
+    makeCancel() {
+      this.isLoadingRequest = true;
+
+      // Call HiPay API endpoint
+      this.hipayService
+        .cancelTransaction(this.hipayOrderData)
+        .then(response => {
+          if (!response.success) {
+            throw new Error(response.message);
+          }
+
+          this.createNotificationSuccess({
+            title: this.$tc('hipay.notification.cancel.title'),
+            message: this.$tc('hipay.notification.cancel.success')
+          });
+        })
+        .catch(() => {
+          this.createNotificationError({
+            title: this.$tc('hipay.notification.capture.title'),
+            message: this.$tc('hipay.notification.capture.failure')
+          });
+        })
+        .finally(() => (this.isLoadingRequest = false));
     },
     makeCapture() {
       this.isLoadingRequest = true;

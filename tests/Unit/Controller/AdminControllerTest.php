@@ -471,4 +471,59 @@ class AdminControllerTest extends TestCase
 
         $this->assertFalse($jsonResponse->success);
     }
+
+    public function testValidCancel()
+    {
+        $order = new HipayOrderEntity();
+        $order->setTransanctionReference('FOO_TRANSACTION_ID');
+
+        /** @var EntitySearchResult&MockObject */
+        $search = $this->createMock(EntitySearchResult::class);
+        $search->method('first')->willReturn($order);
+
+        /** @var EntityRepository&MockObject */
+        $orderRepo = $this->createMock(EntityRepository::class);
+        $orderRepo->method('search')->willReturn($search);
+
+        $service = new AdminController(
+            $orderRepo,
+            $this->createMock(EntityRepository::class),
+            $this->createMock(EntityRepository::class),
+            $this->createMock(HipayLogger::class)
+        );
+
+        /** @var RequestDataBag&MockObject */
+        $params = $this->createMock(RequestDataBag::class);
+        $params->method('get')->willReturn(json_encode(['id' => 'FOO_ORDER_ID']));
+
+        $client = $this->createMock(HiPayHttpClientService::class);
+
+        $response = $service->cancel($params, $client);
+
+        $this->assertSame(
+            ['success' => true],
+            json_decode($response->getContent(), true)
+        );
+    }
+
+    public function testFaileddCancel()
+    {
+        $service = new AdminController(
+            $this->createMock(EntityRepository::class),
+            $this->createMock(EntityRepository::class),
+            $this->createMock(EntityRepository::class),
+            $this->createMock(HipayLogger::class)
+        );
+
+        /** @var RequestDataBag&MockObject */
+        $params = $this->createMock(RequestDataBag::class);
+        $params->method('get')->willReturn(null);
+
+        $response = $service->cancel($params, $this->createMock(HiPayHttpClientService::class));
+
+        $this->assertSame(
+            ['success' => false],
+            json_decode($response->getContent(), true)
+        );
+    }
 }
