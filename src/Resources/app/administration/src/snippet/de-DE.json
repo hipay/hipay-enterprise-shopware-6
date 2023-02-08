@@ -21,10 +21,7 @@
         "notification": "Einstellungen für Benachrichtigungen"
       },
       "info": "Um Sie über Ereignisse im Zusammenhang mit Ihrem Zahlungssystem zu informieren, z. B. über eine neue Transaktion oder eine 3-D Secure-Transaktion, kann die HiPay Plattform Ihrer Anwendung eine Server-to-Server-Benachrichtigung senden. Loggen Sie sich bei HiPay Console ein, wählen Sie einen Account und klicken Sie Integration > Sicherheitseinstellungen um die geheime Passphrase abzurufen.",
-      "authenticationIndicator": "<b>3-D Secure-Authentifizierung obligatorisch :</b><br/>Zum Fortfahren ist eine Authentifizierung erforderlich (diese Authentifizierung kann entweder ein 3DSv2-Challenge-Flow oder ein reibungsloser 3DSv2-Flow sein, ohne dass eine Benutzereingabe erforderlich ist). Schlägt die Authentifizierung fehl, wird die Transaktion abgelehnt und der Kunde wird nicht belastet.<br/><br/><b>3-D Secure-Authentifizierung, falls verfügbar :</b><br/>Wenn die Zahlungsmethode dies zulässt, wird ein Authentifizierungsprozess angefordert. Wenn die Authentifizierung jedoch fehlschlägt, wird die Transaktion <b>nicht</b> abgelehnt (<b>nur für den Rest der Welt</b>, da Transaktionen innerhalb der EURO-Zone PSD2 unterliegen und authentifiziert werden <b>müssen</b>).e. Falls von der Bank verlangt, führt der Kunde einen zusätzlichen Authentifizierungsschritt durch, damit die Belastung erfolgreich ist.",
-      "creditCards": {
-        "choice": "Kreditkarte auswählen"
-      }
+      "authenticationIndicator": "<b>3-D Secure-Authentifizierung obligatorisch :</b><br/>Zum Fortfahren ist eine Authentifizierung erforderlich (diese Authentifizierung kann entweder ein 3DSv2-Challenge-Flow oder ein reibungsloser 3DSv2-Flow sein, ohne dass eine Benutzereingabe erforderlich ist). Schlägt die Authentifizierung fehl, wird die Transaktion abgelehnt und der Kunde wird nicht belastet.<br/><br/><b>3-D Secure-Authentifizierung, falls verfügbar :</b><br/>Wenn die Zahlungsmethode dies zulässt, wird ein Authentifizierungsprozess angefordert. Wenn die Authentifizierung jedoch fehlschlägt, wird die Transaktion <b>nicht</b> abgelehnt (<b>nur für den Rest der Welt</b>, da Transaktionen innerhalb der EURO-Zone PSD2 unterliegen und authentifiziert werden <b>müssen</b>).e. Falls von der Bank verlangt, führt der Kunde einen zusätzlichen Authentifizierungsschritt durch, damit die Belastung erfolgreich ist."
     },
     "action": {
       "cancel": "Absagen",
@@ -74,7 +71,8 @@
         "title": "Zahlungsablauflimit"
       },
       "creditcard": {
-        "title": "Kreditkarten verfügbar"
+        "title": "Kreditkarten verfügbar",
+        "choice": "Kreditkarte auswählen"
       }
     }
   }

@@ -445,6 +445,14 @@ class HiPayPaymentPlugin extends Plugin
             'conditions' => $conditions,
         ];
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function executeComposerCommands(): bool
+    {
+        return true;
+    }
 }
 
 if (file_exists(dirname(__DIR__).'/vendor/autoload.php')) {

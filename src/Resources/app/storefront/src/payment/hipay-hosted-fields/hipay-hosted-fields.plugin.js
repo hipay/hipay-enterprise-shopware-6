@@ -30,11 +30,10 @@ export default class HipayHostedFieldsPlugin extends Plugin {
       ...this.options
     }
 
-    console.log({ ...this.options});
     this._configHostedFields = this.getConfigHostedFields();
     this._form = document.querySelector('#' + this.options.idResponse).form;
 
-    this._cardInstance = HiPay(this.options).create(
+    this._cardInstance = new HiPay(this.options).create(
       this.getPaymentName(),
       this._configHostedFields
     );

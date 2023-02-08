@@ -14,6 +14,7 @@ class CreditCardTest extends TestCase
     {
         $response = [
             'token' => static::class,
+            'card_id' => md5(static::class),
             'payment_product' => 'foo,bar',
             'device_fingerprint' => md5(static::class),
             'browser_info' => [
@@ -31,6 +32,7 @@ class CreditCardTest extends TestCase
         $response2 = [
             'token' => static::class,
             'payment_product' => 'foo',
+            'card_id' => md5(static::class),
         ];
 
         $orderRequest = $this->getHostedFiledsOrderRequest(CreditCard::class, $response);

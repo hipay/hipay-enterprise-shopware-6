@@ -8,7 +8,10 @@
         "fullname": "Fullname",
         "card-number": "Card number",
         "expiry-date": "Expiry date",
-        "cvc": "CVC"
+        "cvc": "CVC",
+        "remember": "Remember card for future purchases",
+        "disabled": "This kind of payment card is disabled",
+        "delete": "Delete"
       },
       "giropay": {
         "bic": "BIC"

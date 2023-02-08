@@ -1,6 +1,17 @@
 {% sw_extends '@Storefront/storefront/component/payment/payment-method.html.twig' %}
+
+ {% block component_payment_method_image %}
+  {% if 'handler_hipay_creditcard' in payment.formattedHandlerIdentifier %}
+    {% sw_include '@HiPayPaymentPlugin/storefront/component/payment/creditcards/hipay-creditcard-image.html.twig' %}
+  {% else %}
+    {{ parent() }}
+  {% endif %}
+ {% endblock %}
+
+
 {% block component_payment_method_description %}
   {{ parent() }}
+  
   {% if payment.id is same as(selectedPaymentMethodId)
       and 'handler_hipay_' in payment.formattedHandlerIdentifier
       and activeRoute in ['frontend.account.edit-order.page', 'frontend.checkout.confirm.page']
@@ -33,7 +44,7 @@
         <input type="text"
           name="hipay-response"
           id="hipay-response"
-          form="confirmOrderForm"            
+          form="confirmOrderForm"
           style="position: absolute; visibility: hidden;"
           required
         />
@@ -48,4 +59,12 @@
       <p>{{ 'hipay.hosted-page.redirect-message'|trans }}</p>
     {% endif %}
   {% endif %}
+
+  {% if 'handler_hipay_creditcard' in payment.formattedHandlerIdentifier
+      and activeRoute in ['frontend.account.payment.page']
+      and page.extensions.card_tokens
+  %}
+    {% sw_include '@HiPayPaymentPlugin/storefront/component/payment/creditcards/account-creditcard.html.twig' %}
+  {% endif %}
+
 {% endblock %}

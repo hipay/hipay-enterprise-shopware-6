@@ -31,6 +31,16 @@ The plugin follows shopware requirements for PHP configuration:
 The easiest method for testing or initial installation.  
 Packages are available on every github release.
 
+In order for shopware to install the necessary dependencies for the plugin to work properly, you must add the following shopware configuration:
+```
+# <shopware folder>/packages/feature.yml
+shopware:
+  feature:
+    flags:
+      - name: FEATURE_NEXT_1797
+        default: true
+```
+
 Download the asset and follow the next step:
 - Connect you to your Administration dashboard
 - Go to _Extensions > My Extensions_.
@@ -49,7 +59,7 @@ Afterward, you can easily activate this plugin via the console and start working
 
 ```
 bin/console plugin:refresh  
-bin/console plugin:install –-activate hipay-enterprise-shopware-6
+bin/console plugin:install --activate hipay-enterprise-shopware-6
  ```
 
 ## Support

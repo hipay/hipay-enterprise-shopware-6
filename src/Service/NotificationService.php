@@ -50,6 +50,8 @@ class NotificationService
 
     private EntityRepository $hipayOrderRefundRepo;
 
+    private EntityRepository $tokenRepo;
+
     private OrderTransactionStateHandler $orderTransactionStateHandler;
 
     private HipayLogger $logger;
@@ -95,6 +97,7 @@ class NotificationService
         EntityRepository $hipayOrderRepository,
         EntityRepository $hipayOrderCaptureRepository,
         EntityRepository $hipayOrderRefundRepository,
+        EntityRepository $hipayCardTokenRepository,
         ReadHipayConfigService $config,
         OrderTransactionStateHandler $orderTransactionStateHandler,
         HipayLogger $hipayLogger
@@ -104,6 +107,7 @@ class NotificationService
         $this->hipayOrderRepo = $hipayOrderRepository;
         $this->hipayOrderCaptureRepo = $hipayOrderCaptureRepository;
         $this->hipayOrderRefundRepo = $hipayOrderRefundRepository;
+        $this->tokenRepo = $hipayCardTokenRepository;
         $this->config = $config;
         $this->orderTransactionStateHandler = $orderTransactionStateHandler;
         $this->logger = $hipayLogger->setChannel(HipayLogger::NOTIFICATION);
@@ -315,7 +319,7 @@ class NotificationService
         /** @var HipayOrderEntity */
         $hipayOrder = $this->getAssociatedHiPayOrder(
             (new Criteria([$notification->getHipayOrderId()]))
-                ->addAssociations(['transaction', 'captures', 'refunds', 'statusFlows'])
+                ->addAssociations(['transaction', 'captures', 'refunds', 'statusFlows', 'order.orderCustomer'])
         );
 
         $this->logger->debug('Dispatching notification '.$notification->getId().' for the transaction '.$hipayOrder->getTransactionId());
@@ -358,6 +362,13 @@ class NotificationService
                 break;
 
             case static::AUTHORIZE:
+                if ($data['custom_data']['multiuse'] ?? false) {
+                    $this->savePaymentToken(
+                        ['brand' => $data['payment_product']] + $data['payment_method'],
+                        $hipayOrder->getOrder()->getOrderCustomer()->getCustomerId()
+                    );
+                }
+
                 $this->orderTransactionStateHandler->authorize($hipayOrder->getTransactionId(), $context);
                 $statusChange = true;
                 break;
@@ -663,5 +674,25 @@ class NotificationService
     private function getOperationId(array $data): string
     {
         return $data['operation']['id'] ?? $data['custom_data']['operation_id'] ?? Uuid::uuid4()->toString();
+    }
+
+    /**
+     * Save payment token.
+     *
+     * @param array<mixed,string> $paymentMethod
+     */
+    private function savePaymentToken(array $paymentMethod, string $customerId): void
+    {
+        $this->tokenRepo->upsert([[
+            'token' => $paymentMethod['token'],
+            'brand' => $paymentMethod['brand'],
+            'pan' => $paymentMethod['pan'],
+            'cardHolder' => $paymentMethod['card_holder'],
+            'cardExpiryMonth' => $paymentMethod['card_expiry_month'],
+            'cardExpiryYear' => $paymentMethod['card_expiry_year'],
+            'issuer' => $paymentMethod['issuer'],
+            'country' => $paymentMethod['country'],
+            'customerId' => $customerId,
+        ]], Context::createDefaultContext());
     }
 }

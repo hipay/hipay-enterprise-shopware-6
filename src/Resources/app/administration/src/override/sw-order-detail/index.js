@@ -132,15 +132,12 @@ Shopware.Component.override('sw-order-detail', {
         return this.hipayService.getCurrencyFormater(this.currency).format(number);
     },
     openCapture() {
-      console.log(JSON.parse(JSON.stringify(this.hipayOrderData)));
       this.showOrderCapture = true;
     },
     openRefund() {
-      console.log(JSON.parse(JSON.stringify(this.hipayOrderData)));
       this.showOrderRefund = true;
     },
     openCancel() {
-      console.log(JSON.parse(JSON.stringify(this.hipayOrderData)));
       this.showOrderStateForCancel = true;
     },
     createdComponent() {
@@ -154,12 +151,8 @@ Shopware.Component.override('sw-order-detail', {
     orderLoaded(order) {
       this.orderData = order;
       this.currency = order.currency.isoCode;
-      console.log(JSON.parse(JSON.stringify(this.orderData)));
       this.lastTransaction = this.orderData.transactions.last();
       this.hipayOrderData = this.orderData.extensions?.hipayOrder;
-      if (this.hipayOrderData) {
-        console.log(JSON.parse(JSON.stringify(this.hipayOrderData)));
-      }
 
       // Set lineItems from orderData & add currentQuantity field to lineItems
       const lineItems = JSON.parse(JSON.stringify(this.orderData.lineItems));

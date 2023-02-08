@@ -3,6 +3,7 @@ import HandlerHipayGiropayPlugin from './payment/hipay-hosted-fields/handler-hip
 import HandlerHipaySepadirectdebitPlugin from './payment/hipay-hosted-fields/handler-hipay-sepa-direct-debit/handler-hipay-sepadirectdebit.plugin';
 import HandlerHipayIdealPlugin from './payment/hipay-hosted-fields/handler-hipay-ideal/handler-hipay-ideal.plugin';
 import HandlerHipayMbwayPlugin from './payment/hipay-hosted-fields/handler-hipay-mbay/handler-hipay-mbway.plugin';
+import HipayManageCreditCardPlugin from './account/payment/hipay-manage-creditcard/hipay-manage-creditcard.plugin';
 
 // Register them via the existing PluginManager
 const PluginManager = window.PluginManager;
@@ -36,6 +37,12 @@ PluginManager.register(
   HandlerHipaySepadirectdebitPlugin,
   '[handler-hipay-sepadirectdebit-plugin]'
 );
+
+PluginManager.register(
+  'HipayManageCreditCardPlugin',
+  HipayManageCreditCardPlugin,
+  '[hipay-manage-creditcard-plugin]'
+)
 
 
 

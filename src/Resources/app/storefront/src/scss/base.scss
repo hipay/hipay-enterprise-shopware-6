@@ -1,5 +1,104 @@
 
 .payment-method-image {
-    max-width: 50%;
-    max-height: 3rem;
+    width: 13.75rem;
+    height: 2rem;
+    display: flex;
+    svg{
+        display: inline-block
+    }
+}
+
+.force-checkbox.custom-checkbox {
+    .custom-control-label{
+        cursor: pointer;
+    }
+    .custom-control-label::before {
+        @include border-radius($custom-checkbox-indicator-border-radius);
+    }
+    
+    .custom-control-input:checked ~ .custom-control-label {
+        &::after {
+            background-image: $custom-checkbox-indicator-icon-checked;
+        }
+    }
+    
+    .custom-control-input:indeterminate ~ .custom-control-label {
+        
+        &::before {
+            border-color: $custom-checkbox-indicator-indeterminate-border-color;
+            @include gradient-bg($custom-checkbox-indicator-indeterminate-bg);
+            @include box-shadow($custom-checkbox-indicator-indeterminate-box-shadow);
+        }
+        &::after {
+            background-image: $custom-checkbox-indicator-icon-indeterminate;
+        }
+    }    
+}
+
+
+
+.hipay-token{
+
+    input:disabled ~ .hipay-token-label {
+        .hipay-card-image{ opacity: 0.5 }
+    }
+
+    .hipay-token-label{
+        display: flex;
+        &::before, &::after{top : 12px;}
+
+        &[for="token-new-creditcard"]{
+            flex-flow: column;
+            &::before, &::after{top : 3px;}
+        }
+    }
+
+    
+
+    .hipay-card-image{
+        width: 2.875rem;
+        overflow: hidden;
+        img{
+            height: 2.2rem;
+            margin-top: 0.15625rem;
+        }
+        .hipay-card-image-visa{
+            margin-left: -3.4375rem;
+        }
+        .hipay-card-image-mastercard{
+            margin-left: -6.8125rem;
+        }
+        .hipay-card-image-maestro{
+            margin-left: -10.1875rem;
+        }
+        .hipay-card-image-amex{
+            margin-left: -13.125rem;
+        }
+        .hipay-card-image-bancontact{
+            margin-left: -16.96875rem;
+        }
+
+    }
+
+
+    .hipay-card-content{
+        display: block;
+        margin-left: 1rem;
+    }
+
+    .hipay-card-pan{
+        font-weight: bold;
+    }
+
+    .hipay-card-expiration::before{
+        content: ' - ';
+    }
+
+    .delete-card{
+        display: inline-block;
+        margin-left: 1rem;
+        color: var(--dark);
+        font-weight: 600;
+        cursor: pointer;
+    }
 }

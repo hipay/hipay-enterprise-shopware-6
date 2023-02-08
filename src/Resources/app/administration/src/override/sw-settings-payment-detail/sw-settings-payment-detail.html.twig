@@ -1,6 +1,6 @@
 {% block sw_settings_payment_detail_content_card %}
   {% parent %}
-  <template v-if="paymentMethod.handlerIdentifier == 'handler_hipay_creditcard'">
+  <template v-if="paymentMethod.formattedHandlerIdentifier == 'handler_hipay_creditcard'">
     <hipay-settings-cards-selector :is-loading="isLoading"
       :paymentMethod="paymentMethod"></hipay-settings-cards-selector>
   </template>

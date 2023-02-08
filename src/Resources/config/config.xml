@@ -259,13 +259,13 @@
             <defaultValue>hostedPage</defaultValue>
         </input-field>
 
-        <!-- <input-field type="bool">
+        <input-field type="bool">
             <name>oneClickPayment</name>
             <label>Using One-click payment</label>
             <label lang="de-DE">One-Click-Zahlung</label>
         </input-field>
 
-        <input-field type="bool">
+        <!--<input-field type="bool">
             <name>rememberCart</name>
             <label>Keep the basket if the payment fails.</label>
             <label lang="de-DE">Den Warenkorb behalten, wenn die Zahlung fehlschlägt</label>

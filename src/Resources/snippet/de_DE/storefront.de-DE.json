@@ -8,7 +8,10 @@
         "fullname": "Vollständiger Name",
         "card-number": "Kartennummer",
         "expiry-date": "Verfallsdatum",
-        "cvc": "CVC"
+        "cvc": "CVC",
+        "remember": "Merken Sie sich die Karte für zukünftige Einkäufe",
+        "disabled": "Diese Art von Zahlungskarte ist deaktiviert",
+        "delete": "Löschen"
       },
       "giropay": {
         "bic": "BIC"
