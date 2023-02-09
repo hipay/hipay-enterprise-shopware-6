@@ -41,7 +41,6 @@ export default class HipayHostedFieldsPlugin extends Plugin {
     this._registerEvents();
   }
 
-
   _registerEvents() {
     this._cardInstance.on('ready', () => {
       // error handler
