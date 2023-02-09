@@ -16,8 +16,10 @@ use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\Framework\Validation\DataBag\RequestDataBag;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Exception\JsonException;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Routing\Exception\InvalidParameterException;
 
@@ -26,7 +28,7 @@ use Symfony\Component\Routing\Exception\InvalidParameterException;
  *
  * Class AdminController
  */
-class AdminController
+class AdminController extends AbstractController
 {
     protected LoggerInterface $logger;
 
@@ -311,5 +313,50 @@ class AdminController
         $this->logger->debug("Payload for $scope $environement", $payload);
 
         return new Configuration($payload);
+    }
+
+    /**
+     * @Route(path="/api/_action/hipay/get-logs")
+     */
+    public function getHipayLogs(): Response
+    {
+        try {
+            $path = $this->container->get('parameter_bag')->get('kernel.logs_dir').DIRECTORY_SEPARATOR.'hipay';
+
+            $zip = new \ZipArchive();
+            $zipName = 'hipay-log-'.(new \DateTime())->format('Y-m-d\TH-i-s\Z').'.zip';
+
+            $zip->open($zipName, \ZipArchive::CREATE);
+
+            $files = new \RecursiveIteratorIterator(
+                new \RecursiveDirectoryIterator($path),
+                \RecursiveIteratorIterator::LEAVES_ONLY
+            );
+
+            foreach ($files as $file) {
+                if (!$file->isDir()) {
+                    $filePath = $file->getRealPath();
+                    $relativePath = substr($filePath, strlen($path) + 1);
+                    $zip->addFile($filePath, $relativePath);
+                }
+            }
+            $zip->close();
+
+            $response = new Response(
+                file_get_contents($zipName) ?: null,
+                200,
+                [
+                    'Content-Type' => 'application/zip',
+                    'Content-Disposition' => 'attachment;filename="'.$zipName.'"',
+                    'Content-length' => filesize($zipName).PHP_EOL,
+                ]
+            );
+
+            @unlink($zipName);
+
+            return $response;
+        } catch (\Throwable $e) {
+            return new JsonResponse(['success' => false, 'message' => $e->getMessage()]);
+        }
     }
 }

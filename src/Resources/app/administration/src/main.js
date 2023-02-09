@@ -4,6 +4,7 @@ import './config/hipay-html-bloc';
 import './config/hipay-help-bloc';
 import './config/hipay-help-info';
 import './config/hipay-check-server-access';
+import './config/hipay-download-logs';
 
 import './settings/hipay-settings-cards-selector';
 import './settings/hipay-settings-multibanco';

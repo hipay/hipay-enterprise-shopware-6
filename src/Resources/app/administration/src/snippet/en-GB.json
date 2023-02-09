@@ -21,7 +21,12 @@
       "capture-help": "<b>Automatic</b>: All transactions will be automatically captured.<br/><b>Manual</b>: All transactions will be captured manually in your HiPay or Shopware back office.",
       "operation-help": "<b>Hosted page</b>: The customer is redirected to a secure payment page hosted by HiPay.<br/><b>Hosted fields</b>: The customer will fill in their banking information directly on the merchant's website but the form fields will be hosted by HiPay. This mode is only valid for credit cards",
       "info": "To inform you about events related to your payment system, e.g. about a new transaction or a 3-D Secure transaction, the HiPay Enterprise platform can send your application a server-to-server notification. Login to Hipay Back Office, go to Integration > Security Settings module and get your HiPay merchant account passphrase.",
-      "authenticationIndicator": "<b>3-D Secure authentication mandatory :</b><br/>An authentication is required to proceed (This authentication can either be a 3DSv2 Challenge flow or a 3DSv2 frictionless flow, without any user input required). If the authentication fails, the transaction will be refused and the client will not be charged.<br/><br/><b>3-D Secure authentication if available :</b><br/>If the Payment Method allows it, an authentication process is requested. However, if the authentication fails, the transaction will <b>not</b> be refused (<b>only for rest of the world transactions</b>, as transactions made inside the EURO zone are subject to PSD2 and <b>must</b> be authenticated).e. If required by the bank, the customer completes an additional authentication step for the charge to succeed."
+      "authenticationIndicator": "<b>3-D Secure authentication mandatory :</b><br/>An authentication is required to proceed (This authentication can either be a 3DSv2 Challenge flow or a 3DSv2 frictionless flow, without any user input required). If the authentication fails, the transaction will be refused and the client will not be charged.<br/><br/><b>3-D Secure authentication if available :</b><br/>If the Payment Method allows it, an authentication process is requested. However, if the authentication fails, the transaction will <b>not</b> be refused (<b>only for rest of the world transactions</b>, as transactions made inside the EURO zone are subject to PSD2 and <b>must</b> be authenticated).e. If required by the bank, the customer completes an additional authentication step for the charge to succeed.",
+      "logs": {
+        "title": "Downloading logs",
+        "download": "Download logs",
+        "failure": "Fail to download logs"
+      }
     },
     "action": {
       "cancel": "Cancel",
