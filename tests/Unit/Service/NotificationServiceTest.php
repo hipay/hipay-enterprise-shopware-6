@@ -16,13 +16,14 @@ use HiPay\Payment\Core\Checkout\Payment\Refund\OrderRefundCollection;
 use HiPay\Payment\Core\Checkout\Payment\Refund\OrderRefundEntity;
 use HiPay\Payment\Enum\CaptureStatus;
 use HiPay\Payment\Enum\RefundStatus;
+use HiPay\Payment\Logger\HipayLogger;
 use HiPay\Payment\Service\NotificationService;
 use HiPay\Payment\Tests\Tools\ReadHipayConfigServiceMockTrait;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
 use Ramsey\Uuid\Uuid;
+use Shopware\Core\Checkout\Order\Aggregate\OrderCustomer\OrderCustomerEntity;
 use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionCollection;
 use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionEntity;
 use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStateHandler;
@@ -172,9 +173,10 @@ class NotificationServiceTest extends TestCase
             $hipayOrderRepo,
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
+            $this->createMock(EntityRepository::class),
             $config,
             $this->createMock(OrderTransactionStateHandler::class),
-            new NullLogger()
+            $this->createMock(HipayLogger::class)
         );
 
         $content = [
@@ -258,9 +260,10 @@ class NotificationServiceTest extends TestCase
             $hipayOrderRepo,
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
+            $this->createMock(EntityRepository::class),
             $config,
             $this->createMock(OrderTransactionStateHandler::class),
-            new NullLogger()
+            $this->createMock(HipayLogger::class)
         );
 
         $content = [
@@ -301,9 +304,10 @@ class NotificationServiceTest extends TestCase
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
+            $this->createMock(EntityRepository::class),
             $config,
             $this->createMock(OrderTransactionStateHandler::class),
-            new NullLogger()
+            $this->createMock(HipayLogger::class)
         );
 
         $this->expectException(ApiErrorException::class);
@@ -328,9 +332,10 @@ class NotificationServiceTest extends TestCase
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
+            $this->createMock(EntityRepository::class),
             $config,
             $this->createMock(OrderTransactionStateHandler::class),
-            new NullLogger()
+            $this->createMock(HipayLogger::class)
         );
 
         $this->expectException(UnauthorizedHttpException::class);
@@ -356,9 +361,10 @@ class NotificationServiceTest extends TestCase
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
+            $this->createMock(EntityRepository::class),
             $config,
             $this->createMock(OrderTransactionStateHandler::class),
-            new NullLogger()
+            $this->createMock(HipayLogger::class)
         );
 
         $request = new Request();
@@ -389,9 +395,10 @@ class NotificationServiceTest extends TestCase
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
+            $this->createMock(EntityRepository::class),
             $config,
             $this->createMock(OrderTransactionStateHandler::class),
-            new NullLogger()
+            $this->createMock(HipayLogger::class)
         );
 
         $request = new Request([], ['foo' => 'bar']);
@@ -421,9 +428,10 @@ class NotificationServiceTest extends TestCase
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
+            $this->createMock(EntityRepository::class),
             $config,
             $this->createMock(OrderTransactionStateHandler::class),
-            new NullLogger()
+            $this->createMock(HipayLogger::class)
         );
 
         $content = [
@@ -456,9 +464,10 @@ class NotificationServiceTest extends TestCase
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
+            $this->createMock(EntityRepository::class),
             $config,
             $this->createMock(OrderTransactionStateHandler::class),
-            new NullLogger()
+            $this->createMock(HipayLogger::class)
         );
 
         $content = [
@@ -495,9 +504,10 @@ class NotificationServiceTest extends TestCase
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
+            $this->createMock(EntityRepository::class),
             $config,
             $this->createMock(OrderTransactionStateHandler::class),
-            new NullLogger()
+            $this->createMock(HipayLogger::class)
         );
 
         $content = [
@@ -542,9 +552,10 @@ class NotificationServiceTest extends TestCase
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
+            $this->createMock(EntityRepository::class),
             $config,
             $this->createMock(OrderTransactionStateHandler::class),
-            new NullLogger()
+            $this->createMock(HipayLogger::class)
         );
 
         $content = [
@@ -566,8 +577,12 @@ class NotificationServiceTest extends TestCase
 
     private function generateTransaction(string $initialState = OrderTransactionStates::STATE_IN_PROGRESS): OrderTransactionEntity
     {
+        $orderCustomer = new OrderCustomerEntity();
+        $orderCustomer->setCustomerId('CUSTOMER_ID');
+
         $order = new OrderEntity();
         $order->setId('ORDER_ID');
+        $order->setOrderCustomer($orderCustomer);
 
         $stateMachine = new StateMachineStateEntity();
         $stateMachine->setTechnicalName($initialState);
@@ -679,8 +694,9 @@ class NotificationServiceTest extends TestCase
         $transactionStateHandler->expects($this->never())->method($methodExpected);
 
         // Logger
-        /** @var LoggerInterface&MockObject $logger */
-        $logger = $this->createMock(LoggerInterface::class);
+        /** @var HipayLogger&MockObject $logger */
+        $logger = $this->createMock(HipayLogger::class);
+        $logger->method('setChannel')->willReturnSelf();
 
         $logs = [];
         foreach (get_class_methods(LoggerInterface::class) as $method) {
@@ -704,6 +720,7 @@ class NotificationServiceTest extends TestCase
             $hipayOrderRepo,
             $captureRepo,
             $refundRepo,
+            $this->createMock(EntityRepository::class),
             $this->getReadHipayConfig([
                 'hashStage' => 'sha256',
                 'passphraseStage' => md5(random_int(0, PHP_INT_MAX)),
@@ -818,8 +835,9 @@ class NotificationServiceTest extends TestCase
         $transactionStateHandler->expects($this->once())->method($methodExpected);
 
         // Logger
-        /** @var LoggerInterface&MockObject $logger */
-        $logger = $this->createMock(LoggerInterface::class);
+        /** @var HipayLogger&MockObject $logger */
+        $logger = $this->createMock(HipayLogger::class);
+        $logger->method('setChannel')->willReturnSelf();
 
         $logs = [];
         foreach (get_class_methods(LoggerInterface::class) as $method) {
@@ -848,6 +866,7 @@ class NotificationServiceTest extends TestCase
             $hipayOrderRepo,
             $captureRepo,
             $refundRepo,
+            $this->createMock(EntityRepository::class),
             $this->getReadHipayConfig([
                 'hashStage' => 'sha256',
                 'passphraseStage' => md5(random_int(0, PHP_INT_MAX)),
@@ -953,8 +972,9 @@ class NotificationServiceTest extends TestCase
         $transactionStateHandler->expects($this->once())->method($methodExpected);
 
         // Logger
-        /** @var LoggerInterface&MockObject $logger */
-        $logger = $this->createMock(LoggerInterface::class);
+        /** @var HipayLogger&MockObject $logger */
+        $logger = $this->createMock(HipayLogger::class);
+        $logger->method('setChannel')->willReturnSelf();
 
         $logs = [];
         foreach (get_class_methods(LoggerInterface::class) as $method) {
@@ -983,6 +1003,7 @@ class NotificationServiceTest extends TestCase
             $hipayOrderRepo,
             $captureRepo,
             $refundRepo,
+            $this->createMock(EntityRepository::class),
             $this->getReadHipayConfig([
                 'hashStage' => 'sha256',
                 'passphraseStage' => md5(random_int(0, PHP_INT_MAX)),
@@ -1013,6 +1034,198 @@ class NotificationServiceTest extends TestCase
         $this->assertSame(
             [['id' => $entity->getId()]],
             $deletedIds
+        );
+    }
+
+    public function testDispatchNotificationAuthorizeAndSaveCard()
+    {
+        $notificationStatus = NotificationService::AUTHORIZE;
+        $hipayStatus = TransactionStatus::AUTHORIZED;
+        $initialState = OrderTransactionStates::STATE_IN_PROGRESS;
+        $methodExpected = 'authorize';
+        $expectedState = OrderTransactionStates::STATE_AUTHORIZED;
+
+        // Transaction
+        $transaction = $this->generateTransaction($initialState);
+        $hipayOrder = $this->generateHipayOrder($transaction);
+
+        /** @var EntityRepository&MockObject $transactionRepo */
+        $transactionRepo = $this->createMock(EntityRepository::class);
+        $transactionRepo->method('search')->willReturnCallback(function ($criteria, $context) use ($transaction) {
+            $collection = new OrderTransactionCollection([$transaction]);
+
+            return new EntitySearchResult(OrderTransactionEntity::class, $collection->count(), $collection, null, $criteria, $context);
+        });
+
+        // Notifications
+        $entity = new HipayNotificationEntity();
+        $entity->setId(md5(random_int(0, PHP_INT_MAX)));
+        $entity->setHipayOrder($hipayOrder);
+        $entity->setStatus($notificationStatus);
+        $entity->setCreatedAt(new \DateTime());
+        $entity->setData([
+            'authorized_amount' => random_int(0, PHP_INT_MAX),
+            'captured_amount' => random_int(0, PHP_INT_MAX),
+            'refunded_amount' => random_int(0, PHP_INT_MAX),
+            'status' => $hipayStatus,
+            'operation' => [
+                'id' => md5(random_int(0, PHP_INT_MAX)),
+            ],
+            'custom_data' => [
+                'multiuse' => true,
+            ],
+            'payment_product' => 'brand_payment_product',
+            'payment_method' => [
+                'card_id' => 'card_id',
+                'token' => 'token',
+                'brand' => 'brand_payment_method',
+                'pan' => 'pan',
+                'card_holder' => 'card_holder',
+                'card_expiry_month' => 'card_expiry_month',
+                'card_expiry_year' => 'card_expiry_year',
+                'issuer' => 'issuer',
+                'country' => 'country',
+            ],
+        ]);
+
+        /** @var EntityRepository&MockObject $notificationRepo */
+        $notificationRepo = $this->createMock(EntityRepository::class);
+        $notificationCollection = new HipayNotificationCollection([$entity]);
+
+        /** @var Criteria|null $notificationCriteria */
+        $notificationCriteria = null;
+        $notificationRepo->method('search')->willReturnCallback(function ($crit, $context) use (&$notificationCriteria, $notificationCollection) {
+            $notificationCriteria = $crit;
+
+            return new EntitySearchResult(HipayNotificationEntity::class, $notificationCollection->count(), $notificationCollection, null, $notificationCriteria, $context);
+        });
+
+        $deletedIds = [];
+        $notificationRepo->method('delete')->willReturnCallback(function ($ids) use (&$deletedIds) {
+            $deletedIds += $ids;
+
+            return $this->createMock(EntityWrittenContainerEvent::class);
+        });
+
+        $idState = md5(random_int(0, PHP_INT_MAX));
+
+        /** @var IdSearchResult&MockObject $idSearchResult */
+        $idSearchResult = $this->createMock(IdSearchResult::class);
+        $idSearchResult->method('firstId')->willReturn($idState);
+
+        // transactionStateHandler
+        /** @var OrderTransactionStateHandler&MockObject $transactionStateHandler */
+        $transactionStateHandler = $this->createMock(OrderTransactionStateHandler::class);
+        $transactionStateHandler->expects($this->once())->method($methodExpected);
+
+        // Logger
+        /** @var HipayLogger&MockObject $logger */
+        $logger = $this->createMock(HipayLogger::class);
+        $logger->method('setChannel')->willReturnSelf();
+
+        $logs = [];
+        foreach (get_class_methods(LoggerInterface::class) as $method) {
+            $logger->method($method)->willReturnCallback(function ($message) use (&$logs, $method) {
+                $logs[$method][] = $message;
+            });
+        }
+
+        /** @var EntityRepository&MockObject $hipayOrderRepo */
+        $hipayOrderRepo = $this->createMock(EntityRepository::class);
+        $hipayOrderRepo->method('search')->willReturnCallback(function ($criteria, $context) use ($hipayOrder) {
+            $collection = new HipayOrderCollection([$hipayOrder]);
+
+            return new EntitySearchResult(HipayOrderEntity::class, $collection->count(), $collection, null, $criteria, $context);
+        });
+
+        /** @var EntityRepository&MockObject $captureRepo */
+        $captureRepo = $this->createMock(EntityRepository::class);
+
+        /** @var EntityRepository&MockObject $refundRepo */
+        $refundRepo = $this->createMock(EntityRepository::class);
+
+        $upsertToken = [];
+        /** @var EntityRepository&MockObject $tokenRepo */
+        $tokenRepo = $this->createMock(EntityRepository::class);
+        $tokenRepo->method('upsert')->willReturnCallback(function ($arg) use (&$upsertToken) {
+            $upsertToken = $arg;
+
+            return $this->createMock(EntityWrittenContainerEvent::class);
+        });
+
+        $service = new NotificationService(
+            $transactionRepo,
+            $notificationRepo,
+            $hipayOrderRepo,
+            $captureRepo,
+            $refundRepo,
+            $tokenRepo,
+            $this->getReadHipayConfig([
+                'hashStage' => 'sha256',
+                'passphraseStage' => md5(random_int(0, PHP_INT_MAX)),
+                'environment' => 'Stage',
+            ]),
+            $transactionStateHandler,
+            $logger
+        );
+
+        $service->dispatchNotifications();
+
+        $this->assertSame(
+            [
+                'notice' => [
+                    'Start dispatching '.$notificationCollection->count().' hipay notifications',
+                    'End dispatching Hipay notifications : '.count($deletedIds).' done',
+                ],
+                'debug' => [
+                    'Dispatching notification '.$entity->getId().' for the transaction '.$hipayOrder->getTransactionId(),
+                ],
+                'info' => [
+                    'Change order transaction '.$hipayOrder->getTransactionId().' to status '.$expectedState.' (previously '.$initialState.')',
+                ],
+            ],
+            $logs
+        );
+
+        $this->assertSame(
+            [['id' => $entity->getId()]],
+            $deletedIds
+        );
+
+        $entityData = $entity->getData();
+        $this->assertSame(
+            [[
+                'token' => $entityData['payment_method']['token'],
+                'brand' => $entityData['payment_product'],
+                'pan' => $entityData['payment_method']['pan'],
+                'cardHolder' => $entityData['payment_method']['card_holder'],
+                'cardExpiryMonth' => $entityData['payment_method']['card_expiry_month'],
+                'cardExpiryYear' => $entityData['payment_method']['card_expiry_year'],
+                'issuer' => $entityData['payment_method']['issuer'],
+                'country' => $entityData['payment_method']['country'],
+                'customerId' => 'CUSTOMER_ID',
+            ]],
+            $upsertToken
+        );
+
+        $this->assertSame(
+            [
+                'total-count-mode' => 0,
+                'associations' => [
+                    'orderTransaction' => [
+                        'total-count-mode' => 0,
+                    ],
+                ],
+                'sort' => [
+                    [
+                        'field' => 'status',
+                        'naturalSorting' => false,
+                        'extensions' => [],
+                        'order' => 'ASC',
+                    ],
+                ],
+              ],
+            json_decode((string) $notificationCriteria, true)
         );
     }
 
@@ -1091,8 +1304,9 @@ class NotificationServiceTest extends TestCase
         $transactionStateHandler->expects($this->once())->method($methodExpected);
 
         // Logger
-        /** @var LoggerInterface&MockObject $logger */
-        $logger = $this->createMock(LoggerInterface::class);
+        /** @var HipayLogger&MockObject $logger */
+        $logger = $this->createMock(HipayLogger::class);
+        $logger->method('setChannel')->willReturnSelf();
         $logs = [];
         foreach (get_class_methods(LoggerInterface::class) as $method) {
             $logger->method($method)->willReturnCallback(function ($message) use (&$logs, $method) {
@@ -1126,6 +1340,7 @@ class NotificationServiceTest extends TestCase
             $hipayOrderRepo,
             $captureRepo,
             $refundRepo,
+            $this->createMock(EntityRepository::class),
             $this->getReadHipayConfig([
                 'hashStage' => 'sha256',
                 'passphraseStage' => md5(random_int(0, PHP_INT_MAX)),
@@ -1230,8 +1445,9 @@ class NotificationServiceTest extends TestCase
         $transactionStateHandler->expects($this->once())->method($methodExpected);
 
         // Logger
-        /** @var LoggerInterface&MockObject $logger */
-        $logger = $this->createMock(LoggerInterface::class);
+        /** @var HipayLogger&MockObject $logger */
+        $logger = $this->createMock(HipayLogger::class);
+        $logger->method('setChannel')->willReturnSelf();
         $logs = [];
         foreach (get_class_methods(LoggerInterface::class) as $method) {
             $logger->method($method)->willReturnCallback(function ($message) use (&$logs, $method) {
@@ -1267,6 +1483,7 @@ class NotificationServiceTest extends TestCase
             $hipayOrderRepo,
             $captureRepo,
             $refundRepo,
+            $this->createMock(EntityRepository::class),
             $this->getReadHipayConfig([
                 'hashStage' => 'sha256',
                 'passphraseStage' => md5(random_int(0, PHP_INT_MAX)),
@@ -1362,8 +1579,9 @@ class NotificationServiceTest extends TestCase
         $transactionStateHandler = $this->createMock(OrderTransactionStateHandler::class);
 
         // Logger
-        /** @var LoggerInterface&MockObject $logger */
-        $logger = $this->createMock(LoggerInterface::class);
+        /** @var HipayLogger&MockObject $logger */
+        $logger = $this->createMock(HipayLogger::class);
+        $logger->method('setChannel')->willReturnSelf();
         $logs = [];
         foreach (get_class_methods(LoggerInterface::class) as $method) {
             $logger->method($method)->willReturnCallback(function ($message) use (&$logs, $method) {
@@ -1399,6 +1617,7 @@ class NotificationServiceTest extends TestCase
             $hipayOrderRepo,
             $captureRepo,
             $refundRepo,
+            $this->createMock(EntityRepository::class),
             $this->getReadHipayConfig([
                 'hashStage' => 'sha256',
                 'passphraseStage' => md5(random_int(0, PHP_INT_MAX)),
@@ -1489,8 +1708,9 @@ class NotificationServiceTest extends TestCase
         $transactionStateHandler = $this->createMock(OrderTransactionStateHandler::class);
 
         // Logger
-        /** @var LoggerInterface&MockObject $logger */
-        $logger = $this->createMock(LoggerInterface::class);
+        /** @var HipayLogger&MockObject $logger */
+        $logger = $this->createMock(HipayLogger::class);
+        $logger->method('setChannel')->willReturnSelf();
         $logs = [];
         foreach (get_class_methods(LoggerInterface::class) as $method) {
             $logger->method($method)->willReturnCallback(function ($message) use (&$logs, $method) {
@@ -1526,6 +1746,7 @@ class NotificationServiceTest extends TestCase
             $hipayOrderRepo,
             $captureRepo,
             $refundRepo,
+            $this->createMock(EntityRepository::class),
             $this->getReadHipayConfig([
                 'hashStage' => 'sha256',
                 'passphraseStage' => md5(random_int(0, PHP_INT_MAX)),
@@ -1628,8 +1849,9 @@ class NotificationServiceTest extends TestCase
         $transactionStateHandler = $this->createMock(OrderTransactionStateHandler::class);
 
         // Logger
-        /** @var LoggerInterface&MockObject $logger */
-        $logger = $this->createMock(LoggerInterface::class);
+        /** @var HipayLogger&MockObject $logger */
+        $logger = $this->createMock(HipayLogger::class);
+        $logger->method('setChannel')->willReturnSelf();
         $logs = [];
         foreach (get_class_methods(LoggerInterface::class) as $method) {
             $logger->method($method)->willReturnCallback(function ($message) use (&$logs, $method) {
@@ -1665,6 +1887,7 @@ class NotificationServiceTest extends TestCase
             $hipayOrderRepo,
             $captureRepo,
             $refundRepo,
+            $this->createMock(EntityRepository::class),
             $this->getReadHipayConfig([
                 'hashStage' => 'sha256',
                 'passphraseStage' => md5(random_int(0, PHP_INT_MAX)),
@@ -1765,8 +1988,9 @@ class NotificationServiceTest extends TestCase
         $transactionStateHandler = $this->createMock(OrderTransactionStateHandler::class);
 
         // Logger
-        /** @var LoggerInterface&MockObject $logger */
-        $logger = $this->createMock(LoggerInterface::class);
+        /** @var HipayLogger&MockObject $logger */
+        $logger = $this->createMock(HipayLogger::class);
+        $logger->method('setChannel')->willReturnSelf();
         $logs = [];
         foreach (get_class_methods(LoggerInterface::class) as $method) {
             $logger->method($method)->willReturnCallback(function ($message) use (&$logs, $method) {
@@ -1802,6 +2026,7 @@ class NotificationServiceTest extends TestCase
             $hipayOrderRepo,
             $captureRepo,
             $refundRepo,
+            $this->createMock(EntityRepository::class),
             $this->getReadHipayConfig([
                 'hashStage' => 'sha256',
                 'passphraseStage' => md5(random_int(0, PHP_INT_MAX)),
@@ -1909,8 +2134,9 @@ class NotificationServiceTest extends TestCase
         $transactionStateHandler->expects($this->once())->method($methodExpected);
 
         // Logger
-        /** @var LoggerInterface&MockObject $logger */
-        $logger = $this->createMock(LoggerInterface::class);
+        /** @var HipayLogger&MockObject $logger */
+        $logger = $this->createMock(HipayLogger::class);
+        $logger->method('setChannel')->willReturnSelf();
         $logs = [];
         foreach (get_class_methods(LoggerInterface::class) as $method) {
             $logger->method($method)->willReturnCallback(function ($message) use (&$logs, $method) {
@@ -1945,6 +2171,7 @@ class NotificationServiceTest extends TestCase
             $hipayOrderRepo,
             $captureRepo,
             $refundRepo,
+            $this->createMock(EntityRepository::class),
             $this->getReadHipayConfig([
                 'hashStage' => 'sha256',
                 'passphraseStage' => md5(random_int(0, PHP_INT_MAX)),
@@ -2048,8 +2275,9 @@ class NotificationServiceTest extends TestCase
         $transactionStateHandler->expects($this->never())->method($methodExpected);
 
         // Logger
-        /** @var LoggerInterface&MockObject $logger */
-        $logger = $this->createMock(LoggerInterface::class);
+        /** @var HipayLogger&MockObject $logger */
+        $logger = $this->createMock(HipayLogger::class);
+        $logger->method('setChannel')->willReturnSelf();
         $logs = [];
         foreach (get_class_methods(LoggerInterface::class) as $method) {
             $logger->method($method)->willReturnCallback(function ($message) use (&$logs, $method) {
@@ -2078,6 +2306,7 @@ class NotificationServiceTest extends TestCase
             $hipayOrderRepo,
             $captureRepo,
             $refundRepo,
+            $this->createMock(EntityRepository::class),
             $this->getReadHipayConfig([
                 'hashStage' => 'sha256',
                 'passphraseStage' => md5(random_int(0, PHP_INT_MAX)),
@@ -2175,8 +2404,9 @@ class NotificationServiceTest extends TestCase
         $transactionStateHandler->expects($this->once())->method($methodExpected);
 
         // Logger
-        /** @var LoggerInterface&MockObject $logger */
-        $logger = $this->createMock(LoggerInterface::class);
+        /** @var HipayLogger&MockObject $logger */
+        $logger = $this->createMock(HipayLogger::class);
+        $logger->method('setChannel')->willReturnSelf();
         $logs = [];
         foreach (get_class_methods(LoggerInterface::class) as $method) {
             $logger->method($method)->willReturnCallback(function ($message) use (&$logs, $method) {
@@ -2204,6 +2434,7 @@ class NotificationServiceTest extends TestCase
             $hipayOrderRepo,
             $captureRepo,
             $refundRepo,
+            $this->createMock(EntityRepository::class),
             $this->getReadHipayConfig([
                 'hashStage' => 'sha256',
                 'passphraseStage' => md5(random_int(0, PHP_INT_MAX)),
@@ -2304,8 +2535,9 @@ class NotificationServiceTest extends TestCase
         $transactionStateHandler = $this->createMock(OrderTransactionStateHandler::class);
 
         // Logger
-        /** @var LoggerInterface&MockObject $logger */
-        $logger = $this->createMock(LoggerInterface::class);
+        /** @var HipayLogger&MockObject $logger */
+        $logger = $this->createMock(HipayLogger::class);
+        $logger->method('setChannel')->willReturnSelf();
         $logs = [];
         foreach (get_class_methods(LoggerInterface::class) as $method) {
             $logger->method($method)->willReturnCallback(function ($message) use (&$logs, $method) {
@@ -2334,6 +2566,7 @@ class NotificationServiceTest extends TestCase
             $hipayOrderRepo,
             $captureRepo,
             $refundRepo,
+            $this->createMock(EntityRepository::class),
             $this->getReadHipayConfig([
                 'hashStage' => 'sha256',
                 'passphraseStage' => md5(random_int(0, PHP_INT_MAX)),
@@ -2433,8 +2666,9 @@ class NotificationServiceTest extends TestCase
         $transactionStateHandler->expects($this->never())->method('fail');
 
         // Logger
-        /** @var LoggerInterface&MockObject $logger */
-        $logger = $this->createMock(LoggerInterface::class);
+        /** @var HipayLogger&MockObject $logger */
+        $logger = $this->createMock(HipayLogger::class);
+        $logger->method('setChannel')->willReturnSelf();
         $logs = [];
         foreach (get_class_methods(LoggerInterface::class) as $method) {
             $logger->method($method)->willReturnCallback(function ($message) use (&$logs, $method) {
@@ -2462,6 +2696,7 @@ class NotificationServiceTest extends TestCase
             $hipayOrderRepo,
             $captureRepo,
             $refundRepo,
+            $this->createMock(EntityRepository::class),
             $this->getReadHipayConfig([
                 'hashStage' => 'sha256',
                 'passphraseStage' => md5(random_int(0, PHP_INT_MAX)),
@@ -2563,8 +2798,9 @@ class NotificationServiceTest extends TestCase
         $transactionStateHandler->expects($this->never())->method('fail');
 
         // Logger
-        /** @var LoggerInterface&MockObject $logger */
-        $logger = $this->createMock(LoggerInterface::class);
+        /** @var HipayLogger&MockObject $logger */
+        $logger = $this->createMock(HipayLogger::class);
+        $logger->method('setChannel')->willReturnSelf();
         $logs = [];
         foreach (get_class_methods(LoggerInterface::class) as $method) {
             $logger->method($method)->willReturnCallback(function ($message) use (&$logs, $method) {
@@ -2600,6 +2836,7 @@ class NotificationServiceTest extends TestCase
             $hipayOrderRepo,
             $captureRepo,
             $refundRepo,
+            $this->createMock(EntityRepository::class),
             $this->getReadHipayConfig([
                 'hashStage' => 'sha256',
                 'passphraseStage' => md5(random_int(0, PHP_INT_MAX)),
@@ -2701,8 +2938,9 @@ class NotificationServiceTest extends TestCase
         $transactionStateHandler->expects($this->never())->method('fail');
 
         // Logger
-        /** @var LoggerInterface&MockObject $logger */
-        $logger = $this->createMock(LoggerInterface::class);
+        /** @var HipayLogger&MockObject $logger */
+        $logger = $this->createMock(HipayLogger::class);
+        $logger->method('setChannel')->willReturnSelf();
         $logs = [];
         foreach (get_class_methods(LoggerInterface::class) as $method) {
             $logger->method($method)->willReturnCallback(function ($message) use (&$logs, $method) {
@@ -2738,6 +2976,7 @@ class NotificationServiceTest extends TestCase
             $hipayOrderRepo,
             $captureRepo,
             $refundRepo,
+            $this->createMock(EntityRepository::class),
             $this->getReadHipayConfig([
                 'hashStage' => 'sha256',
                 'passphraseStage' => md5(random_int(0, PHP_INT_MAX)),
@@ -2834,8 +3073,9 @@ class NotificationServiceTest extends TestCase
         $transactionStateHandler->expects($this->never())->method('fail');
 
         // Logger
-        /** @var LoggerInterface&MockObject $logger */
-        $logger = $this->createMock(LoggerInterface::class);
+        /** @var HipayLogger&MockObject $logger */
+        $logger = $this->createMock(HipayLogger::class);
+        $logger->method('setChannel')->willReturnSelf();
         $logs = [];
         foreach (get_class_methods(LoggerInterface::class) as $method) {
             $logger->method($method)->willReturnCallback(function ($message) use (&$logs, $method) {
@@ -2870,6 +3110,7 @@ class NotificationServiceTest extends TestCase
             $hipayOrderRepo,
             $captureRepo,
             $refundRepo,
+            $this->createMock(EntityRepository::class),
             $this->getReadHipayConfig([
                 'hashStage' => 'sha256',
                 'passphraseStage' => md5(random_int(0, PHP_INT_MAX)),
@@ -2975,8 +3216,9 @@ class NotificationServiceTest extends TestCase
         $transactionStateHandler->expects($this->never())->method('fail');
 
         // Logger
-        /** @var LoggerInterface&MockObject $logger */
-        $logger = $this->createMock(LoggerInterface::class);
+        /** @var HipayLogger&MockObject $logger */
+        $logger = $this->createMock(HipayLogger::class);
+        $logger->method('setChannel')->willReturnSelf();
         $logs = [];
         foreach (get_class_methods(LoggerInterface::class) as $method) {
             $logger->method($method)->willReturnCallback(function ($message) use (&$logs, $method) {
@@ -3005,6 +3247,7 @@ class NotificationServiceTest extends TestCase
             $hipayOrderRepo,
             $captureRepo,
             $refundRepo,
+            $this->createMock(EntityRepository::class),
             $this->getReadHipayConfig([
                 'hashStage' => 'sha256',
                 'passphraseStage' => md5(random_int(0, PHP_INT_MAX)),
@@ -3106,8 +3349,9 @@ class NotificationServiceTest extends TestCase
         $transactionStateHandler->expects($this->never())->method('fail');
 
         // Logger
-        /** @var LoggerInterface&MockObject $logger */
-        $logger = $this->createMock(LoggerInterface::class);
+        /** @var HipayLogger&MockObject $logger */
+        $logger = $this->createMock(HipayLogger::class);
+        $logger->method('setChannel')->willReturnSelf();
         $logs = [];
         foreach (get_class_methods(LoggerInterface::class) as $method) {
             $logger->method($method)->willReturnCallback(function ($message) use (&$logs, $method) {
@@ -3143,6 +3387,7 @@ class NotificationServiceTest extends TestCase
             $hipayOrderRepo,
             $captureRepo,
             $refundRepo,
+            $this->createMock(EntityRepository::class),
             $this->getReadHipayConfig([
                 'hashStage' => 'sha256',
                 'passphraseStage' => md5(random_int(0, PHP_INT_MAX)),
@@ -3243,8 +3488,9 @@ class NotificationServiceTest extends TestCase
         $transactionStateHandler->expects($this->never())->method('fail');
 
         // Logger
-        /** @var LoggerInterface&MockObject $logger */
-        $logger = $this->createMock(LoggerInterface::class);
+        /** @var HipayLogger&MockObject $logger */
+        $logger = $this->createMock(HipayLogger::class);
+        $logger->method('setChannel')->willReturnSelf();
         $logs = [];
         foreach (get_class_methods(LoggerInterface::class) as $method) {
             $logger->method($method)->willReturnCallback(function ($message) use (&$logs, $method) {
@@ -3272,6 +3518,7 @@ class NotificationServiceTest extends TestCase
             $hipayOrderRepo,
             $captureRepo,
             $refundRepo,
+            $this->createMock(EntityRepository::class),
             $this->getReadHipayConfig([
                 'hashStage' => 'sha256',
                 'passphraseStage' => md5(random_int(0, PHP_INT_MAX)),
@@ -3389,8 +3636,9 @@ class NotificationServiceTest extends TestCase
         $transactionStateHandler->expects($this->never())->method($methodUnexpected);
 
         // Logger
-        /** @var LoggerInterface&MockObject $logger */
-        $logger = $this->createMock(LoggerInterface::class);
+        /** @var HipayLogger&MockObject $logger */
+        $logger = $this->createMock(HipayLogger::class);
+        $logger->method('setChannel')->willReturnSelf();
 
         $logs = [];
         foreach (get_class_methods(LoggerInterface::class) as $method) {
@@ -3411,6 +3659,7 @@ class NotificationServiceTest extends TestCase
             $hipayOrderRepo,
             $captureRepo,
             $refundRepo,
+            $this->createMock(EntityRepository::class),
             $this->getReadHipayConfig([
                 'hashStage' => 'sha256',
                 'passphraseStage' => md5(random_int(0, PHP_INT_MAX)),
@@ -3497,8 +3746,9 @@ class NotificationServiceTest extends TestCase
             'environment' => 'Stage',
         ]);
 
-        /** @var LoggerInterface&MockObject $logger */
-        $logger = $this->createMock(LoggerInterface::class);
+        /** @var HipayLogger&MockObject $logger */
+        $logger = $this->createMock(HipayLogger::class);
+        $logger->method('setChannel')->willReturnSelf();
 
         $logs = [];
         foreach (get_class_methods(LoggerInterface::class) as $method) {
@@ -3523,6 +3773,7 @@ class NotificationServiceTest extends TestCase
             $notificationRepo,
             $hipayOrderRepo,
             $captureRepo,
+            $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
             $config,
             $this->createMock(OrderTransactionStateHandler::class),
@@ -3566,8 +3817,9 @@ class NotificationServiceTest extends TestCase
             'environment' => 'Stage',
         ]);
 
-        /** @var LoggerInterface&MockObject $logger */
-        $logger = $this->createMock(LoggerInterface::class);
+        /** @var HipayLogger&MockObject $logger */
+        $logger = $this->createMock(HipayLogger::class);
+        $logger->method('setChannel')->willReturnSelf();
 
         $logs = [];
         foreach (get_class_methods(LoggerInterface::class) as $method) {
@@ -3579,6 +3831,7 @@ class NotificationServiceTest extends TestCase
         $service = new NotificationService(
             $this->createMock(EntityRepository::class),
             $notificationRepo,
+            $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),

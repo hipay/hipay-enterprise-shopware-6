@@ -18,6 +18,7 @@ function package() {
 
     # Prepare files before install
     sed -i "/\"shopware\\/core\"/d" $built_dir/composer.json
+    sed -i "/\"shopware\\/storefront\"/d" $built_dir/composer.json
 
     # Install production dependencies
     cd $built_dir

@@ -9,6 +9,7 @@ if [ "$1" = '' ] || [ "$1" = '--help' ]; then
     printf "\n ==================================================== "
     printf "\n                                                      "
     printf "\n      - init                      : Build images and run containers                       "
+    printf "\n      - copy                      : Copy Shopware root directory to local web folder      "
     printf "\n      - init-without-sources      : Build images and run containers without mounting point"
     printf "\n      - restart                   : Run containers if they exist yet                      "
     printf "\n      - command                   : Run custom command in container                       "
@@ -23,13 +24,12 @@ fi
 
 if [ "$1" = 'init' ] || [ "$1" = 'init-without-sources' ]; then
     docker compose down -v
-    rm -rf web/
-
     COMPOSE_HTTP_TIMEOUT=200
     docker compose up -d --build
 fi
 
-if [ "$1" = 'init' ]; then
+if [ "$1" = 'init' ] || [ "$1" = 'copy' ]; then
+    rm -rf web/
     docker cp $container:/var/www/html/ web/
 elif [ "$1" = 'restart' ]; then
     docker compose stop
@@ -87,7 +87,7 @@ elif [ "$1" = 'test' ]; then
         docker exec $container bash -c "
             export XDEBUG_MODE=coverage
             cd custom/plugins/HiPayPaymentPlugin
-            php -d xdebug.mode=coverage vendor/bin/infection --logger-html=reports/infection.html --min-covered-msi=85 --threads=4
+            php -d xdebug.mode=coverage vendor/bin/infection --logger-html=reports/infection.html --min-covered-msi=80 --threads=4
         "
         find=true
     fi

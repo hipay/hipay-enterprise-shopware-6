@@ -2,12 +2,11 @@
 
 namespace HiPay\Payment\Tests\Unit\Controller;
 
-use Exception;
 use HiPay\Payment\Controller\NotificationController;
+use HiPay\Payment\Logger\HipayLogger;
 use HiPay\Payment\Service\NotificationService;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Psr\Log\NullLogger;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
@@ -19,7 +18,7 @@ class NotificationControllerTest extends TestCase
         $service = $this->createMock(NotificationService::class);
 
         $controller = new NotificationController(
-            new NullLogger(),
+            $this->createMock(HipayLogger::class),
             $service
         );
 
@@ -38,7 +37,7 @@ class NotificationControllerTest extends TestCase
         $service->method('saveNotificationRequest')->willThrowException(new UnauthorizedHttpException('', 'FOO'));
 
         $controller = new NotificationController(
-            new NullLogger(),
+            $this->createMock(HipayLogger::class),
             $service
         );
 
@@ -62,7 +61,7 @@ class NotificationControllerTest extends TestCase
         $service->method('saveNotificationRequest')->willThrowException(new AccessDeniedException('BAR'));
 
         $controller = new NotificationController(
-            new NullLogger(),
+            $this->createMock(HipayLogger::class),
             $service
         );
 
@@ -83,10 +82,10 @@ class NotificationControllerTest extends TestCase
     {
         /** @var NotificationService&MockObject */
         $service = $this->createMock(NotificationService::class);
-        $service->method('saveNotificationRequest')->willThrowException(new Exception('QUZ'));
+        $service->method('saveNotificationRequest')->willThrowException(new \Exception('QUZ'));
 
         $controller = new NotificationController(
-            new NullLogger(),
+            $this->createMock(HipayLogger::class),
             $service
         );
 

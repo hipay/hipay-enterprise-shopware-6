@@ -2,6 +2,8 @@
 
 namespace HiPay\Payment\PaymentMethod;
 
+use HiPay\Fullservice\Data\PaymentProduct;
+use HiPay\Fullservice\Data\PaymentProduct\Collection;
 use HiPay\Fullservice\Enum\ThreeDSTwo\DeliveryTimeFrame;
 use HiPay\Fullservice\Enum\ThreeDSTwo\DeviceChannel;
 use HiPay\Fullservice\Enum\ThreeDSTwo\PurchaseIndicator;
@@ -9,21 +11,26 @@ use HiPay\Fullservice\Enum\ThreeDSTwo\ReorderIndicator;
 use HiPay\Fullservice\Enum\ThreeDSTwo\ShippingIndicator;
 use HiPay\Fullservice\Enum\Transaction\TransactionState;
 use HiPay\Fullservice\Exception\UnexpectedValueException;
+use HiPay\Fullservice\Gateway\Model\HostedPaymentPage;
 use HiPay\Fullservice\Gateway\Model\Request\ThreeDSTwo\AccountInfo;
 use HiPay\Fullservice\Gateway\Model\Request\ThreeDSTwo\AccountInfo\Customer;
 use HiPay\Fullservice\Gateway\Model\Request\ThreeDSTwo\AccountInfo\Payment;
 use HiPay\Fullservice\Gateway\Model\Request\ThreeDSTwo\AccountInfo\Purchase;
 use HiPay\Fullservice\Gateway\Model\Request\ThreeDSTwo\AccountInfo\Shipping;
+use HiPay\Fullservice\Gateway\Model\Request\ThreeDSTwo\BrowserInfo;
 use HiPay\Fullservice\Gateway\Model\Request\ThreeDSTwo\MerchantRiskStatement;
 use HiPay\Fullservice\Gateway\Model\Request\ThreeDSTwo\MerchantRiskStatement\GiftCard;
+use HiPay\Fullservice\Gateway\Model\Transaction;
 use HiPay\Fullservice\Gateway\Request\Info\CustomerBillingInfoRequest;
 use HiPay\Fullservice\Gateway\Request\Info\CustomerShippingInfoRequest;
 use HiPay\Fullservice\Gateway\Request\Order\HostedPaymentPageRequest;
 use HiPay\Fullservice\Gateway\Request\Order\OrderRequest;
 use HiPay\Payment\Helper\Source;
+use HiPay\Payment\Logger\HipayLogger;
 use HiPay\Payment\Service\HiPayHttpClientService;
 use HiPay\Payment\Service\ReadHipayConfigService;
-use Ramsey\Uuid\Uuid;
+use libphonenumber\PhoneNumberFormat;
+use libphonenumber\PhoneNumberUtil;
 use Shopware\Core\Checkout\Order\Aggregate\OrderAddress\OrderAddressEntity;
 use Shopware\Core\Checkout\Order\Aggregate\OrderCustomer\OrderCustomerCollection;
 use Shopware\Core\Checkout\Order\Aggregate\OrderCustomer\OrderCustomerEntity;
@@ -42,6 +49,7 @@ use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Sorting\FieldSorting;
 use Shopware\Core\Framework\Store\Authentication\LocaleProvider;
+use Shopware\Core\Framework\Uuid\Uuid;
 use Shopware\Core\Framework\Validation\DataBag\RequestDataBag;
 use Shopware\Core\System\Country\Aggregate\CountryState\CountryStateEntity;
 use Shopware\Core\System\SalesChannel\SalesChannelContext;
@@ -67,13 +75,28 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
 
     private EntityRepository $orderCustomerRepo;
 
+    protected HipayLogger $logger;
+
+    /** @var int Initial payment position */
+    protected const PAYMENT_POSITION = -1;
+
+    /** @var string Payment code and json file */
+    protected const PAYMENT_CODE = '';
+
+    /** @var ?string Payment image to load */
+    protected const PAYMENT_IMAGE = null;
+
+    /** @var PaymentProduct Configuration loaded from the json file. MUST be redeclare for each payment method */
+    protected static PaymentProduct $paymentConfig;
+
     public function __construct(
         OrderTransactionStateHandler $transactionStateHandler,
         ReadHipayConfigService $config,
         HiPayHttpClientService $clientService,
         RequestStack $requestStack,
         LocaleProvider $localeProvider,
-        EntityRepository $orderCustomerRepository
+        EntityRepository $orderCustomerRepository,
+        HipayLogger $hipayLogger
     ) {
         $this->transactionStateHandler = $transactionStateHandler;
         $this->config = $config;
@@ -81,6 +104,13 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
         $this->request = $requestStack->getCurrentRequest();
         $this->localeProvider = $localeProvider;
         $this->orderCustomerRepo = $orderCustomerRepository;
+        $this->logger = $hipayLogger->setChannel(HipayLogger::API);
+
+        if (-1 === static::PAYMENT_POSITION) {
+            throw new UnexpectedValueException('Constant '.__CLASS__.'::PAYMENT_POSITION must be defined');
+        }
+
+        static::$paymentConfig = static::loadPaymentConfig();
     }
 
     /**
@@ -94,8 +124,10 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
         try {
             $locale = $this->localeProvider->getLocaleFromContext($salesChannelContext->getContext());
             $redirectUri = $this->getRedirectUri($transaction, $locale);
-        } catch (\Exception $e) {
-            throw new AsyncPaymentProcessException($transaction->getOrderTransaction()->getId(), 'An error occurred during the communication with external payment gateway'.PHP_EOL.$e->getMessage());
+        } catch (\Throwable $e) {
+            $message = 'An error occurred during the communication with external payment gateway : '.$e->getMessage();
+            $this->logger->error($message);
+            throw new AsyncPaymentProcessException($transaction->getOrderTransaction()->getId(), $message);
         }
 
         // Redirect to external gateway
@@ -120,6 +152,109 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
     }
 
     /**
+     * {@inheritDoc}
+     */
+    public static function getPosition(): int
+    {
+        return static::PAYMENT_POSITION;
+    }
+
+    /**
+     * Get the payment code.
+     */
+    public static function getProductCode(): string
+    {
+        if (!isset(static::$paymentConfig)) {
+            static::$paymentConfig = static::loadPaymentConfig();
+        }
+
+        return static::$paymentConfig->getProductCode();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public static function addDefaultCustomFields(): array
+    {
+        if (!isset(static::$paymentConfig)) {
+            static::$paymentConfig = static::loadPaymentConfig();
+        }
+
+        return [
+            'haveHostedFields' => !empty(static::$paymentConfig->getAdditionalFields()),
+            'allowPartialCapture' => (bool) static::$paymentConfig->getCanManualCapturePartially(),
+            'allowPartialRefund' => (bool) static::$paymentConfig->getCanRefundPartially(),
+        ];
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public static function getImage(): ?string
+    {
+        return static::PAYMENT_IMAGE;
+    }
+
+    /**
+     * Get the currencies rules.
+     *
+     * @return array<string>|null
+     */
+    public static function getCurrencies(): ?array
+    {
+        return null;
+    }
+
+    /**
+     * Get the countries rules.
+     *
+     * @return array<string>|null
+     */
+    public static function getCountries(): ?array
+    {
+        return null;
+    }
+
+    /**
+     * Generate the config for the payment method.
+     */
+    protected static function loadPaymentConfig(): PaymentProduct
+    {
+        if (empty(static::PAYMENT_CODE)) {
+            throw new UnexpectedValueException('Constant '.__CLASS__.'::PAYMENT_CODE must be defined');
+        }
+
+        if (!$config = Collection::getItem(static::PAYMENT_CODE)) {
+            throw new UnexpectedValueException('The constant '.__CLASS__.'::PAYMENT_CODE is invalid');
+        }
+
+        return $config;
+    }
+
+    /**
+     * Configure hosted fields request for the current payment method.
+     *
+     * @param array<string,mixed> $payload
+     */
+    protected function hydrateHostedFields(
+        OrderRequest $orderRequest,
+        array $payload,
+        AsyncPaymentTransactionStruct $transaction
+    ): OrderRequest {
+        return $orderRequest;
+    }
+
+    /**
+     * Configure hosted page request for the current payment method.
+     */
+    protected function hydrateHostedPage(
+        HostedPaymentPageRequest $orderRequest,
+        AsyncPaymentTransactionStruct $transaction
+    ): HostedPaymentPageRequest {
+        return $orderRequest;
+    }
+
+    /**
      * Generate the redirect URI after payment.
      */
     private function getRedirectUri(AsyncPaymentTransactionStruct $transaction, string $locale): string
@@ -128,37 +263,24 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
 
         if ($this->config->isHostedFields()) {
             // hosted fields
-            $response = $client->requestNewOrder(
-                $this->generateRequestHostedFields($transaction, $locale)
-            );
+            $request = $this->generateRequestHostedFields($transaction, $locale);
+            $this->logger->info('Sending an hosted fields request', [$request]);
 
-            // error as main return
-            $redirect = $transaction->getReturnUrl().'&return='.TransactionState::ERROR;
+            $response = $client->requestNewOrder($request);
+            $this->logger->info('Hosted fields response received', $response->toArray());
 
-            switch ($response->getState()) {
-                case TransactionState::FORWARDING:
-                    $redirect = $response->getForwardUrl();
-                    break;
-                case TransactionState::COMPLETED:
-                case TransactionState::PENDING:
-                    $redirect = $transaction->getReturnUrl();
-                    break;
-
-                case TransactionState::DECLINED:
-                    $redirect = $transaction->getReturnUrl().'&return='.TransactionState::DECLINED;
-                    break;
-            }
-
-            return $redirect;
+            return $this->handleHostedFieldResponse($transaction, $response);
         }
 
         if ($this->config->isHostedPage()) {
             // hosted page
-            $response = $client->requestHostedPaymentPage(
-                $this->generateRequestHostedPage($transaction, $locale)
-            );
+            $request = $this->generateRequestHostedPage($transaction, $locale);
+            $this->logger->info('Sending an hosted page request', [$request]);
 
-            return $response->getForwardUrl();
+            $response = $client->requestHostedPaymentPage($request);
+            $this->logger->info('Hosted Page response received', $response->toArray());
+
+            return $this->handleHostedPageResponse($transaction, $response);
         }
 
         throw new UnexpectedValueException('Configuration mode "'.$this->config->getOperationMode().'" is invalid');
@@ -171,21 +293,43 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
         AsyncPaymentTransactionStruct $transaction,
         string $locale
     ): HostedPaymentPageRequest {
-        return $this->hydrateHostedPage(
-            // @phpstan-ignore-next-line
-            $this->hydrateGenericOrderRequest(new HostedPaymentPageRequest(), $transaction, $locale),
-            $transaction
-        );
+        /** @var HostedPaymentPageRequest $orderRequest */
+        $orderRequest = $this->hydrateGenericOrderRequest(new HostedPaymentPageRequest(), $transaction, $locale);
+        $orderRequest->payment_product_list = static::getProductCode();
+
+        return $this->hydrateHostedPage($orderRequest, $transaction);
     }
 
     /**
      * Generate the request on hosted fields mode.
      */
-    private function generateRequestHostedFields(AsyncPaymentTransactionStruct $transaction, string $locale): OrderRequest
-    {
-        return $this->hydrateHostedFields(
-            $this->hydrateGenericOrderRequest(new OrderRequest(), $transaction, $locale)
-        );
+    private function generateRequestHostedFields(
+        AsyncPaymentTransactionStruct $transaction,
+        string $locale
+    ): OrderRequest {
+        $orderRequest = $this->hydrateGenericOrderRequest(new OrderRequest(), $transaction, $locale);
+
+        if (!empty($payload = json_decode($this->request->get('hipay-response', '[]'), true))) {
+            $requestInfo = $payload['browser_info'] ?? [];
+
+            $browserInfo = new BrowserInfo();
+            $browserInfo->ipaddr = $this->request->getClientIp();
+            $browserInfo->http_accept = 'application/json';
+            $browserInfo->http_user_agent = $requestInfo['http_user_agent'] ?? null;
+            $browserInfo->java_enabled = $requestInfo['java_enabled'] ?? null;
+            $browserInfo->javascript_enabled = $requestInfo['javascript_enabled'] ?? false;
+            $browserInfo->language = $requestInfo['language'] ?? null;
+            $browserInfo->color_depth = $requestInfo['color_depth'] ?? null;
+            $browserInfo->screen_height = $requestInfo['screen_height'] ?? null;
+            $browserInfo->screen_width = $requestInfo['screen_width'] ?? null;
+            $browserInfo->timezone = $requestInfo['timezone'] ?? null;
+
+            $orderRequest->browser_info = $browserInfo;
+            $orderRequest->device_fingerprint = $payload['device_fingerprint'] ?? null;
+        }
+        $orderRequest->payment_product = static::getProductCode();
+
+        return $this->hydrateHostedFields($orderRequest, $payload, $transaction);
     }
 
     /**
@@ -199,7 +343,7 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
         $isCaptureAuto = $this->config->isCaptureAuto();
         $order = $transaction->getOrder();
 
-        $operationId = Uuid::uuid4()->toString();
+        $operationId = Uuid::randomHex();
         $orderRequest->orderid = $order->getOrderNumber().'-'.dechex(crc32($transaction->getOrderTransaction()->getId()));
         $orderRequest->operation = $isCaptureAuto ? 'Sale' : 'Authorization';
         $orderRequest->description = $this->generateDescription($order->getLineItems(), 255, '...');
@@ -228,12 +372,10 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
         $orderRequest->cid = $order->getOrderCustomer()->getId();
         $orderRequest->customerBillingInfo = $this->generateCustomerBillingInfo($order);
         $orderRequest->customerShippingInfo = $this->generateCustomerShippingInfo($order);
-        $customData = ['transaction_id' => $transaction->getOrderTransaction()->getId()];
-        if ($isCaptureAuto) {
-            // Create operation_id in custom_data if capture mode is auto
-            $customData['operation_id'] = $operationId;
-        }
-        $orderRequest->custom_data = $customData;
+        $orderRequest->custom_data = [
+            'transaction_id' => $transaction->getOrderTransaction()->getId(),
+            'operation_id' => $operationId,
+        ];
 
         $orderRequest->merchant_risk_statement = $this->generateMerchantRiskStatement($order);
         $orderRequest->account_info = $this->generateAccountInfo($order);
@@ -303,8 +445,11 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
         $billingInfo->firstname = $billingAddress->getFirstName();
         $billingInfo->lastname = $billingAddress->getLastName();
         $billingInfo->email = $order->getOrderCustomer()->getEmail();
-        $billingInfo->phone = $billingAddress->getPhoneNumber();
         $billingInfo->gender = $this->generateGender($billingAddress->getSalutation());
+        $billingInfo->phone = $this->formatPhoneNumber(
+            $billingAddress->getPhoneNumber(),
+            $billingAddress->getCountry()->getIso()
+        );
 
         // Postal data
         $billingInfo->recipientinfo = $billingAddress->getCompany();
@@ -337,6 +482,10 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
             $shippingInfo->shipto_lastname = $shippingAddress->getLastName();
             $shippingInfo->shipto_gender = $this->generateGender($shippingAddress->getSalutation());
             $shippingInfo->shipto_phone = $shippingAddress->getPhoneNumber();
+            $shippingInfo->shipto_phone = $this->formatPhoneNumber(
+                $shippingAddress->getPhoneNumber(),
+                $shippingAddress->getCountry()->getIso()
+            );
 
             // Postal data
             $shippingInfo->shipto_recipientinfo = $shippingAddress->getCompany();
@@ -581,23 +730,58 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
     }
 
     /**
-     * {@inheritDoc}
+     * Format a phone number.
+     *
+     * @param int $format libphonenumber\PhoneNumberFormat\PhoneNumberFormat const
      */
-    public static function addDefaultCustomFields(): array
+    protected function formatPhoneNumber(?string $phoneNumber, ?string $isoCountry = null, int $format = PhoneNumberFormat::E164): ?string
     {
-        return [];
+        try {
+            $phoneUtil = PhoneNumberUtil::getInstance();
+
+            if ($phoneUtil->isValidNumber($parsed = $phoneUtil->parse($phoneNumber, $isoCountry))) {
+                return str_replace(' ', '', $phoneUtil->format($parsed, $format));
+            }
+        } catch (\Throwable $e) {
+            if ($phoneNumber) {
+                $this->logger->error('Error on parsing phone number "'.$phoneNumber.'"');
+            }
+            unset($e);
+        }
+
+        return null;
     }
 
     /**
-     * Configure hosted fields request for the current payment method.
+     * Handle hosted fields response and return the redirect url.
      */
-    abstract protected function hydrateHostedFields(OrderRequest $orderRequest): OrderRequest;
+    protected function handleHostedFieldResponse(AsyncPaymentTransactionStruct $transaction, Transaction $response): string
+    {
+        // error as main return
+        $redirect = $transaction->getReturnUrl().'&return='.TransactionState::ERROR;
+
+        switch ($response->getState()) {
+            case TransactionState::FORWARDING:
+                $redirect = $response->getForwardUrl();
+                break;
+            case TransactionState::COMPLETED:
+            case TransactionState::PENDING:
+                $redirect = $transaction->getReturnUrl();
+                break;
+
+            case TransactionState::DECLINED:
+                $redirect = $transaction->getReturnUrl().'&return='.TransactionState::DECLINED;
+                break;
+        }
+
+        return $redirect;
+    }
 
     /**
-     * Configure hosted page request for the current payment method.
+     * Handle hosted page response and return the redirect url.
      */
-    abstract protected function hydrateHostedPage(
-        HostedPaymentPageRequest $orderRequest,
-        AsyncPaymentTransactionStruct $transaction
-    ): HostedPaymentPageRequest;
+    protected function handleHostedPageResponse(AsyncPaymentTransactionStruct $transaction, HostedPaymentPage $response): string
+    {
+        return $response->getForwardUrl();
+    }
 }

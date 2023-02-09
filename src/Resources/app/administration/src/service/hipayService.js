@@ -17,6 +17,17 @@ class ApiHiPay extends ApiService {
     );
   }
 
+  getLogsArrayBuffer() {
+    const headers = this.getBasicHeaders({});
+
+    return this.httpClient({
+      headers,
+      method: 'get',
+      url: `/_action/${this.getApiBasePath()}/get-logs`,
+      responseType: 'arraybuffer'
+    })
+  }
+
   validateConfig(values) {
     const headers = this.getBasicHeaders({});
 
@@ -24,6 +35,20 @@ class ApiHiPay extends ApiService {
       .post(`/_action/${this.getApiBasePath()}/checkAccess`, values, {
         headers
       })
+      .then((response) => {
+        return ApiService.handleResponse(response);
+      });
+  }
+
+  cancelTransaction(hipayOrder) {
+    const headers = this.getBasicHeaders({});
+
+    return this.httpClient
+      .post(
+        `/_action/${this.getApiBasePath()}/cancel`,
+        { hipayOrder: JSON.stringify(hipayOrder) },
+        { headers }
+      )
       .then((response) => {
         return ApiService.handleResponse(response);
       });

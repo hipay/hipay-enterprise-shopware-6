@@ -2,6 +2,7 @@
 
 namespace HiPay\Payment\Tests\Unit\PaymentMethod;
 
+use HiPay\Fullservice\Data\PaymentProduct;
 use HiPay\Fullservice\Enum\ThreeDSTwo\DeliveryTimeFrame;
 use HiPay\Fullservice\Enum\ThreeDSTwo\DeviceChannel;
 use HiPay\Fullservice\Enum\ThreeDSTwo\PurchaseIndicator;
@@ -12,12 +13,14 @@ use HiPay\Fullservice\Gateway\Mapper\HostedPaymentPageMapper;
 use HiPay\Fullservice\Gateway\Mapper\TransactionMapper;
 use HiPay\Fullservice\Gateway\Request\Order\HostedPaymentPageRequest;
 use HiPay\Fullservice\Gateway\Request\Order\OrderRequest;
+use HiPay\Payment\Logger\HipayLogger;
 use HiPay\Payment\PaymentMethod\AbstractPaymentMethod;
 use HiPay\Payment\Service\HiPayHttpClientService;
 use HiPay\Payment\Service\ReadHipayConfigService;
 use HiPay\Payment\Tests\Tools\PaymentMethodMockTrait;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStateHandler;
 use Shopware\Core\Checkout\Payment\Cart\AsyncPaymentTransactionStruct;
 use Shopware\Core\Checkout\Payment\Exception\AsyncPaymentFinalizeException;
@@ -26,6 +29,7 @@ use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\Store\Authentication\LocaleProvider;
 use Shopware\Core\Framework\Validation\DataBag\RequestDataBag;
 use Shopware\Core\System\SalesChannel\SalesChannelContext;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -39,9 +43,52 @@ class AbstractPaymentMethodTest extends TestCase
         HiPayHttpClientService $clientService,
         RequestStack $requestStack,
         LocaleProvider $localeProvider,
-        EntityRepository $orderCustomerRepository
+        EntityRepository $orderCustomerRepository,
+        LoggerInterface $logger,
+        bool $haveHostedFields = false
     ) {
         return $subClass = new class(...func_get_args()) extends AbstractPaymentMethod {
+            protected const PAYMENT_POSITION = 1;
+
+            protected static bool $haveHostedFields = false;
+            protected static bool $allowPartialCapture = true;
+            protected static bool $allowPartialRefund = true;
+
+            public function __construct(
+                OrderTransactionStateHandler $transactionStateHandler,
+                ReadHipayConfigService $config,
+                HiPayHttpClientService $clientService,
+                RequestStack $requestStack,
+                LocaleProvider $localeProvider,
+                EntityRepository $orderCustomerRepository,
+                LoggerInterface $logger,
+                bool $haveHostedFields = false
+            ) {
+                static::$haveHostedFields = $haveHostedFields;
+                parent::__construct(
+                    $transactionStateHandler,
+                    $config,
+                    $clientService,
+                    $requestStack,
+                    $localeProvider,
+                    $orderCustomerRepository,
+                    $logger
+                );
+            }
+
+            public static function getProductCode(): string
+            {
+                return 'foobar';
+            }
+
+            protected static function loadPaymentConfig(): PaymentProduct
+            {
+                return new PaymentProduct([
+                    'allowPartialCapture' => static::$allowPartialCapture,
+                    'allowPartialRefund' => static::$allowPartialRefund,
+                ]);
+            }
+
             public static function getName(string $code): string
             {
                 return static::class;
@@ -52,7 +99,7 @@ class AbstractPaymentMethodTest extends TestCase
                 return static::class;
             }
 
-            protected function hydrateHostedFields(OrderRequest $orderRequest): OrderRequest
+            protected function hydrateHostedFields(OrderRequest $orderRequest, array $payload, AsyncPaymentTransactionStruct $transaction): OrderRequest
             {
                 return $orderRequest;
             }
@@ -60,6 +107,21 @@ class AbstractPaymentMethodTest extends TestCase
             protected function hydrateHostedPage(HostedPaymentPageRequest $orderRequest, AsyncPaymentTransactionStruct $transaction): HostedPaymentPageRequest
             {
                 return $orderRequest;
+            }
+
+            public static function getImage(): ?string
+            {
+                return null;
+            }
+
+            public static function getRule(ContainerInterface $container): ?array
+            {
+                return null;
+            }
+
+            public static function getPosition(): int
+            {
+                return 0;
             }
         };
 
@@ -88,7 +150,7 @@ class AbstractPaymentMethodTest extends TestCase
                 'billing' => [
                     'first_name' => 'Donald',
                     'last_name' => 'Duck',
-                    'phone_number' => '+C01N C01N',
+                    'phone_number' => '+4930932107754',
                     'company' => 'compagny_donald',
                     'street' => '23 rue des canards',
                     'additional_address_line1' => ' dans les roseaux ',
@@ -97,14 +159,14 @@ class AbstractPaymentMethodTest extends TestCase
                     'city' => 'CANARDVILLE',
                     'salutation.salutation_key' => 'mr',
                     'gender_expected' => 'M',
-                    'country.iso' => 'DY',
+                    'country.iso' => 'DE',
                     'state.name' => 'MikeyState',
                     'state_expected' => null,
                 ],
                 'shipping' => [
                     'first_name' => 'Daisy',
                     'last_name' => 'Duck',
-                    'phone_number' => '+N01C N01C',
+                    'phone_number' => '+16135550165',
                     'company' => 'compagny_daisy',
                     'street' => '75 rue du pain mouilllé',
                     'additional_address_line1' => ' dans la mare ',
@@ -161,7 +223,9 @@ class AbstractPaymentMethodTest extends TestCase
             $this->getClientService($responses),
             $this->getRequestStack(),
             $this->getLocaleProvider($locale),
-            $this->generateOrderCustomerRepo()
+            $this->generateOrderCustomerRepo(),
+            $this->createMock(HipayLogger::class),
+            true
         );
 
         $transaction = $this->generateTransaction($configTransaction);
@@ -240,7 +304,9 @@ class AbstractPaymentMethodTest extends TestCase
             $this->getClientService($responses),
             $this->getRequestStack(),
             $this->getLocaleProvider($locale),
-            $this->generateOrderCustomerRepo()
+            $this->generateOrderCustomerRepo(),
+            $this->createMock(HipayLogger::class),
+            true
         );
 
         $transaction = $this->generateTransaction();
@@ -306,7 +372,9 @@ class AbstractPaymentMethodTest extends TestCase
             $this->getClientService($responses),
             $this->getRequestStack(),
             $this->getLocaleProvider($locale),
-            $this->generateOrderCustomerRepo()
+            $this->generateOrderCustomerRepo(),
+            $this->createMock(HipayLogger::class),
+            true
         );
 
         $transaction = $this->generateTransaction($configTransaction);
@@ -352,7 +420,7 @@ class AbstractPaymentMethodTest extends TestCase
                 'billing' => [
                     'first_name' => 'Donald',
                     'last_name' => 'Duck',
-                    'phone_number' => '+C01N C01N',
+                    'phone_number' => '+4930932107754',
                     'company' => 'compagny_donald',
                     'street' => '23 rue des canards',
                     'additional_address_line1' => '  ',
@@ -361,14 +429,14 @@ class AbstractPaymentMethodTest extends TestCase
                     'city' => 'CANARDVILLE',
                     'salutation.salutation_key' => 'mr',
                     'gender_expected' => 'M',
-                    'country.iso' => 'DY',
+                    'country.iso' => 'DE',
                     'state.name' => 'MikeyState',
                     'state_expected' => null,
                 ],
                 'shipping' => [
                     'first_name' => 'Daisy',
                     'last_name' => 'Duck',
-                    'phone_number' => '+N01C N01C',
+                    'phone_number' => '+16135550165',
                     'company' => 'compagny_daisy',
                     'street' => '75 rue du pain mouilllé',
                     'additional_address_line1' => ' dans la mare ',
@@ -418,7 +486,8 @@ class AbstractPaymentMethodTest extends TestCase
             $this->getClientService($responses),
             $this->getRequestStack(),
             $this->getLocaleProvider(),
-            $this->generateOrderCustomerRepo()
+            $this->generateOrderCustomerRepo(),
+            $this->createMock(HipayLogger::class)
         );
 
         /** @var RequestDataBag&MockObject */
@@ -466,11 +535,12 @@ class AbstractPaymentMethodTest extends TestCase
             $this->getClientService($responses),
             $this->getRequestStack(),
             $this->getLocaleProvider(),
-            $this->generateOrderCustomerRepo()
+            $this->generateOrderCustomerRepo(),
+            $this->createMock(HipayLogger::class)
         );
 
         $this->expectException(AsyncPaymentProcessException::class);
-        $this->expectExceptionMessage('An error occurred during the communication with external payment gateway'.PHP_EOL.'Random Exception');
+        $this->expectExceptionMessage('An error occurred during the communication with external payment gateway : Random Exception');
 
         /** @var RequestDataBag&MockObject */
         $dataBag = $this->createMock(RequestDataBag::class);
@@ -498,11 +568,13 @@ class AbstractPaymentMethodTest extends TestCase
             $this->getClientService(),
             $this->getRequestStack(),
             $this->getLocaleProvider(),
-            $this->generateOrderCustomerRepo()
+            $this->generateOrderCustomerRepo(),
+            $this->createMock(HipayLogger::class),
+            true
         );
 
         $this->expectException(AsyncPaymentProcessException::class);
-        $this->expectExceptionMessage('An error occurred during the communication with external payment gateway'.PHP_EOL.'Configuration mode "Foobar" is invalid');
+        $this->expectExceptionMessage('An error occurred during the communication with external payment gateway : Configuration mode "Foobar" is invalid');
 
         /** @var RequestDataBag&MockObject */
         $dataBag = $this->createMock(RequestDataBag::class);
@@ -796,7 +868,9 @@ class AbstractPaymentMethodTest extends TestCase
             $this->getClientService($responses),
             $this->getRequestStack(),
             $this->getLocaleProvider(),
-            $this->generateOrderCustomerRepo()
+            $this->generateOrderCustomerRepo(),
+            $this->createMock(HipayLogger::class),
+            true
         );
 
         /** @var RequestDataBag&MockObject */
@@ -862,7 +936,9 @@ class AbstractPaymentMethodTest extends TestCase
             $this->getClientService($responses),
             $this->getRequestStack(),
             $this->getLocaleProvider(),
-            $this->generateOrderCustomerRepo()
+            $this->generateOrderCustomerRepo(),
+            $this->createMock(HipayLogger::class),
+            true
         );
 
         /** @var RequestDataBag&MockObject */
@@ -951,7 +1027,9 @@ class AbstractPaymentMethodTest extends TestCase
             $this->getClientService($responses),
             $this->getRequestStack(),
             $this->getLocaleProvider(),
-            $this->generateOrderCustomerRepo($orderCutomerConfig)
+            $this->generateOrderCustomerRepo($orderCutomerConfig),
+            $this->createMock(HipayLogger::class),
+            true
         );
 
         /** @var RequestDataBag&MockObject */
@@ -1020,7 +1098,9 @@ class AbstractPaymentMethodTest extends TestCase
             $this->getClientService($responses),
             $this->getRequestStack(),
             $this->getLocaleProvider(),
-            $this->generateOrderCustomerRepo()
+            $this->generateOrderCustomerRepo(),
+            $this->createMock(HipayLogger::class),
+            true
         );
 
         /** @var RequestDataBag&MockObject */
@@ -1097,7 +1177,9 @@ class AbstractPaymentMethodTest extends TestCase
             $this->getClientService($responses),
             $this->getRequestStack(),
             $this->getLocaleProvider(),
-            $this->generateOrderCustomerRepo($orderCutomerConfig)
+            $this->generateOrderCustomerRepo($orderCutomerConfig),
+            $this->createMock(HipayLogger::class),
+            true
         );
 
         /** @var RequestDataBag&MockObject */

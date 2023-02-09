@@ -1,7 +1,11 @@
 {% block sw_settings_payment_detail_content_card %}
   {% parent %}
-  <template v-if="paymentMethod.handlerIdentifier == 'HiPay\\Payment\\PaymentMethod\\CreditCard'">
+  <template v-if="paymentMethod.formattedHandlerIdentifier == 'handler_hipay_creditcard'">
     <hipay-settings-cards-selector :is-loading="isLoading"
       :paymentMethod="paymentMethod"></hipay-settings-cards-selector>
+  </template>
+  <template v-if="paymentMethod.formattedHandlerIdentifier == 'handler_hipay_multibanco'">
+    <hipay-settings-multibanco :is-loading="isLoading"
+      :paymentMethod="paymentMethod"></hipay-settings-multibanco>
   </template>
 {% endblock %}

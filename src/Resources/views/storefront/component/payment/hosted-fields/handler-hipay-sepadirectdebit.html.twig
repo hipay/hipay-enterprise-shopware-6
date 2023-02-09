@@ -1,0 +1,49 @@
+{# set gender from customer #}
+{% if context.customer.salutation.salutationKey == 'mr' %}
+    {% set hipayConfig = hipayConfig|merge({genderValue: 'M'}) %}
+{% elseif  context.customer.salutation.salutationKey == 'Mrs' %}
+    {% set hipayConfig = hipayConfig|merge({genderValue: 'F'}) %}
+{% else %}
+    {% set hipayConfig = hipayConfig|merge({genderValue: 'U'}) %}
+{% endif %}
+
+{% set hipayConfig = hipayConfig|merge({
+    firstnameValue: context.customer.firstname,
+    lastnameValue: context.customer.lastname 
+}) %}
+
+<div {{componentName}}-plugin data-{{componentName}}-plugin-options="{{ hipayConfig|json_encode }}">
+    {% block hipay_giropay_html %}
+
+    <div class="hostedfield" id="hipay-sdd-gender" style="display: none"></div>
+
+    <div class="form-group">
+        <label class="form-label" for="hipay-sdd-firstname">
+            {{ 'hipay.hosted-fields.sdd.firstname'|trans }}
+        </label>
+        <div class="hostedfield form-control" id="hipay-sdd-firstname"></div>
+        <div class="invalid-feedback" id="error-hipay-sdd-firstname"></div>
+    </div>
+    <div class="form-group">
+        <label class="form-label" for="hipay-sdd-lastname">
+            {{ 'hipay.hosted-fields.sdd.lastname'|trans }}
+        </label>
+        <div class="hostedfield form-control" id="hipay-sdd-lastname"></div>
+        <div class="invalid-feedback" id="error-hipay-sdd-lastname"></div>
+    </div>
+    <div class="form-group">
+        <label class="form-label" for="hipay-sdd-bank-name">
+            {{ 'hipay.hosted-fields.sdd.bank-name'|trans }}
+        </label>
+        <div class="hostedfield form-control" id="hipay-sdd-bank-name"></div>
+        <div class="invalid-feedback" id="error-hipay-sdd-bank-name"></div>
+    </div>
+    <div class="form-group">
+        <label class="form-label" for="hipay-sdd-iban">
+            {{ 'hipay.hosted-fields.sdd.iban'|trans }}
+        </label>
+        <div class="hostedfield form-control" id="hipay-sdd-iban"></div>
+        <div class="invalid-feedback" id="error-hipay-sdd-iban"></div>
+    </div>
+    {% endblock %}
+</div>

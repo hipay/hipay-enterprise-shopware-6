@@ -4,10 +4,38 @@
       "redirect-message": "Sie werden auf eine externe Zahlungsseite weitergeleitet. Bitte aktualisieren Sie die Seite während des Vorgangs nicht"
     },
     "hosted-fields": {
-      "fullname": "Vollständiger Name",
-      "card-number": "Kartennummer",
-      "expiry-date": "Verfallsdatum",
-      "cvc": "CVC"
+      "creditcard": {
+        "fullname": "Vollständiger Name",
+        "card-number": "Kartennummer",
+        "expiry-date": "Verfallsdatum",
+        "cvc": "CVC",
+        "remember": "Merken Sie sich die Karte für zukünftige Einkäufe",
+        "disabled": "Diese Art von Zahlungskarte ist deaktiviert",
+        "delete": "Löschen"
+      },
+      "giropay": {
+        "bic": "BIC"
+      },
+      "ideal": {
+        "bic": "Wählen Sie Ihre Bank"
+      },
+      "mbway": {
+        "phone": "Telefon"
+      },
+      "sdd": {
+        "firstname": "Vorname",
+        "lastname": "Nachname",
+        "bank-name": "Bank Name",
+        "iban": "IBAN"
+      }
+    },
+    "finish-details": {
+      "multibanco": {
+        "title": "Multibanco-Informationen",
+        "reference": "Referenz",
+        "amount": "Betrag",
+        "expiration": "Ablauf"
+      }
     }
   }
 }

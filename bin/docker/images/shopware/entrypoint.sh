@@ -23,7 +23,7 @@ fi
 echo "-----------------------------------------------------"
 echo "ACTIVATING HIPAY PAYMENT MODULE"
 # Activate custom module
-composer require hipay/hipay-fullservice-sdk-php
+composer require hipay/hipay-fullservice-sdk-php giggsey/libphonenumber-for-php
 bin/console plugin:refresh --quiet
 bin/console plugin:install --activate HiPayPaymentPlugin
 bin/console cache:clear --quiet

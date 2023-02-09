@@ -125,6 +125,31 @@ class Migration extends MigrationStep
         COLLATE = utf8mb4_unicode_ci;
         SQL;
         $connection->executeStatement($sql);
+
+        // Create table for credit card token
+        $sql = <<<SQL
+        CREATE TABLE IF NOT EXISTS `hipay_card_token` (
+            `id` BINARY(16) NOT NULL,
+            `customer_id` BINARY(16) NOT NULL,
+            `token` CHAR(64) NOT NULL,
+            `brand` VARCHAR(16) NOT NULL,            
+            `pan` CHAR(16) NOT NULL,
+            `card_holder` VARCHAR(255) NOT NULL,
+            `card_expiry_month` VARCHAR(2) NOT NULL,
+            `card_expiry_year` VARCHAR(4) NOT NULL,
+            `issuer` VARCHAR(255) NOT NULL,
+            `country` CHAR(2) NOT NULL,
+            `created_at` DATETIME(3) NOT NULL,
+            `updated_at` DATETIME(3) NULL,
+            PRIMARY KEY (`id`),
+            CONSTRAINT `fk.hipay_card_token.customer_id` FOREIGN KEY (`customer_id`)
+            REFERENCES `customer` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+        )
+        ENGINE = InnoDB
+        DEFAULT CHARSET = utf8mb4
+        COLLATE = utf8mb4_unicode_ci;
+        SQL;
+        $connection->executeStatement($sql);
     }
 
     public function updateDestructive(Connection $connection): void

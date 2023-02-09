@@ -36,6 +36,7 @@ Shopware.Component.override('sw-order-detail', {
       fullRefund: true,
       showOrderStateForCapture: false,
       showOrderStateForRefund: false,
+      showOrderStateForCancel: false,
       isLoadingRequest: false
     };
   },
@@ -45,21 +46,34 @@ Shopware.Component.override('sw-order-detail', {
         this.lastTransaction?.paymentMethod?.formattedHandlerIdentifier
       );
     },
+    canCancel() {
+      return ['authorized'].includes(
+        this.lastTransaction?.stateMachineState?.technicalName
+      );
+    },
     canCapture() {
       return ['paid_partially', 'authorized'].includes(
         this.lastTransaction?.stateMachineState?.technicalName
       );
+    },
+    canPartialCapture() {
+      return this.canCapture && this.lastTransaction?.paymentMethod?.customFields?.allowPartialCapture !== false;
     },
     canRefund() {
       return ['paid_partially', 'paid', 'refunded_partially'].includes(
         this.lastTransaction?.stateMachineState?.technicalName
       );
     },
+    canPartialRefund() {
+      return this.canRefund && this.lastTransaction?.paymentMethod?.customFields?.allowPartialRefund !== false;
+    },
     orderBasket() {
       // Returns lineItems as source to data grid & show currency next to totalPrice
       for (const lineItem of this.lineItems) {
         lineItem.totalPrice = this.formatCurrency(lineItem.unitPrice * lineItem.currentQuantity);
+        lineItem.editable = this.canPartialCapture;
       }
+
       return this.lineItems;
     },
     orderAmount() {
@@ -118,12 +132,13 @@ Shopware.Component.override('sw-order-detail', {
         return this.hipayService.getCurrencyFormater(this.currency).format(number);
     },
     openCapture() {
-      console.log(JSON.parse(JSON.stringify(this.hipayOrderData)));
       this.showOrderCapture = true;
     },
     openRefund() {
-      console.log(JSON.parse(JSON.stringify(this.hipayOrderData)));
       this.showOrderRefund = true;
+    },
+    openCancel() {
+      this.showOrderStateForCancel = true;
     },
     createdComponent() {
       this.$super('createdComponent');
@@ -136,12 +151,8 @@ Shopware.Component.override('sw-order-detail', {
     orderLoaded(order) {
       this.orderData = order;
       this.currency = order.currency.isoCode;
-      console.log(JSON.parse(JSON.stringify(this.orderData)));
       this.lastTransaction = this.orderData.transactions.last();
       this.hipayOrderData = this.orderData.extensions?.hipayOrder;
-      if (this.hipayOrderData) {
-        console.log(JSON.parse(JSON.stringify(this.hipayOrderData)));
-      }
 
       // Set lineItems from orderData & add currentQuantity field to lineItems
       const lineItems = JSON.parse(JSON.stringify(this.orderData.lineItems));
@@ -181,6 +192,9 @@ Shopware.Component.override('sw-order-detail', {
       for (const index in this.lineItems) {
         this.lineItems[index].currentQuantity = this.lineItems[index].quantity;
       }
+    },
+    closeCancelModal() {
+      this.showOrderStateForCancel = false;
     },
     onSelectProductForCapture(selections) {
       // Calcul capture amount according to selected products + current quantity
@@ -261,6 +275,30 @@ Shopware.Component.override('sw-order-detail', {
     closeOrderStateModal() {
       this.showOrderStateForCapture = false;
       this.showOrderStateForRefund = false;
+    },
+    makeCancel() {
+      this.isLoadingRequest = true;
+
+      // Call HiPay API endpoint
+      this.hipayService
+        .cancelTransaction(this.hipayOrderData)
+        .then(response => {
+          if (!response.success) {
+            throw new Error(response.message);
+          }
+
+          this.createNotificationSuccess({
+            title: this.$tc('hipay.notification.cancel.title'),
+            message: this.$tc('hipay.notification.cancel.success')
+          });
+        })
+        .catch(() => {
+          this.createNotificationError({
+            title: this.$tc('hipay.notification.capture.title'),
+            message: this.$tc('hipay.notification.capture.failure')
+          });
+        })
+        .finally(() => (this.isLoadingRequest = false));
     },
     makeCapture() {
       this.isLoadingRequest = true;

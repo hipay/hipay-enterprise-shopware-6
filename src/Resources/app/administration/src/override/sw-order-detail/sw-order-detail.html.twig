@@ -1,5 +1,6 @@
 {% block sw_order_detail_actions_slot_smart_bar_actions %}
   <template v-if="showOnHipayMethod">
+   
     <sw-button variant="contrast"
       v-if="canCapture"
       @click="openCapture"
@@ -12,6 +13,12 @@
       :disabled="!acl.can('order.editor')">
       {{ $tc('hipay.action.refund') }}
     </sw-button>
+    <sw-button variant="danger"
+      v-if="canCancel"
+      @click="openCancel"
+      :disabled="!acl.can('order.editor')">
+      {{ $tc('hipay.action.cancel') }}
+    </sw-button>
     {% parent %}
     <sw-modal :title="$tc('hipay.action.capture')"
       v-if="showOrderCapture"
@@ -22,6 +29,7 @@
         :columns="basketColumns"
         :showActions="false"
         :isRecordSelectable="isProductSelectable"
+        :showSelection="canPartialCapture"
         @selection-change="onSelectProductForCapture"
         @quantity-change="onQuantityChangeForCapture"
         @hook:mounted="selectAllProducts"></sw-data-grid>
@@ -45,6 +53,7 @@
           :value="getCaptureAmount"
           :allowEmpty="true"
           :required="true"
+          :disabled="!canPartialCapture"
           :isInvalid="isInvalidCaptureAmount"
           @change="onManualCaptureAmount"
           :placeholder="captureAmountPlaceholder ? formatCurrency(captureAmountPlaceholder) : null"></sw-number-field>
@@ -54,6 +63,7 @@
           {{ $tc('hipay.action.cancel') }}
         </sw-button>
         <sw-button variant="primary"
+          v-if="canPartialCapture"
           @click="captureOrder"
           :disabled="isInvalidCaptureAmount">
           {{ $tc('hipay.action.capture') }}
@@ -81,6 +91,7 @@
         :columns="basketColumns"
         :showActions="false"
         :isRecordSelectable="isProductSelectable"
+        :showSelection="canPartialRefund"
         @selection-change="onSelectProductForRefund"
         @quantity-change="onQuantityChangeForRefund"
         @hook:mounted="selectAllProducts"></sw-data-grid>
@@ -105,6 +116,7 @@
           :allowEmpty="true"
           :required="true"
           :isInvalid="isInvalidRefundAmount"
+          :disabled="!canPartialRefund"
           @change="onManualRefundAmount"
           :placeholder="refundAmountPlaceholder ? formatCurrency(refundAmountPlaceholder) : null"></sw-number-field>
       </div>
@@ -113,6 +125,7 @@
           {{ $tc('hipay.action.cancel') }}
         </sw-button>
         <sw-button variant="primary"
+        v-if="canPartialRefund"
           @click="refundOrder"
           :disabled="isInvalidRefundAmount">
           {{ $tc('hipay.action.refund') }}
@@ -130,5 +143,12 @@
         @page-leave="closeOrderStateModal"
         @page-leave-confirm="makeRefund"></sw-order-state-change-modal>
     </sw-modal>
+
+    <sw-order-state-change-modal :order="orderData"
+        :isLoading="isLoadingRequest"
+        technicalName=""
+        v-if="showOrderStateForCancel"
+        @page-leave="closeCancelModal"
+        @page-leave-confirm="makeCancel"></sw-order-state-change-modal>
   </template>
 {% endblock %}

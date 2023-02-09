@@ -9,22 +9,26 @@ use HiPay\Payment\Core\Checkout\Payment\HipayOrder\HipayOrderEntity;
 use HiPay\Payment\Core\Checkout\Payment\Refund\OrderRefundEntity;
 use HiPay\Payment\Formatter\Request\MaintenanceRequestFormatter;
 use HiPay\Payment\HiPayPaymentPlugin;
+use HiPay\Payment\Logger\HipayLogger;
 use HiPay\Payment\Service\HiPayHttpClientService;
 use Psr\Log\LoggerInterface;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\Framework\Validation\DataBag\RequestDataBag;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Exception\JsonException;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Exception\InvalidParameterException;
 
 /**
  * @Route(defaults={"_routeScope"={"administration"}})
  *
  * Class AdminController
  */
-class AdminController
+class AdminController extends AbstractController
 {
     protected LoggerInterface $logger;
 
@@ -41,12 +45,12 @@ class AdminController
         EntityRepository $hipayOrderRepository,
         EntityRepository $hipayOrderCaptureRepository,
         EntityRepository $hipayOrderRefundRepository,
-        LoggerInterface $hipayApiLogger
+        HipayLogger $hipayLogger
     ) {
         $this->hipayOrderRepo = $hipayOrderRepository;
         $this->hipayOrderCaptureRepo = $hipayOrderCaptureRepository;
         $this->hipayOrderRefundRepo = $hipayOrderRefundRepository;
-        $this->logger = $hipayApiLogger;
+        $this->logger = $hipayLogger->setChannel(HipayLogger::API);
     }
 
     /**
@@ -92,20 +96,28 @@ class AdminController
             }
 
             $hipayOrderData = json_decode($params->get('hipayOrder'));
-
-            $maintenanceRequestFormatter = new MaintenanceRequestFormatter();
-            $maintenanceRequest = $maintenanceRequestFormatter->makeRequest([
-                'amount' => $params->get('amount'),
-                'operation' => Operation::CAPTURE,
-            ]);
+            $captureAmount = $params->get('amount');
 
             $context = Context::createDefaultContext();
 
             // Search HiPay order entity by ID
             $hipayOrderCriteria = new Criteria([$hipayOrderData->id]);
-            $hipayOrderCriteria->addAssociation('captures');
+            $hipayOrderCriteria->addAssociations(['captures', 'transaction.paymentMethod']);
             /** @var HipayOrderEntity */
             $hipayOrder = $this->hipayOrderRepo->search($hipayOrderCriteria, $context)->first();
+
+            $customFields = $hipayOrder->getTransaction()->getPaymentMethod()->getCustomFields();
+            $totalTransaction = $hipayOrder->getTransaction()->getAmount()->getTotalPrice();
+
+            if (!boolval($customFields['allowPartialCapture']) && $captureAmount !== $totalTransaction) {
+                throw new InvalidParameterException('Only the full capture is allowed');
+            }
+
+            $maintenanceRequestFormatter = new MaintenanceRequestFormatter();
+            $maintenanceRequest = $maintenanceRequestFormatter->makeRequest([
+                'amount' => $captureAmount,
+                'operation' => Operation::CAPTURE,
+            ]);
 
             // Create HiPay capture related to this transaction
             $capture = OrderCaptureEntity::create($maintenanceRequest->operation_id, floatval($maintenanceRequest->amount), $hipayOrder);
@@ -218,6 +230,61 @@ class AdminController
     }
 
     /**
+     * @Route(path="/api/_action/hipay/cancel")
+     */
+    public function cancel(RequestDataBag $params, HiPayHttpClientService $clientService): JsonResponse
+    {
+        try {
+            if (!is_string($params->get('hipayOrder'))) {
+                throw new JsonException('HiPay Order parameter is mandatory');
+            }
+
+            $hipayOrderData = json_decode($params->get('hipayOrder'));
+
+            $maintenanceRequestFormatter = new MaintenanceRequestFormatter();
+            $maintenanceRequest = $maintenanceRequestFormatter->makeRequest([
+                'operation' => Operation::CANCEL,
+            ]);
+
+            $context = Context::createDefaultContext();
+
+            // Search HiPay order entity by ID
+            $hipayOrderCriteria = new Criteria([$hipayOrderData->id]);
+            /** @var HipayOrderEntity */
+            $hipayOrder = $this->hipayOrderRepo->search($hipayOrderCriteria, $context)->first();
+
+            /* @infection-ignore-all */
+            $this->logger->info(
+                'Payload for Maintenance cancel request',
+                (array) $maintenanceRequest
+            );
+
+            // Make HiPay Maintenance request to refund transaction
+            $maintenanceResponse = $clientService
+                ->getConfiguredClient()
+                ->requestMaintenanceOperation(
+                    $maintenanceRequest->operation,
+                    $hipayOrder->getTransanctionReference()
+                );
+
+            /* @infection-ignore-all */
+            $this->logger->info(
+                'Response of Maintenance cancel request',
+                (array) $maintenanceResponse
+            );
+
+            return new JsonResponse([
+                'success' => true,
+            ]);
+        } catch (\Exception $e) {
+            /* @infection-ignore-all */
+            $this->logger->error($e->getCode().' : '.$e->getMessage());
+
+            return new JsonResponse(['success' => false]);
+        }
+    }
+
+    /**
      * Extract Configuration for SimpleHTTPClient from the plugin config data.
      */
     private function extractConfigurationFromPluginConfig(RequestDataBag $params, string $scope): Configuration
@@ -246,5 +313,50 @@ class AdminController
         $this->logger->debug("Payload for $scope $environement", $payload);
 
         return new Configuration($payload);
+    }
+
+    /**
+     * @Route(path="/api/_action/hipay/get-logs")
+     */
+    public function getHipayLogs(): Response
+    {
+        try {
+            $path = $this->container->get('parameter_bag')->get('kernel.logs_dir').DIRECTORY_SEPARATOR.'hipay';
+
+            $zip = new \ZipArchive();
+            $zipName = 'hipay-log-'.(new \DateTime())->format('Y-m-d\TH-i-s\Z').'.zip';
+
+            $zip->open($zipName, \ZipArchive::CREATE);
+
+            $files = new \RecursiveIteratorIterator(
+                new \RecursiveDirectoryIterator($path),
+                \RecursiveIteratorIterator::LEAVES_ONLY
+            );
+
+            foreach ($files as $file) {
+                if (!$file->isDir()) {
+                    $filePath = $file->getRealPath();
+                    $relativePath = substr($filePath, strlen($path) + 1);
+                    $zip->addFile($filePath, $relativePath);
+                }
+            }
+            $zip->close();
+
+            $response = new Response(
+                file_get_contents($zipName) ?: null,
+                200,
+                [
+                    'Content-Type' => 'application/zip',
+                    'Content-Disposition' => 'attachment;filename="'.$zipName.'"',
+                    'Content-length' => filesize($zipName).PHP_EOL,
+                ]
+            );
+
+            @unlink($zipName);
+
+            return $response;
+        } catch (\Throwable $e) {
+            return new JsonResponse(['success' => false, 'message' => $e->getMessage()]);
+        }
     }
 }

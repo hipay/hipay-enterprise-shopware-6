@@ -1,0 +1,11 @@
+<div {{componentName}}-plugin data-{{componentName}}-plugin-options="{{ hipayConfig|json_encode }}">
+    {% block hipay_ideal_html %}
+    <div class="form-group">
+        <label class="form-label" for="hipay-ideal-issuer-bank" >
+            {{ 'hipay.hosted-fields.ideal.bic'|trans }}
+        </label>
+        <div class="hostedfield form-control" id="hipay-ideal-issuer-bank" style="border: 0px; padding : 0"></div>
+        <div class="invalid-feedback" id="error-hipay-ideal-issuer-bank"></div>
+    </div>
+    {% endblock %}
+</div>

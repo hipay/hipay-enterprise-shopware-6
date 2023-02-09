@@ -46,6 +46,9 @@ Shopware.Component.override('sw-order-detail-base', {
     },
     getTitle() {
       return this.$t('hipay.transaction.title') +' #'+this.order.extensions.hipayOrder.transactionReference
+    },
+    isHipayPayment() {
+      return this.transaction.paymentMethod.formattedHandlerIdentifier.startsWith('handler_hipay')
     }
   },
   watch: {

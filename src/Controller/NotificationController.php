@@ -2,8 +2,8 @@
 
 namespace HiPay\Payment\Controller;
 
+use HiPay\Payment\Logger\HipayLogger;
 use HiPay\Payment\Service\NotificationService;
-use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
@@ -17,15 +17,15 @@ use Symfony\Component\Security\Core\Exception\AccessDeniedException;
  */
 class NotificationController
 {
-    private LoggerInterface $logger;
+    private HipayLogger $logger;
 
     private NotificationService $notificationService;
 
     public function __construct(
-        LoggerInterface $hipayApiLogger,
+        HipayLogger $hipayLogger,
         NotificationService $notificationService
     ) {
-        $this->logger = $hipayApiLogger;
+        $this->logger = $hipayLogger->setChannel(HipayLogger::API);
         $this->notificationService = $notificationService;
     }
 

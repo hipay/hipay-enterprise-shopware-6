@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 48">
+    <defs>
+        <clipPath id="clip-path" />
+        <clipPath id="clip-path-2" />
+        <clipPath id="clip-path-3" />
+        <clipPath id="clip-path-4" />
+        <clipPath id="clip-path-5" />
+        <clipPath id="clip-path-6" />
+        <clipPath id="clip-path-7" />
+        <clipPath id="clip-path-8" />
+        <clipPath id="clip-path-9" />
+        <clipPath id="clip-path-10" />
+        <clipPath id="clip-path-11" />
+        <clipPath id="clip-path-12" />
+        <clipPath id="clip-path-13" />
+        <clipPath id="clip-path-14" />
+        <linearGradient id="Dégradé_sans_nom_3" x1="-639.08" x2="-616.98" y1="-2540.54"
+            y2="-2532.33" gradientTransform="matrix(1 0 0 -1 646.98 -2509.91)"
+            gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#005ab9" />
+            <stop offset="1" stop-color="#1e3764" />
+        </linearGradient>
+        <linearGradient id="Dégradé_sans_nom_2" x1="-613.15" x2="-589.68" y1="-2534.97"
+            y2="-2526.96" gradientTransform="matrix(1 0 0 -1 646.98 -2509.91)"
+            gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#fba900" />
+            <stop offset="1" stop-color="#ffd800" />
+        </linearGradient>
+    </defs>
+    <path id="blue-symbol" d="M13.79 36.14c9.1 0 13.66-6.07 18.21-12.14H1.78v12.14Z"
+        style="fill:url(#Dégradé_sans_nom_3)" />
+    <path id="yellow-symbol" d="M50.21 11.86c-9.1 0-13.66 6.07-18.21 12.14h30.22V11.86Z"
+        style="fill:url(#Dégradé_sans_nom_2)" />
+</svg>

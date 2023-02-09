@@ -1,0 +1,28 @@
+{% sw_extends '@Storefront/storefront/page/checkout/finish/finish-details.html.twig' %}
+
+{% block page_checkout_finish_ordernumber %}    
+    {{ parent() }}
+    {% if page.order.transactions.last.paymentMethod.formattedHandlerIdentifier == 'handler_hipay_multibanco'
+        && page.order.transactions.last.customFields.reference_to_pay
+    %}
+    <h2 class="text-center">{{ 'hipay.finish-details.multibanco.title'|trans }}</h2>
+    <div class="row justify-content-center">
+        <div class="col-md-10 col-md-offset-1 col-lg-6 col-lg-offset-3">
+            <table class="table table-striped ">
+                <tr>
+                    <th>{{ 'hipay.finish-details.multibanco.reference'|trans }}</th>
+                    <td>{{ page.order.transactions.last.customFields.reference_to_pay.reference }}</td>
+                </tr>
+                 <tr>
+                    <th>{{ 'hipay.finish-details.multibanco.amount'|trans }}</th>
+                    <td>{{ page.order.transactions.last.customFields.reference_to_pay.amount|floatval|currency }}</td>
+                </tr>
+                 <tr>
+                    <th>{{ 'hipay.finish-details.multibanco.expiration'|trans }}</th>
+                    <td>{{ page.order.transactions.last.customFields.reference_to_pay.expirationDate|date }}</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+{% endblock %}
