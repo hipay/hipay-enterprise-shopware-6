@@ -1,0 +1,11 @@
+<div {{componentName}}-plugin data-{{componentName}}-plugin-options="{{ hipayConfig|json_encode }}">
+    {% block hipay_mbway_html %}
+    <div class="form-group">
+        <label class="form-label" for="hipay-mbway-phone">
+            {{ 'hipay.hosted-fields.mbway.phone'|trans }}
+        </label>
+        <div class="hostedfield form-control" id="hipay-mbway-phone"></div>
+        <div class="invalid-feedback" id="error-hipay-mbway-phone"></div>
+    </div>
+    {% endblock %}
+</div>

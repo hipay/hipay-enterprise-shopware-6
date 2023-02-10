@@ -1,0 +1,11 @@
+<div {{componentName}}-plugin data-{{componentName}}-plugin-options="{{ hipayConfig|json_encode }}">
+    {% block hipay_giropay_html %}
+    <div class="form-group">
+        <label class="form-label" for="hipay-giropay-issuer-bank">
+            {{ 'hipay.hosted-fields.giropay.bic'|trans }}
+        </label>
+        <div class="hostedfield form-control" id="hipay-giropay-issuer-bank"></div>
+        <div class="invalid-feedback" id="error-hipay-giropay-issuer-bank"></div>
+    </div>
+    {% endblock %}
+</div>

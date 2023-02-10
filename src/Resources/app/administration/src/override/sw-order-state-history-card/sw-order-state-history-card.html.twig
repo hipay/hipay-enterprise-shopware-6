@@ -1,0 +1,15 @@
+ {% block sw_order_state_history_card_transaction %}
+    <template v-if="isHipayPayment">
+        <sw-order-state-card-entry
+            v-if="transaction"
+            class="sw-order-state-history-card__payment-state"
+            :disabled="true"
+            :history="transactionHistory"
+            :transition-options="transactionOptions"
+            state-machine-name="order_transaction.state"
+            :title="$tc('sw-order.stateCard.headlineTransactionState')"
+            @state-select="onTransactionStateSelected"
+        />
+    </template>
+    <template v-else>{% parent %}</template>
+{% endblock %}

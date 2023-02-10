@@ -1,0 +1,9 @@
+<sw-button-process style="margin-top: 20px"
+  class="sw-button--primary"
+  :disabled="isLoading"
+  :isLoading="isLoading"
+  :processSuccess="success"
+  @process-finish="completeSucess"
+  @click="downloadLogs">
+  {{ $tc('hipay.config.logs.download') }}
+</sw-button-process>

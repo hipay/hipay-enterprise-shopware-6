@@ -4,10 +4,38 @@
       "redirect-message": "You will be redirected to an external payment page. Please do not refresh the page during the process"
     },
     "hosted-fields": {
-      "fullname": "fullname",
-      "card-number": "Card number",
-      "expiry-date": "Expiry date",
-      "cvc": "CVC"
+      "creditcard": {
+        "fullname": "Fullname",
+        "card-number": "Card number",
+        "expiry-date": "Expiry date",
+        "cvc": "CVC",
+        "remember": "Remember card for future purchases",
+        "disabled": "This kind of payment card is disabled",
+        "delete": "Delete"
+      },
+      "giropay": {
+        "bic": "BIC"
+      },
+      "ideal": {
+        "bic": "Choose your bank"
+      },
+      "mbway": {
+        "phone": "Phone"
+      },
+      "sdd": {
+        "firstname": "Firstname",
+        "lastname": "Lastname",
+        "bank-name": "Bank name",
+        "iban": "IBAN"
+      }
+    },
+    "finish-details": {
+      "multibanco": {
+        "title": "Multibanco Informations",
+        "reference": "Reference",
+        "amount": "Amount",
+        "expiration": "Expiration"
+      }
     }
   }
 }

@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <container xmlns="http://symfony.com/schema/dic/services"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
 
     <imports>
         <import resource="packages/*" />
@@ -24,30 +25,29 @@
             <argument type="service" id="hipay_order.repository" />
             <argument type="service" id="hipay_order_capture.repository" />
             <argument type="service" id="hipay_order_refund.repository" />
+            <argument type="service" id="hipay_card_token.repository" />
         </service>
 
         <service id="HiPay\Payment\Service\ImageImportService" public="true">
             <argument type="service" id="media.repository" />
+            <argument type="service" id="media_folder.repository" />
             <argument type="service" id="Shopware\Core\Content\Media\MediaService" />
             <argument type="service" id="Shopware\Core\Content\Media\File\FileSaver" />
             <argument>%hipay.media_directory%</argument>
         </service>
 
         <!-- Extension Entity -->
-        <service id="HiPay\Payment\Extension\Order\OrderExtension">
-            <tag name="shopware.entity.extension" />
-        </service>
-
-        <service id="HiPay\Payment\Extension\Order\OrderTransactionExtension">
-            <tag name="shopware.entity.extension" />
-        </service>
+        <prototype namespace="HiPay\Payment\Extension\" resource="../../Extension/**/*Extension.php">
+            <tag>shopware.entity.extension</tag>
+        </prototype>
 
         <!-- Entity -->
         <service id="HiPay\Payment\Core\Checkout\Payment\HipayOrder\HipayOrderDefinition">
             <tag name="shopware.entity.definition" entity="hipay_order" />
         </service>
 
-        <service id="HiPay\Payment\Core\Checkout\Payment\HipayNotification\HipayNotificationDefinition">
+        <service
+            id="HiPay\Payment\Core\Checkout\Payment\HipayNotification\HipayNotificationDefinition">
             <tag name="shopware.entity.definition" entity="hipay_notification" />
         </service>
 
@@ -63,6 +63,10 @@
             <tag name="shopware.entity.definition" entity="hipay_status_flow" />
         </service>
 
+        <service id="HiPay\Payment\Core\Checkout\Payment\HipayCardToken\HipayCardTokenDefinition">
+            <tag name="shopware.entity.definition" entity="hipay_card_token" />
+        </service>
+
         <!-- Controller-->
         <prototype namespace="HiPay\Payment\Controller\" resource="../../Controller/*Controller.php">
             <tag>controller.service_arguments</tag>
@@ -75,19 +79,39 @@
             <tag>controller.service_arguments</tag>
         </service>
 
+        <service id="HiPay\Payment\Controller\HipayStorefrontController">
+            <argument type="service" id="hipay_card_token.repository" />
+            <tag>controller.service_arguments</tag>
+        </service>
+
+        <!-- Route -->
+        <service id="HiPay\Payment\Route\HipayCardToken\HipayCardTokenRoute">
+            <argument type="service" id="hipay_card_token.repository" />
+        </service>
+
         <!-- PaymentMethod -->
-        <prototype namespace="HiPay\Payment\PaymentMethod\" resource="../../PaymentMethod/*.php" exclude="../../PaymentMethod/*Interface.php">
+        <prototype namespace="HiPay\Payment\PaymentMethod\" resource="../../PaymentMethod/*.php"
+            exclude="../../PaymentMethod/*Interface.php">
             <argument key="$orderCustomerRepository" id="order_customer.repository" type="service"></argument>
             <tag>shopware.payment.method.async</tag>
         </prototype>
 
+        <service id="HiPay\Payment\PaymentMethod\Multibanco">
+            <argument key="$orderCustomerRepository" id="order_customer.repository" type="service"></argument>
+            <argument key="$orderTransactionRepository" id="order_transaction.repository"
+                type="service"></argument>
+            <tag>shopware.payment.method.async</tag>
+        </service>
+
         <!-- Scheduled task -->
-        <prototype namespace="HiPay\Payment\ScheduledTask\" resource="../../ScheduledTask/**/*Task.php">
+        <prototype namespace="HiPay\Payment\ScheduledTask\"
+            resource="../../ScheduledTask/**/*Task.php">
             <tag>shopware.scheduled.task</tag>
         </prototype>
 
         <!-- Scheduled task handler -->
-        <prototype namespace="HiPay\Payment\ScheduledTask\" resource="../../ScheduledTask/**/*TaskHandler.php">
+        <prototype namespace="HiPay\Payment\ScheduledTask\"
+            resource="../../ScheduledTask/**/*TaskHandler.php">
             <argument type="service" id="scheduled_task.repository" />
             <tag>name="messenger.message_handler</tag>
         </prototype>
@@ -96,6 +120,15 @@
         <prototype namespace="HiPay\Payment\Subscriber\" resource="../../Subscriber/*Subscriber.php">
             <tag>kernel.event_subscriber</tag>
         </prototype>
+
+        <!-- Logger Handler -->
+        <service id="HiPay\Payment\Logger\HipayLogger" />
+
+        <!-- Command-->
+        <prototype namespace="HiPay\Payment\Command\" resource="../../Command/*Command.php">
+            <tag>console.command</tag>
+        </prototype>
+
 
     </services>
 </container>

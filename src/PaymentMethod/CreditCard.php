@@ -2,12 +2,11 @@
 
 namespace HiPay\Payment\PaymentMethod;
 
-use HiPay\Fullservice\Gateway\Model\Request\ThreeDSTwo\BrowserInfo;
+use HiPay\Fullservice\Data\PaymentProduct;
 use HiPay\Fullservice\Gateway\Request\Order\HostedPaymentPageRequest;
 use HiPay\Fullservice\Gateway\Request\Order\OrderRequest;
 use HiPay\Fullservice\Gateway\Request\PaymentMethod\CardTokenPaymentMethod;
 use Shopware\Core\Checkout\Payment\Cart\AsyncPaymentTransactionStruct;
-use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 
 /**
  * Credit card payment Methods.
@@ -15,6 +14,30 @@ use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 class CreditCard extends AbstractPaymentMethod
 {
     /** {@inheritDoc} */
+    protected const PAYMENT_POSITION = 10;
+
+    /** {@inheritDoc} */
+    protected const PAYMENT_IMAGE = 'credit_card.svg';
+
+    /** {@inheritDoc} */
+    protected static PaymentProduct $paymentConfig;
+
+    /**
+     * {@inheritDoc}
+     */
+    protected static function loadPaymentConfig(): PaymentProduct
+    {
+        return new PaymentProduct([
+            'productCode' => 'cb,visa,mastercard,american-express,bcmc,maestro',
+            'additionalFields' => true,
+            'canManualCapturePartially' => true,
+            'canRefundPartially' => true,
+        ]);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public static function getName(string $lang): ?string
     {
         $names = [
@@ -25,7 +48,9 @@ class CreditCard extends AbstractPaymentMethod
         return $names[$lang] ?? null;
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     public static function getDescription(string $lang): ?string
     {
         $descriptions = [
@@ -36,54 +61,39 @@ class CreditCard extends AbstractPaymentMethod
         return $descriptions[$lang] ?? null;
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     public static function addDefaultCustomFields(): array
     {
-        return [
+        return parent::addDefaultCustomFields() + [
             'cards' => ['cb', 'visa', 'mastercard', 'american-express', 'bcmc', 'maestro'],
         ];
     }
 
     /**
      * {@inheritDoc}
-     *
-     * @throws BadRequestException
      */
-    protected function hydrateHostedFields(OrderRequest $orderRequest): OrderRequest
+    protected function hydrateHostedFields(OrderRequest $orderRequest, array $payload, AsyncPaymentTransactionStruct $transaction): OrderRequest
     {
-        $payload = json_decode($this->request->get('hipay-response'), true);
-
         $paymentMethod = new CardTokenPaymentMethod();
         $paymentMethod->cardtoken = $payload['token'];
-        $paymentMethod->eci = 7;
+        $paymentMethod->eci = isset($payload['card_id']) ? 7 : 9;
         $paymentMethod->authentication_indicator = $this->config->get3DSAuthenticator();
-
-        $browserInfo = new BrowserInfo();
-        $browserInfo->ipaddr = $this->request->getClientIp();
-        $browserInfo->http_accept = 'application/json';
-        $browserInfo->http_user_agent = isset($payload['browser_info']['http_user_agent']) ? $payload['browser_info']['http_user_agent'] : null;
-        $browserInfo->java_enabled = isset($payload['browser_info']['java_enabled']) ? $payload['browser_info']['java_enabled'] : null;
-        $browserInfo->javascript_enabled = isset($payload['browser_info']['javascript_enabled']) ? $payload['browser_info']['javascript_enabled'] : null;
-        $browserInfo->language = isset($payload['browser_info']['language']) ? $payload['browser_info']['language'] : null;
-        $browserInfo->color_depth = isset($payload['browser_info']['color_depth']) ? $payload['browser_info']['color_depth'] : null;
-        $browserInfo->screen_height = isset($payload['browser_info']['screen_height']) ? $payload['browser_info']['screen_height'] : null;
-        $browserInfo->screen_width = isset($payload['browser_info']['screen_width']) ? $payload['browser_info']['screen_width'] : null;
-        $browserInfo->timezone = isset($payload['browser_info']['timezone']) ? $payload['browser_info']['timezone'] : null;
 
         // @phpstan-ignore-next-line
         $orderRequest->paymentMethod = $paymentMethod;
-        $orderRequest->browser_info = $browserInfo;
-
         $orderRequest->payment_product = $payload['payment_product'];
-        $orderRequest->device_fingerprint = isset($payload['device_fingerprint']) ? $payload['device_fingerprint'] : null;
+
+        if ($this->request->get('hipay-multiuse')) {
+            $orderRequest->custom_data += ['multiuse' => true];
+        }
 
         return $orderRequest;
     }
 
     /**
      * {@inheritDoc}
-     *
-     * @throws BadRequestException
      */
     protected function hydrateHostedPage(HostedPaymentPageRequest $orderRequest, AsyncPaymentTransactionStruct $transaction): HostedPaymentPageRequest
     {

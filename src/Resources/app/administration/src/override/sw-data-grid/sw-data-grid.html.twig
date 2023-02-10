@@ -1,5 +1,11 @@
+{% block sw_data_grid_bulk %}
+  <div v-if="showSelection">
+    {% parent %}
+  </div>
+{% endblock %}
+
 {% block sw_data_grid_columns_render_value %}
-  <template v-if="column.property === 'quantity'">
+  <template v-if="column.property === 'quantity' && item.editable">
     <sw-number-field class="quantityInp"
       numberType="int"
       :min="1"
@@ -14,3 +20,5 @@
     </span>
   </template>
 {% endblock %}
+
+

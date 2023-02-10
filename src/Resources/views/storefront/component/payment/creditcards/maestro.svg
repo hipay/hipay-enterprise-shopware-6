@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" data-name="Calque 1" viewBox="0 0 64 48">
+    <defs>
+        <clipPath id="clip-path" />
+        <clipPath id="clip-path-2" />
+        <clipPath id="clip-path-3" />
+        <clipPath id="clip-path-4" />
+        <clipPath id="clip-path-5" />
+        <clipPath id="clip-path-11" />
+        <clipPath id="clip-path-12" />
+        <clipPath id="clip-path-13" />
+        <clipPath id="clip-path-14" />
+        <clipPath id="clip-path-15" />
+        <clipPath id="clip-path-21" />
+        <clipPath id="clip-path-22" />
+        <clipPath id="clip-path-23" />
+        <clipPath id="clip-path-24" />
+        <clipPath id="clip-path-25" />
+        <clipPath id="clip-path-26" />
+        <clipPath id="clip-path-27" />
+        <clipPath id="clip-path-28" />
+        <clipPath id="clip-path-29" />
+        <clipPath id="clip-path-30" />
+        <clipPath id="clip-path-31" />
+        <clipPath id="clip-path-32" />
+        <clipPath id="clip-path-33" />
+        <clipPath id="clip-path-34" />
+        <clipPath id="clip-path-35" />
+        <clipPath id="clip-path-36" />
+        <clipPath id="clip-path-37" />
+        <clipPath id="clip-path-38" />
+        <clipPath id="clip-path-39" />
+        <clipPath id="clip-path-40" />
+        <clipPath id="clip-path-41" />
+        <clipPath id="clip-path-42" />
+        <clipPath id="clip-path-43" />
+        <clipPath id="clip-path-44" />
+        <clipPath id="clip-path-45" />
+        <clipPath id="clip-path-46" />
+        <clipPath id="clip-path-47" />
+        <clipPath id="clip-path-48" />
+        <clipPath id="clip-path-49" />
+        <clipPath id="clip-path-50" />
+        <clipPath id="clip-path-51" />
+        <clipPath id="clip-path-52" />
+        <clipPath id="clip-path-53" />
+        <clipPath id="clip-path-54" />
+        <clipPath id="clip-path-55" />
+        <clipPath id="clip-path-56" />
+        <clipPath id="clip-path-57" />
+        <clipPath id="clip-path-58" />
+        <clipPath id="clip-path-59" />
+    </defs>
+    <path d="M40.38 39.07H23.61V8.93h16.77Z" style="fill:#6c6bbd;isolation:isolate" />
+    <path
+        d="M24.69 24A19.12 19.12 0 0 1 32 8.93a19.17 19.17 0 1 0 0 30.13 19.15 19.15 0 0 1-7.32-15"
+        style="fill:#d32011" />
+    <path
+        d="M63 24a19.16 19.16 0 0 1-19.16 19.17A19.13 19.13 0 0 1 32 39.07a19.17 19.17 0 0 0 0-30.14A19.16 19.16 0 0 1 63 24"
+        style="fill:#0099df" />
+</svg>

@@ -1,0 +1,5 @@
+<div class="payment-method-image">
+    {% for creditcard in payment.customFields.cards %}
+        {% sw_include '@HiPayPaymentPlugin/storefront/component/payment/creditcards/'~ creditcard ~'.svg' %}
+    {% endfor %}
+</div>

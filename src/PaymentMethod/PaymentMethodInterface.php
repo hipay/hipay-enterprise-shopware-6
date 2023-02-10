@@ -15,9 +15,33 @@ interface PaymentMethodInterface
     public static function getDescription(string $lang): ?string;
 
     /**
-     * Add default custum fields on the plugin install.
+     * Add default custom fields on the plugin install.
      *
      * @return array<string,mixed>
      */
     public static function addDefaultCustomFields(): array;
+
+    /**
+     * Image of the payment method.
+     */
+    public static function getImage(): ?string;
+
+    /**
+     * Get the ISO currencies rules.
+     *
+     * @return array<string>|null
+     */
+    public static function getCurrencies(): ?array;
+
+    /**
+     * Get the ISO countries rules.
+     *
+     * @return array<string>|null
+     */
+    public static function getCountries(): ?array;
+
+    /**
+     * Return the initial position of the payment method.
+     */
+    public static function getPosition(): int;
 }

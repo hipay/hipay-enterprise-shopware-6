@@ -7,6 +7,7 @@ use HiPay\Fullservice\Gateway\Mapper\TransactionMapper;
 use HiPay\Fullservice\Gateway\Model\Request\ThreeDSTwo\AccountInfo\Customer;
 use HiPay\Fullservice\Gateway\Request\Order\HostedPaymentPageRequest;
 use HiPay\Fullservice\Gateway\Request\Order\OrderRequest;
+use HiPay\Payment\Logger\HipayLogger;
 use HiPay\Payment\PaymentMethod\AbstractPaymentMethod;
 use PHPUnit\Framework\MockObject\MockObject;
 use Shopware\Core\Checkout\Customer\CustomerEntity;
@@ -46,7 +47,7 @@ trait PaymentMethodMockTrait
     use HipayHttpClientServiceMockTrait;
     use RequestStackMockTrait;
 
-    protected function getPaymentMethod(string $classname, array $config, array $responses, Request $request = null, array $orderCutomerConfig = []): AbstractPaymentMethod
+    protected function getPaymentMethod(string $classname, array $config, array $responses, Request $request = null, array $orderCustomerConfig = [], array $construct = []): AbstractPaymentMethod
     {
         return new $classname(
             $this->createMock(OrderTransactionStateHandler::class),
@@ -54,7 +55,9 @@ trait PaymentMethodMockTrait
             $this->getClientService($responses),
             $this->getRequestStack($request),
             $this->getLocaleProvider(),
-            $this->generateOrderCustomerRepo($orderCutomerConfig)
+            $this->generateOrderCustomerRepo($orderCustomerConfig),
+            $this->createMock(HipayLogger::class),
+            ...$construct
         );
     }
 
@@ -298,7 +301,7 @@ trait PaymentMethodMockTrait
         return $localeProvider;
     }
 
-    protected function getHostedFiledsOrderRequest(string $classname, array $jsonResponse = null, $redirectUri = null): OrderRequest
+    protected function getHostedFiledsOrderRequest(string $classname, array $jsonResponse = null, $redirectUri = null, array $construct = [], array $configTransaction = []): OrderRequest
     {
         $config = [
             'operationMode' => 'hostedFields',
@@ -334,12 +337,14 @@ trait PaymentMethodMockTrait
             $classname,
             $config,
             $responses,
-            $request
+            $request,
+            [],
+            $construct
         );
         $this->createMock(SalesChannelContext::class);
 
         $paymentMethod->pay(
-            $this->generateTransaction(),
+            $this->generateTransaction($configTransaction),
             $this->createMock(RequestDataBag::class),
             $this->createMock(SalesChannelContext::class)
         );
@@ -347,7 +352,7 @@ trait PaymentMethodMockTrait
         return $orderRequest;
     }
 
-    protected function getHostedPagePaymentRequest(string $classname, $redirectUri = null, array $transactionConfig = [])
+    protected function getHostedPagePaymentRequest(string $classname, $redirectUri = null, array $transactionConfig = [], array $construct = [])
     {
         $config = [
             'operationMode' => 'hostedPage',
@@ -372,7 +377,10 @@ trait PaymentMethodMockTrait
         $paymentMethod = $this->getPaymentMethod(
             $classname,
             $config,
-            $responses
+            $responses,
+            null,
+            [],
+            $construct
         );
 
         $paymentMethod->pay(

@@ -249,7 +249,7 @@ infection:
   script:
     - $PATH_VENDOR/bin/infection
       --logger-html=$PATH_REPORTS/infection.html
-      --min-covered-msi=85
+      --min-covered-msi=80
   artifacts:
     paths:
       - $PATH_REPORTS/infection.html

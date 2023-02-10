@@ -6,20 +6,34 @@ namespace HiPay\Payment;
 
 use Composer\InstalledVersions;
 use HiPay\Fullservice\Exception\UnexpectedValueException;
+use HiPay\Payment\PaymentMethod\Bancontact;
 use HiPay\Payment\PaymentMethod\CreditCard;
+use HiPay\Payment\PaymentMethod\Giropay;
+use HiPay\Payment\PaymentMethod\Ideal;
+use HiPay\Payment\PaymentMethod\Mbway;
+use HiPay\Payment\PaymentMethod\Multibanco;
+use HiPay\Payment\PaymentMethod\Mybank;
 use HiPay\Payment\PaymentMethod\PaymentMethodInterface;
+use HiPay\Payment\PaymentMethod\Paypal;
+use HiPay\Payment\PaymentMethod\Przelewy24;
+use HiPay\Payment\PaymentMethod\SepaDirectDebit;
+use HiPay\Payment\PaymentMethod\Sofort;
 use HiPay\Payment\Service\ImageImportService;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
+use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\ContainsFilter;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsAnyFilter;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
+use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\OrFilter;
 use Shopware\Core\Framework\Plugin;
 use Shopware\Core\Framework\Plugin\Context\ActivateContext;
 use Shopware\Core\Framework\Plugin\Context\DeactivateContext;
 use Shopware\Core\Framework\Plugin\Context\InstallContext;
 use Shopware\Core\Framework\Plugin\Context\UninstallContext;
 use Shopware\Core\Framework\Plugin\Util\PluginIdProvider;
+use Shopware\Core\Framework\Rule\Rule;
+use Shopware\Core\Framework\Uuid\Uuid;
 use Shopware\Core\System\Language\LanguageEntity;
 use Symfony\Component\DependencyInjection\Exception\ServiceCircularReferenceException;
 use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
@@ -50,6 +64,21 @@ class HiPayPaymentPlugin extends Plugin
         'PUBLIC_PASSWORD_STAGE' => 'HiPayPaymentPlugin.config.publicPasswordStage',
         'PASSPHRASE_STAGE' => 'HiPayPaymentPlugin.config.passphraseStage',
         'HASH_STAGE' => 'HiPayPaymentPlugin.config.hashStage',
+        'LOG_DEBUG' => 'HiPayPaymentPlugin.config.debugMode',
+    ];
+
+    private const PAYMENT_METHODS = [
+        Bancontact::class,
+        CreditCard::class,
+        Giropay::class,
+        Ideal::class,
+        Paypal::class,
+        Mbway::class,
+        Multibanco::class,
+        Mybank::class,
+        Przelewy24::class,
+        SepaDirectDebit::class,
+        Sofort::class,
     ];
 
     private string $paymentMethodRepoName = 'payment_method.repository';
@@ -82,18 +111,15 @@ class HiPayPaymentPlugin extends Plugin
     /**
      * Get Shopware version.
      */
-    public static function getShopwareVersion(): string
+    public static function getShopwareVersion(): ?string
     {
-        return InstalledVersions::isInstalled('shopware/platform')
-            ? InstalledVersions::getVersion('shopware/platform')
-            : InstalledVersions::getVersion('shopware/core');
+        return InstalledVersions::getVersion('shopware/core')
+            ?? InstalledVersions::getVersion('shopware/recovery');
     }
 
     public function install(InstallContext $context): void
     {
-        $paymentMethods = [CreditCard::class];
-
-        foreach ($paymentMethods as $paymentMethod) {
+        foreach (self::PAYMENT_METHODS as $paymentMethod) {
             $this->addPaymentMethod($paymentMethod, $context->getContext());
         }
 
@@ -104,32 +130,37 @@ class HiPayPaymentPlugin extends Plugin
     {
         // Only set the payment method to inactive when uninstalling. Removing the payment method would
         // cause data consistency issues, since the payment method might have been used in several orders
-        $this->setPaymentMethodIsActive(
-            false,
-            CreditCard::class,
-            $context->getContext()
-        );
+
+        foreach (self::PAYMENT_METHODS as $paymentMethod) {
+            $this->setPaymentMethodIsActive(
+                false,
+                $paymentMethod,
+                $context->getContext()
+            );
+        }
     }
 
     public function activate(ActivateContext $context): void
     {
-        $this->setPaymentMethodIsActive(
-            true,
-            CreditCard::class,
-            $context->getContext(),
-            'credit_card.svg',
-            'administration/media'
-        );
+        foreach (self::PAYMENT_METHODS as $paymentMethod) {
+            $this->setPaymentMethodIsActive(
+                true,
+                $paymentMethod,
+                $context->getContext()
+            );
+        }
         parent::activate($context);
     }
 
     public function deactivate(DeactivateContext $context): void
     {
-        $this->setPaymentMethodIsActive(
-            false,
-            CreditCard::class,
-            $context->getContext()
-        );
+        foreach (self::PAYMENT_METHODS as $paymentMethod) {
+            $this->setPaymentMethodIsActive(
+                false,
+                $paymentMethod,
+                $context->getContext()
+            );
+        }
         parent::deactivate($context);
     }
 
@@ -141,16 +172,16 @@ class HiPayPaymentPlugin extends Plugin
      * @throws ServiceNotFoundException
      */
     private function addPaymentMethod(
-        string $paymentClassname,
+        string $classname,
         Context $context
     ): void {
         // Check implementation
-        if (!is_subclass_of($paymentClassname, PaymentMethodInterface::class)) {
-            throw new UnexpectedValueException('The payment method "'.$paymentClassname.'" must implement interface "'.PaymentMethodInterface::class.'"');
+        if (!is_subclass_of($classname, PaymentMethodInterface::class)) {
+            throw new UnexpectedValueException('The payment method "'.$classname.'" must implement interface "'.PaymentMethodInterface::class.'"');
         }
 
         // Payment method exists already
-        if ($this->getPaymentMethodId($paymentClassname)) {
+        if ($this->getPaymentMethodId($classname)) {
             return;
         }
 
@@ -167,20 +198,19 @@ class HiPayPaymentPlugin extends Plugin
         foreach ($this->getLanguages() as $lang) {
             $translations[] = [
                 'languageId' => $lang['id'],
-                'name' => $paymentClassname::getName($lang['code']),
-                'description' => $paymentClassname::getDescription(
-                    $lang['code']
-                ),
-                'customFields' => $paymentClassname::addDefaultCustomFields(),
+                'name' => $classname::getName($lang['code']),
+                'description' => $classname::getDescription($lang['code']),
+                'customFields' => $classname::addDefaultCustomFields(),
             ];
         }
 
         $paymentMethod = [
-            'handlerIdentifier' => $paymentClassname,
+            'handlerIdentifier' => $classname,
             'translations' => $translations,
             'afterOrderEnabled' => true,
             'pluginId' => $this->pluginId,
             'salesChannels' => $this->getSalesChannelIds(),
+            'position' => $classname::getPosition(),
         ];
 
         /** @var EntityRepository $paymentRepository */
@@ -196,15 +226,14 @@ class HiPayPaymentPlugin extends Plugin
      */
     private function setPaymentMethodIsActive(
         bool $active,
-        string $paymentClassname,
+        string $classname,
         Context $context,
-        ?string $filename = null,
-        string $directory = ''
+        string $directory = 'administration/media'
     ): void {
         /** @var EntityRepository $paymentRepository */
         $paymentRepository = $this->container->get($this->paymentMethodRepoName);
 
-        $paymentMethodId = $this->getPaymentMethodId($paymentClassname);
+        $paymentMethodId = $this->getPaymentMethodId($classname);
 
         // Payment does not even exist, so nothing to (de-)activate here
         if (!$paymentMethodId) {
@@ -216,8 +245,15 @@ class HiPayPaymentPlugin extends Plugin
             'active' => $active,
         ];
 
-        if ($filename && $mediaId = $this->addImageToPaymentMethod($filename, $directory, $context)) {
-            $paymentMethod['mediaId'] = $mediaId;
+        if ($active) {
+            $filename = $classname::getImage();
+            if ($filename && $mediaId = $this->addImageToPaymentMethod($filename, $directory, $context)) {
+                $paymentMethod['mediaId'] = $mediaId;
+            }
+
+            if ($rule = $this->getRule($classname)) {
+                $paymentMethod['availabilityRule'] = $rule;
+            }
         }
 
         $paymentRepository->update([$paymentMethod], $context);
@@ -229,14 +265,14 @@ class HiPayPaymentPlugin extends Plugin
      * @throws ServiceCircularReferenceException
      * @throws ServiceNotFoundException
      */
-    private function getPaymentMethodId(string $paymentClassname): ?string
+    private function getPaymentMethodId(string $classname): ?string
     {
         /** @var EntityRepository $paymentRepository */
         $paymentRepository = $this->container->get($this->paymentMethodRepoName);
 
         // Fetch ID for update
         $paymentCriteria = (new Criteria())->addFilter(
-            new EqualsFilter('handlerIdentifier', $paymentClassname)
+            new EqualsFilter('handlerIdentifier', $classname)
         );
 
         return $paymentRepository
@@ -291,7 +327,6 @@ class HiPayPaymentPlugin extends Plugin
         /** @var ImageImportService $imageImportService */
         $imageImportService = $this->container->get(ImageImportService::class);
 
-        // Upload credit card image to media library
         return $imageImportService->addImageToMediaFromFile($filename, $directory, 'payment_method', $context);
     }
 
@@ -307,7 +342,7 @@ class HiPayPaymentPlugin extends Plugin
                 $deleteKeys[] = $paramName;
                 $validParams[] = [
                     'configurationKey' => $paramName,
-                    'configurationValue' => $value,
+                    'configurationValue' => $paramName === self::PARAMS['LOG_DEBUG'] ? boolval($value) : $value,
                 ];
             }
         }
@@ -317,7 +352,7 @@ class HiPayPaymentPlugin extends Plugin
             'system_config.repository'
         );
 
-        // Delete default fields when set bey env vars
+        // Delete default fields when set by env vars
         $critera = new Criteria();
         $critera->addFilter(
             new EqualsAnyFilter('configurationKey', $deleteKeys)
@@ -333,9 +368,84 @@ class HiPayPaymentPlugin extends Plugin
 
         $systemConfigRepository->create($validParams, $context);
     }
+
+    /**
+     * Add the rule for the payement method.
+     *
+     * @return array<string,mixed>|null
+     */
+    private function getRule(string $classname): ?array
+    {
+        $context = Context::createDefaultContext();
+
+        /** @var EntityRepository */
+        $ruleRepo = $this->container->get('rule.repository');
+        $ruleCriteria = (new Criteria())->addFilter(new ContainsFilter('customFields', $classname::getProductCode()));
+
+        // Existing rule
+        if ($ruleId = $ruleRepo->searchIds($ruleCriteria, $context)->firstId()) {
+            return ['id' => $ruleId];
+        }
+
+        $countries = $classname::getCountries();
+        $currencies = $classname::getCurrencies();
+
+        // No rule
+        if (!$countries && !$currencies) {
+            return null;
+        }
+
+        $conditions = [[
+            'id' => $andId = Uuid::randomHex(),
+            'type' => 'andContainer',
+            'position' => 0,
+        ]];
+
+        if ($countries) {
+            $filter = new OrFilter();
+            foreach ($countries as $country) {
+                $filter->addQuery(new EqualsFilter('iso', $country));
+            }
+
+            /** @var EntityRepository */
+            $countryRepo = $this->container->get('country.repository');
+            $countryIds = $countryRepo->searchIds((new Criteria())->addFilter($filter), $context)->getIds();
+
+            $conditions[] = [
+                'type' => 'customerBillingCountry',
+                'position' => 1,
+                'value' => ['operator' => Rule::OPERATOR_EQ, 'countryIds' => $countryIds],
+                'parentId' => $andId,
+            ];
+        }
+
+        if ($currencies) {
+            $filter = new OrFilter();
+            foreach ($currencies as $currency) {
+                $filter->addQuery(new EqualsFilter('isoCode', $currency));
+            }
+
+            /** @var EntityRepository */
+            $currencyRepo = $this->container->get('currency.repository');
+            $currencyIds = $currencyRepo->searchIds((new Criteria())->addFilter($filter), $context)->getIds();
+
+            $conditions[] = [
+                'type' => 'currency',
+                'position' => 0,
+                'value' => ['operator' => Rule::OPERATOR_EQ, 'currencyIds' => $currencyIds],
+                'parentId' => $andId,
+            ];
+        }
+
+        return [
+            'name' => $classname::getName('en-GB').' rule',
+            'priority' => 1,
+            'customFields' => ['hipay-payment' => $classname::getProductCode()],
+            'conditions' => $conditions,
+        ];
+    }
 }
 
-if (file_exists(__DIR__ . '/../vendor/autoload.php')) {
-    require_once __DIR__ . '/../vendor/autoload.php';
+if (file_exists(dirname(__DIR__).'/vendor/autoload.php')) {
+    require_once dirname(__DIR__).'/vendor/autoload.php';
 }
-

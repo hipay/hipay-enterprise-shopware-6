@@ -13,10 +13,15 @@ use HiPay\Payment\Enum\CaptureStatus;
 use HiPay\Payment\Enum\RefundStatus;
 use HiPay\Payment\Formatter\Request\MaintenanceRequestFormatter;
 use HiPay\Payment\HiPayPaymentPlugin;
+use HiPay\Payment\Logger\HipayLogger;
 use HiPay\Payment\Service\HiPayHttpClientService;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Psr\Log\NullLogger;
+use Shopware\Core\Checkout\Cart\Price\Struct\CalculatedPrice;
+use Shopware\Core\Checkout\Cart\Tax\Struct\CalculatedTaxCollection;
+use Shopware\Core\Checkout\Cart\Tax\Struct\TaxRuleCollection;
+use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionEntity;
+use Shopware\Core\Checkout\Payment\PaymentMethodEntity;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Event\EntityWrittenContainerEvent;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
@@ -87,7 +92,7 @@ class AdminControllerTest extends TestCase
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
-            new NullLogger()
+            $this->createMock(HipayLogger::class)
         );
 
         $jsonResponse = json_decode(
@@ -115,7 +120,7 @@ class AdminControllerTest extends TestCase
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
-            new NullLogger()
+            $this->createMock(HipayLogger::class)
         );
 
         $jsonResponse = json_decode(
@@ -143,7 +148,7 @@ class AdminControllerTest extends TestCase
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
-            new NullLogger()
+            $this->createMock(HipayLogger::class)
         );
 
         $jsonResponse = json_decode(
@@ -168,7 +173,7 @@ class AdminControllerTest extends TestCase
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
-            new NullLogger()
+            $this->createMock(HipayLogger::class)
         );
 
         $jsonResponse = json_decode(
@@ -265,10 +270,27 @@ class AdminControllerTest extends TestCase
 
         $captures = [];
 
+        /** @var PaymentMethodEntity&MockObject */
+        $paymentMethod = $this->createMock(PaymentMethodEntity::class);
+        $paymentMethod->method('getCustomFields')->willReturn(['allowPartialCapture' => true]);
+
+        $amount = new CalculatedPrice(
+            10.0,
+            10.0,
+            $this->createMock(CalculatedTaxCollection::class),
+            $this->createMock(TaxRuleCollection::class),
+        );
+
+        /** @var OrderTransactionEntity&MockObject */
+        $transaction = $this->createMock(OrderTransactionEntity::class);
+        $transaction->method('getPaymentMethod')->willReturn($paymentMethod);
+        $transaction->method('getAmount')->willReturn($amount);
+
         /** @var HipayOrderEntity&MockObject */
         $hipayOrderEntity = $this->createMock(HipayOrderEntity::class);
         $hipayOrderEntity->method('getCapturesToArray')->willReturn($captures);
         $hipayOrderEntity->method('getCapturedAmount')->willReturn(10.00);
+        $hipayOrderEntity->method('getTransaction')->willReturn($transaction);
 
         /** @var EntityRepository&MockObject */
         $hipayOrderRepo = $this->createMock(EntityRepository::class);
@@ -295,7 +317,7 @@ class AdminControllerTest extends TestCase
             $hipayOrderRepo,
             $hipayOrderCaptureRepo,
             $this->createMock(EntityRepository::class),
-            new NullLogger()
+            $this->createMock(HipayLogger::class)
         );
 
         $jsonResponse = json_decode(
@@ -331,7 +353,7 @@ class AdminControllerTest extends TestCase
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
-            new NullLogger()
+            $this->createMock(HipayLogger::class)
         );
 
         $jsonResponse = json_decode(
@@ -401,7 +423,7 @@ class AdminControllerTest extends TestCase
             $hipayOrderRepo,
             $this->createMock(EntityRepository::class),
             $hipayOrderRefundRepo,
-            new NullLogger()
+            $this->createMock(HipayLogger::class)
         );
 
         $jsonResponse = json_decode(
@@ -437,7 +459,7 @@ class AdminControllerTest extends TestCase
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
             $this->createMock(EntityRepository::class),
-            new NullLogger()
+            $this->createMock(HipayLogger::class)
         );
 
         $jsonResponse = json_decode(
@@ -448,5 +470,60 @@ class AdminControllerTest extends TestCase
         );
 
         $this->assertFalse($jsonResponse->success);
+    }
+
+    public function testValidCancel()
+    {
+        $order = new HipayOrderEntity();
+        $order->setTransanctionReference('FOO_TRANSACTION_ID');
+
+        /** @var EntitySearchResult&MockObject */
+        $search = $this->createMock(EntitySearchResult::class);
+        $search->method('first')->willReturn($order);
+
+        /** @var EntityRepository&MockObject */
+        $orderRepo = $this->createMock(EntityRepository::class);
+        $orderRepo->method('search')->willReturn($search);
+
+        $service = new AdminController(
+            $orderRepo,
+            $this->createMock(EntityRepository::class),
+            $this->createMock(EntityRepository::class),
+            $this->createMock(HipayLogger::class)
+        );
+
+        /** @var RequestDataBag&MockObject */
+        $params = $this->createMock(RequestDataBag::class);
+        $params->method('get')->willReturn(json_encode(['id' => 'FOO_ORDER_ID']));
+
+        $client = $this->createMock(HiPayHttpClientService::class);
+
+        $response = $service->cancel($params, $client);
+
+        $this->assertSame(
+            ['success' => true],
+            json_decode($response->getContent(), true)
+        );
+    }
+
+    public function testFaileddCancel()
+    {
+        $service = new AdminController(
+            $this->createMock(EntityRepository::class),
+            $this->createMock(EntityRepository::class),
+            $this->createMock(EntityRepository::class),
+            $this->createMock(HipayLogger::class)
+        );
+
+        /** @var RequestDataBag&MockObject */
+        $params = $this->createMock(RequestDataBag::class);
+        $params->method('get')->willReturn(null);
+
+        $response = $service->cancel($params, $this->createMock(HiPayHttpClientService::class));
+
+        $this->assertSame(
+            ['success' => false],
+            json_decode($response->getContent(), true)
+        );
     }
 }
