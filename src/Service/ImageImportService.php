@@ -3,13 +3,12 @@
 namespace HiPay\Payment\Service;
 
 use Psr\Log\LoggerInterface;
-use Shopware\Core\Content\Media\DataAbstractionLayer\MediaFolderRepositoryDecorator;
-use Shopware\Core\Content\Media\DataAbstractionLayer\MediaRepositoryDecorator;
 use Shopware\Core\Content\Media\Exception\DuplicatedMediaFileNameException;
 use Shopware\Core\Content\Media\File\FileSaver;
 use Shopware\Core\Content\Media\File\MediaFile;
 use Shopware\Core\Content\Media\MediaService;
 use Shopware\Core\Framework\Context;
+use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
@@ -18,9 +17,9 @@ class ImageImportService
 {
     private string $mediaRootDirectory;
 
-    protected MediaRepositoryDecorator $mediaRepository;
+    protected EntityRepository $mediaRepository;
 
-    protected MediaFolderRepositoryDecorator $mediaFolderRepository;
+    protected EntityRepository $mediaFolderRepository;
 
     protected MediaService $mediaService;
 
@@ -29,8 +28,8 @@ class ImageImportService
     protected LoggerInterface $logger;
 
     public function __construct(
-        MediaRepositoryDecorator $mediaRepository,
-        MediaFolderRepositoryDecorator $mediaFolderRepository,
+        EntityRepository $mediaRepository,
+        EntityRepository $mediaFolderRepository,
         MediaService $mediaService,
         FileSaver $fileSaver,
         string $mediaRootDirectory,

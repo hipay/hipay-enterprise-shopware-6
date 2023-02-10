@@ -111,11 +111,10 @@ class HiPayPaymentPlugin extends Plugin
     /**
      * Get Shopware version.
      */
-    public static function getShopwareVersion(): string
+    public static function getShopwareVersion(): ?string
     {
-        return InstalledVersions::isInstalled('shopware/platform')
-            ? InstalledVersions::getVersion('shopware/platform')
-            : InstalledVersions::getVersion('shopware/core');
+        return InstalledVersions::getVersion('shopware/core')
+            ?? InstalledVersions::getVersion('shopware/recovery');
     }
 
     public function install(InstallContext $context): void
@@ -444,14 +443,6 @@ class HiPayPaymentPlugin extends Plugin
             'customFields' => ['hipay-payment' => $classname::getProductCode()],
             'conditions' => $conditions,
         ];
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function executeComposerCommands(): bool
-    {
-        return true;
     }
 }
 

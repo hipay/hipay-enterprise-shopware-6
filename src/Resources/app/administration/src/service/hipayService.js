@@ -17,6 +17,17 @@ class ApiHiPay extends ApiService {
     );
   }
 
+  getLogsArrayBuffer() {
+    const headers = this.getBasicHeaders({});
+
+    return this.httpClient({
+      headers,
+      method: 'get',
+      url: `/_action/${this.getApiBasePath()}/get-logs`,
+      responseType: 'arraybuffer'
+    })
+  }
+
   validateConfig(values) {
     const headers = this.getBasicHeaders({});
 

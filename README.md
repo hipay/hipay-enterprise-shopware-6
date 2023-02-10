@@ -28,6 +28,8 @@ The plugin follows shopware requirements for PHP configuration:
 
 **Zip/Upload**
 
+The zip/upload install is temporary unavaible.
+<!--
 The easiest method for testing or initial installation.  
 Packages are available on every github release.
 
@@ -47,7 +49,7 @@ Download the asset and follow the next step:
 - Click on _Upload extensions_
 - Select the plugin and validate
 - Install and Activate the plugin
-
+-->
 **Composer**
 
 This is the method we recommend because you really have control over the installation and updates.  

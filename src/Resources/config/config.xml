@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/shopware/platform/master/src/Core/System/SystemConfig/Schema/config.xsd">
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/shopware/platform/master/src/Core/System/SystemConfig/Schema/config.xsd">
 
     <!-- help bloc -->
     <card>
@@ -265,17 +266,12 @@
             <label lang="de-DE">One-Click-Zahlung</label>
         </input-field>
 
-        <!--<input-field type="bool">
+        <!--<input-field
+        type="bool">
             <name>rememberCart</name>
             <label>Keep the basket if the payment fails.</label>
             <label lang="de-DE">Den Warenkorb behalten, wenn die Zahlung fehlschlägt</label>
         </input-field> -->
-
-        <input-field type="bool">
-            <name>debugMode</name>
-            <label>Activate technical logs</label>
-            <label lang="de-DE">Technische Logs aktivieren</label>
-        </input-field>
 
         <component name="hipay-help-info">
             <name>paragraph</name>
@@ -304,6 +300,22 @@
                 </option>
             </options>
         </input-field>
+    </card>
+
+    <card>
+        <title>Logs</title>
+        <title lang="de-DE">Logs</title>
+
+        <input-field type="bool">
+            <name>debugMode</name>
+            <label>Activate technical logs</label>
+            <label lang="de-DE">Technische Logs aktivieren</label>
+            <defaultValue>true</defaultValue>
+        </input-field>
+
+        <component name="hipay-download-logs">
+            <name>downloadlog</name>
+        </component>
     </card>
 
     <!-- hosted fields style -->
