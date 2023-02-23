@@ -22,6 +22,13 @@ interface PaymentMethodInterface
     public static function addDefaultCustomFields(): array;
 
     /**
+     * Get the configuration of the payment method based on sdk json files.
+     *
+     * @return array<string,mixed>
+     */
+    public static function getConfig(): array;
+
+    /**
      * Image of the payment method.
      */
     public static function getImage(): ?string;

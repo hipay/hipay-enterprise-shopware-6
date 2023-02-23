@@ -66,7 +66,7 @@ class CreditCard extends AbstractPaymentMethod
      */
     public static function addDefaultCustomFields(): array
     {
-        return parent::addDefaultCustomFields() + [
+        return [
             'cards' => ['cb', 'visa', 'mastercard', 'american-express', 'bcmc', 'maestro'],
         ];
     }

@@ -71,8 +71,13 @@ class SepaDirectDebitTest extends TestCase
     public function testStatic()
     {
         $this->assertEquals(
-            ['haveHostedFields' => true, 'allowPartialCapture' => false, 'allowPartialRefund' => false],
+            [],
             SepaDirectDebit::addDefaultCustomFields()
+        );
+
+        $this->assertEquals(
+            ['haveHostedFields' => true, 'allowPartialCapture' => false, 'allowPartialRefund' => false],
+            SepaDirectDebit::getConfig()
         );
 
         $this->assertEquals(

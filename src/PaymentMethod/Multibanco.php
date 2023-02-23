@@ -91,9 +91,7 @@ class Multibanco extends AbstractPaymentMethod
      */
     public static function addDefaultCustomFields(): array
     {
-        return parent::addDefaultCustomFields() + [
-            'expiration_limit' => '3',
-        ];
+        return ['expiration_limit' => '3'];
     }
 
     /**

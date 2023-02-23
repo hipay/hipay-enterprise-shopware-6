@@ -40,8 +40,13 @@ class MybankTest extends TestCase
         );
 
         $this->assertEquals(
-            ['haveHostedFields' => false,  'allowPartialCapture' => false, 'allowPartialRefund' => true],
+            [],
             Mybank::addDefaultCustomFields()
+        );
+
+        $this->assertEquals(
+            ['haveHostedFields' => false,  'allowPartialCapture' => false, 'allowPartialRefund' => true],
+            Mybank::getCOnfig()
         );
 
         $this->assertSame(

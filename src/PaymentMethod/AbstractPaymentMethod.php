@@ -173,8 +173,10 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
 
     /**
      * {@inheritDoc}
+     *
+     * @throws UnexpectedValueException
      */
-    public static function addDefaultCustomFields(): array
+    public static function getConfig(): array
     {
         if (!isset(static::$paymentConfig)) {
             static::$paymentConfig = static::loadPaymentConfig();
@@ -185,6 +187,14 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
             'allowPartialCapture' => (bool) static::$paymentConfig->getCanManualCapturePartially(),
             'allowPartialRefund' => (bool) static::$paymentConfig->getCanRefundPartially(),
         ];
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public static function addDefaultCustomFields(): array
+    {
+        return [];
     }
 
     /**
@@ -552,7 +562,7 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
                 };
 
                 return $order->getId() !== $orderCustomer->getOrderId()
-                && $mapLineItemsCallback($order->getLineItems()) === $mapLineItemsCallback($orderCustomer->getOrder()->getLineItems());
+                    && $mapLineItemsCallback($order->getLineItems()) === $mapLineItemsCallback($orderCustomer->getOrder()->getLineItems());
             }
         );
 
@@ -693,18 +703,18 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
     private function getAddressHash(OrderAddressEntity $address): string
     {
         return $address->getSalutationId()
-        .$address->getFirstName()
-        .$address->getLastName()
-        .$address->getStreet()
-        .$address->getZipcode()
-        .$address->getCity()
-        .$address->getCompany()
-        .$address->getTitle()
-        .$address->getPhoneNumber()
-        .$address->getAdditionalAddressLine1()
-        .$address->getAdditionalAddressLine2()
-        .$address->getCountryId()
-        .$address->getCountryStateId();
+            .$address->getFirstName()
+            .$address->getLastName()
+            .$address->getStreet()
+            .$address->getZipcode()
+            .$address->getCity()
+            .$address->getCompany()
+            .$address->getTitle()
+            .$address->getPhoneNumber()
+            .$address->getAdditionalAddressLine1()
+            .$address->getAdditionalAddressLine2()
+            .$address->getCountryId()
+            .$address->getCountryStateId();
     }
 
     /**
