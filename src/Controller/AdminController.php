@@ -106,10 +106,11 @@ class AdminController extends AbstractController
             /** @var HipayOrderEntity */
             $hipayOrder = $this->hipayOrderRepo->search($hipayOrderCriteria, $context)->first();
 
-            $customFields = $hipayOrder->getTransaction()->getPaymentMethod()->getCustomFields();
+            $config = $hipayOrder->getTransaction()->getPaymentMethod()->getExtension('hipayConfig');
             $totalTransaction = $hipayOrder->getTransaction()->getAmount()->getTotalPrice();
 
-            if (!boolval($customFields['allowPartialCapture']) && $captureAmount !== $totalTransaction) {
+            // @phpstan-ignore-next-line
+            if (!boolval($config['allowPartialCapture']) && $captureAmount !== $totalTransaction) {
                 throw new InvalidParameterException('Only the full capture is allowed');
             }
 
@@ -294,17 +295,17 @@ class AdminController extends AbstractController
         $payload = [
             HiPayHttpClientService::API_USERNAME => $params->get(
                 HiPayPaymentPlugin::getModuleName()
-                .'.config.'
-                .$scope
-                .'Login'
-                .$environement
+                    .'.config.'
+                    .$scope
+                    .'Login'
+                    .$environement
             ),
             HiPayHttpClientService::API_PASSWORD => $params->get(
                 HiPayPaymentPlugin::getModuleName()
-                .'.config.'
-                .$scope
-                .'Password'
-                .$environement
+                    .'.config.'
+                    .$scope
+                    .'Password'
+                    .$environement
             ),
             HiPayHttpClientService::API_ENV => strtolower($environement),
         ];

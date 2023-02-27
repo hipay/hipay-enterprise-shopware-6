@@ -57,7 +57,7 @@ Shopware.Component.override('sw-order-detail', {
       );
     },
     canPartialCapture() {
-      return this.canCapture && this.lastTransaction?.paymentMethod?.customFields?.allowPartialCapture !== false;
+      return this.canCapture && this.lastTransaction?.paymentMethod?.extensions?.hipayConfig?.allowPartialCapture !== false;
     },
     canRefund() {
       return ['paid_partially', 'paid', 'refunded_partially'].includes(
@@ -65,7 +65,7 @@ Shopware.Component.override('sw-order-detail', {
       );
     },
     canPartialRefund() {
-      return this.canRefund && this.lastTransaction?.paymentMethod?.customFields?.allowPartialRefund !== false;
+      return this.canRefund && this.lastTransaction?.paymentMethod?.extensions?.hipayConfig?.allowPartialRefund !== false;
     },
     orderBasket() {
       // Returns lineItems as source to data grid & show currency next to totalPrice

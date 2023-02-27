@@ -35,8 +35,13 @@ class PaypalTest extends TestCase
     public function testStatic()
     {
         $this->assertEquals(
-            ['haveHostedFields' => false, 'allowPartialCapture' => true, 'allowPartialRefund' => true],
+            [],
             Paypal::addDefaultCustomFields()
+        );
+
+        $this->assertEquals(
+            ['haveHostedFields' => false, 'allowPartialCapture' => true, 'allowPartialRefund' => true],
+            Paypal::getConfig()
         );
 
         $this->assertEquals(

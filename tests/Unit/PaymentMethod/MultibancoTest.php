@@ -53,8 +53,13 @@ class MultibancoTest extends TestCase
     public function testStatic()
     {
         $this->assertEquals(
-            ['haveHostedFields' => false, 'allowPartialCapture' => false, 'allowPartialRefund' => false, 'expiration_limit' => '3'],
+            ['expiration_limit' => '3'],
             Multibanco::addDefaultCustomFields()
+        );
+
+        $this->assertEquals(
+            ['haveHostedFields' => false, 'allowPartialCapture' => false, 'allowPartialRefund' => false],
+            Multibanco::getConfig()
         );
 
         $this->assertEquals(

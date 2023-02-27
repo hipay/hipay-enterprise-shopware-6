@@ -47,8 +47,13 @@ class MbwayTest extends TestCase
     public function testStatic()
     {
         $this->assertEquals(
-            ['haveHostedFields' => true, 'allowPartialCapture' => true, 'allowPartialRefund' => true],
+            [],
             Mbway::addDefaultCustomFields()
+        );
+
+        $this->assertEquals(
+            ['haveHostedFields' => true, 'allowPartialCapture' => true, 'allowPartialRefund' => true],
+            Mbway::getConfig()
         );
 
         $this->assertEquals(

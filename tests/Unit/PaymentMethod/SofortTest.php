@@ -35,8 +35,13 @@ class SofortTest extends TestCase
     public function testStatic()
     {
         $this->assertEquals(
-            ['haveHostedFields' => false, 'allowPartialCapture' => false, 'allowPartialRefund' => true],
+            [],
             Sofort::addDefaultCustomFields()
+        );
+
+        $this->assertEquals(
+            ['haveHostedFields' => false, 'allowPartialCapture' => false, 'allowPartialRefund' => true],
+            Sofort::getConfig()
         );
 
         $this->assertEquals(

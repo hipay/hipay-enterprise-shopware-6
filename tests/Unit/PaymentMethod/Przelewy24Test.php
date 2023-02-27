@@ -35,8 +35,13 @@ class Przelewy24Test extends TestCase
     public function testStatic()
     {
         $this->assertEquals(
-            ['haveHostedFields' => false,  'allowPartialCapture' => false, 'allowPartialRefund' => false],
+            [],
             Przelewy24::addDefaultCustomFields()
+        );
+
+        $this->assertEquals(
+            ['haveHostedFields' => false,  'allowPartialCapture' => false, 'allowPartialRefund' => false],
+            Przelewy24::getConfig()
         );
 
         $this->assertEquals(

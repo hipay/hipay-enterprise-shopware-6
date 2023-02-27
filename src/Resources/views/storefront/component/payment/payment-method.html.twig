@@ -16,8 +16,9 @@
       and 'handler_hipay_' in payment.formattedHandlerIdentifier
       and activeRoute in ['frontend.account.edit-order.page', 'frontend.checkout.confirm.page']
   %}
+
     {% if config('HiPayPaymentPlugin.config.operationMode') == 'hostedFields'
-        and payment.customFields.haveHostedFields 
+        and payment.extensions.hipayConfig.haveHostedFields
     %}
       <script src="https://libs.hipay.com/js/sdkjs.js"></script>
       {% set environment = config('HiPayPaymentPlugin.config.environment') %}

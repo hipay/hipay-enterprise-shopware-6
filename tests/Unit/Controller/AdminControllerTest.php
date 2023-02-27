@@ -26,6 +26,7 @@ use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Event\EntityWrittenContainerEvent;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\EntitySearchResult;
+use Shopware\Core\Framework\Struct\ArrayEntity;
 use Shopware\Core\Framework\Validation\DataBag\RequestDataBag;
 
 class AdminControllerTest extends TestCase
@@ -38,7 +39,7 @@ class AdminControllerTest extends TestCase
 
         foreach (['public', 'private'] as $scope) {
             foreach (['Login', 'Password'] as $field) {
-                $key = HiPayPaymentPlugin::getModuleName().'.config.'.$scope.$field.$env;
+                $key = HiPayPaymentPlugin::getModuleName() . '.config.' . $scope . $field . $env;
                 if (!isset($params[$key])) {
                     $params[$key] = $key;
                 }
@@ -272,7 +273,7 @@ class AdminControllerTest extends TestCase
 
         /** @var PaymentMethodEntity&MockObject */
         $paymentMethod = $this->createMock(PaymentMethodEntity::class);
-        $paymentMethod->method('getCustomFields')->willReturn(['allowPartialCapture' => true]);
+        $paymentMethod->method('getExtension')->willReturn(new ArrayEntity(['allowPartialCapture' => true]));
 
         $amount = new CalculatedPrice(
             10.0,
@@ -323,8 +324,9 @@ class AdminControllerTest extends TestCase
         $jsonResponse = json_decode(
             $service->capture(
                 $this->generateCaptureDataBag(),
-                $this->generateOperationClientService($response))
-            ->getContent()
+                $this->generateOperationClientService($response)
+            )
+                ->getContent()
         );
 
         $this->assertEquals(10, $captures[0]['amount']);
@@ -359,8 +361,9 @@ class AdminControllerTest extends TestCase
         $jsonResponse = json_decode(
             $service->capture(
                 $this->generateCaptureDataBag(['ok' => 'ok']),
-                $this->generateOperationClientService($response))
-            ->getContent()
+                $this->generateOperationClientService($response)
+            )
+                ->getContent()
         );
 
         $this->assertFalse($jsonResponse->success);
@@ -429,8 +432,9 @@ class AdminControllerTest extends TestCase
         $jsonResponse = json_decode(
             $service->refund(
                 $this->generateRefundDataBag(),
-                $this->generateOperationClientService($response))
-            ->getContent()
+                $this->generateOperationClientService($response)
+            )
+                ->getContent()
         );
 
         $this->assertEquals(5, $refunds[0]['amount']);
@@ -465,8 +469,9 @@ class AdminControllerTest extends TestCase
         $jsonResponse = json_decode(
             $service->refund(
                 $this->generateRefundDataBag(['ok' => 'ok']),
-                $this->generateOperationClientService($response))
-            ->getContent()
+                $this->generateOperationClientService($response)
+            )
+                ->getContent()
         );
 
         $this->assertFalse($jsonResponse->success);
