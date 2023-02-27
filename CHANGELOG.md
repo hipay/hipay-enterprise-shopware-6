@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## Version 1.0.1
+
+- Load config form sdk json directly
+
 ## Version 1.0.0
 
 - Downloading technical logs
