@@ -79,7 +79,6 @@ class Mbway extends AbstractPaymentMethod
             $orderRequest->customerBillingInfo->country,
             PhoneNumberFormat::NATIONAL
         );
-        // @phpstan-ignore-next-line
         $orderRequest->paymentMethod = $paymentMethod;
 
         $orderRequest->customerBillingInfo->phone = $paymentMethod->phone;

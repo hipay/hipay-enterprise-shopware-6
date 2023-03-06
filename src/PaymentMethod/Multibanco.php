@@ -119,7 +119,6 @@ class Multibanco extends AbstractPaymentMethod
 
         $paymentMethod = new ExpirationLimitPaymentMethod();
         $paymentMethod->expiration_limit = intval($customFields['expiration_limit'] ?? 3);
-        // @phpstan-ignore-next-line
         $orderRequest->paymentMethod = $paymentMethod;
 
         return $orderRequest;
@@ -169,7 +168,6 @@ class Multibanco extends AbstractPaymentMethod
 
         $paymentMethod = new ExpirationLimitPaymentMethod();
         $paymentMethod->expiration_limit = intval($customFields['expiration_limit'] ?? 3);
-        // @phpstan-ignore-next-line
         $orderRequest->paymentMethod = $paymentMethod;
 
         return $orderRequest;

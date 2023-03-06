@@ -80,7 +80,6 @@ class SepaDirectDebit extends AbstractPaymentMethod
         $paymentMethod->bank_name = $payload['bank_name'];
         $paymentMethod->recurring_payment = 0;
 
-        // @phpstan-ignore-next-line
         $orderRequest->paymentMethod = $paymentMethod;
 
         return $orderRequest;

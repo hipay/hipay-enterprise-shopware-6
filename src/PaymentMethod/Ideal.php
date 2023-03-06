@@ -74,7 +74,6 @@ class Ideal extends AbstractPaymentMethod
         $paymentMethod = new IssuerBankIDPaymentMethod();
         $paymentMethod->issuer_bank_id = $payload['issuer_bank_id'];
 
-        // @phpstan-ignore-next-line
         $orderRequest->paymentMethod = $paymentMethod;
 
         return $orderRequest;
