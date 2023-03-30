@@ -60,6 +60,6 @@ class Sofort extends AbstractPaymentMethod
      */
     public static function getCountries(): ?array
     {
-        return ['BE', 'FR', 'GP', 'GF', 'IT', 'RE', 'MA', 'MC', 'PT', 'MQ', 'YT', 'NC', 'SP', 'CH'];
+        return ['BE', 'FR', 'DE', 'GP', 'GF', 'IT', 'RE', 'MA', 'MC', 'PT', 'MQ', 'YT', 'NC', 'SP', 'CH'];
     }
 }

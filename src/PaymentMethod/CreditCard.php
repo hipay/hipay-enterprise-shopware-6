@@ -81,7 +81,6 @@ class CreditCard extends AbstractPaymentMethod
         $paymentMethod->eci = isset($payload['card_id']) ? 7 : 9;
         $paymentMethod->authentication_indicator = $this->config->get3DSAuthenticator();
 
-        // @phpstan-ignore-next-line
         $orderRequest->paymentMethod = $paymentMethod;
         $orderRequest->payment_product = $payload['payment_product'];
 

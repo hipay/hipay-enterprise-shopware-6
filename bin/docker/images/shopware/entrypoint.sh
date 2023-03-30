@@ -7,18 +7,22 @@ echo "** CUSTOM POST ENTRYPOINT **"
 echo "*******************************************************"
 echo ""
 
-echo "SETTING ACTUAL URL...."
 BASE_URL="http://localhost"
 
 sudo chown -R www-data:www-data /var/www/html/var
 sudo chmod -R g+w /var/www/html/var
 
 if [ ! -z $APP_URL ]; then
+    echo "SETTING ACTUAL URL"
     sudo mysql -u root --password=root -D shopware -e "update sales_channel_domain set url='$APP_URL' where url='$BASE_URL';"
     bin/console app:url-change:resolve reinstall-apps
     bin/console cache:clear --quiet
     BASE_URL="$APP_URL"
 fi
+
+# Fix Express shipping method
+echo "SETTING SHIPPING METHOD RULE"
+sudo mysql -u root --password=root -D shopware -e "update shipping_method s inner join shipping_method_translation st on s.id = st.shipping_method_id set s.availability_rule_id = (select id from rule where name = 'Always valid (Default)' limit 1) where st.name = 'Express';"
 
 echo "-----------------------------------------------------"
 echo "ACTIVATING HIPAY PAYMENT MODULE"
