@@ -81,7 +81,7 @@ class SofortTest extends TestCase
         );
 
         $this->assertSame(
-            ['BE', 'FR', 'GP', 'GF', 'IT', 'RE', 'MA', 'MC', 'PT', 'MQ', 'YT', 'NC', 'SP', 'CH'],
+            ['BE', 'FR', 'DE', 'GP', 'GF', 'IT', 'RE', 'MA', 'MC', 'PT', 'MQ', 'YT', 'NC', 'SP', 'CH'],
             Sofort::getCountries()
         );
 
