@@ -1,23 +1,27 @@
 # CHANGELOG
 
+## Version 1.0.2
+
+- **Fix** : Fixed `Sofort` authorized country list
+
 ## Version 1.0.1
 
-- Load config form sdk json directly
+- **Fix** : Load config form sdk json directly
 
 ## Version 1.0.0
 
-- Downloading technical logs
-- One clic payment for credit cards
-- Cancel order
-- add Sofort payment method
-- add Ideal payment method
-- add MBway payment method
-- add Multibanco payment method
-- add Bancontact (BCMC via PPRO) payment method
+- **Add** : Added downloading technical logs feature
+- **Add** : Added One clic payment for credit cards
+- **Add** : Added order cancellation
+- **Add** : Added Sofort payment method
+- **Add** : Added Ideal payment method
+- **Add** : Added MBway payment method
+- **Add** : Added Multibanco payment method
+- **Add** : Added Bancontact (BCMC via PPRO) payment method
 
 ## Version 0.0.1
 
-- HiPay notification system
-- Handle refund and capture
-- Implement credit card payment with hosted fields and hosted page
-- Official version of HiPay Shopware plugin
+- **Add** : Added HiPay notification system
+- **Add** : Added refund and capture features
+- **Add** : Added credit card payment implementation with hosted fields and hosted page
+- **New** : Official version of HiPay Shopware plugin
