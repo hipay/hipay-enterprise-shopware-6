@@ -1,13 +1,12 @@
 # Contributing to the HiPay Enterprise plugin for Shopware 6
 
-Contributions to the HiPay Enterprise module for Shopware 6 should be made via GitHub [pull
-requests][pull-requests] and discussed using
-GitHub [issues][issues].
+> :warning: This repository is a mirror of a private repository for this plugin, so we are not able to merge your PRs directly in GitHub. Any open PRs will be added to the main repository and closed in GitHub. Any contributor will be credited in the plugin's changelog.
+
+Contributions to the HiPay Enterprise module for Shopware 6 should be made via GitHub [pull requests][pull-requests] and discussed using GitHub [issues][issues].
 
 ## Before you start
 
-If you would like to make a significant change, please open
-an issue to discuss it, in order to minimize duplication of effort.
+If you would like to make a significant change, please open an issue to discuss it, in order to minimize duplication of effort.
 
 ## Development
 
@@ -44,9 +43,7 @@ To connect to the back office, go to this URL: <http://localhost/admin>
 
 The login and password are the default: admin / shopware.
 
-
 You can test the module with your HiPay account configuration.
-
 
 ## Quality & Testing
 
@@ -81,8 +78,7 @@ Run it :
 
 ### Making the request
 
-Development takes place against the `develop` branch of this repository and pull
-requests should be opened against that branch.
+Development takes place against the `develop` branch of this repository and pull requests should be opened against that branch.
 
 [pull-requests]: https://github.com/hipay/hipay-enterprise-shopware-6/pulls
 [issues]: https://github.com/hipay/hipay-enterprise-shopware-6/issues
