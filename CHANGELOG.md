@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## Version 1.0.3
+
+- **Fix** : EC-3315 - Fixed Database definition
+
 ## Version 1.0.2
 
 - **Fix** : Fixed `Sofort` authorized country list

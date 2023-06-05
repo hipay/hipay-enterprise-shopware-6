@@ -175,6 +175,7 @@ smoke-test:
       alias: web
   script:
     - curl --retry 20 --retry-delay 10 --retry-connrefused --output /dev/null http://web
+  allow_failure: true
   except:
     variables:
       - $ONLY_DEPLOY

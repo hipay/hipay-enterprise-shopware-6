@@ -760,9 +760,9 @@ class NotificationServiceTest extends TestCase
                 ],
                 'sort' => [
                     [
+                        'extensions' => [],
                         'field' => 'status',
                         'naturalSorting' => false,
-                        'extensions' => [],
                         'order' => 'ASC',
                     ],
                 ],
@@ -909,9 +909,9 @@ class NotificationServiceTest extends TestCase
                 ],
                 'sort' => [
                     [
+                        'extensions' => [],
                         'field' => 'status',
                         'naturalSorting' => false,
-                        'extensions' => [],
                         'order' => 'ASC',
                     ],
                 ],
@@ -1218,9 +1218,9 @@ class NotificationServiceTest extends TestCase
                 ],
                 'sort' => [
                     [
+                        'extensions' => [],
                         'field' => 'status',
                         'naturalSorting' => false,
-                        'extensions' => [],
                         'order' => 'ASC',
                     ],
                 ],
