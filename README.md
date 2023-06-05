@@ -9,6 +9,7 @@ The **HiPay Enterprise module for Shopware 6** is a PHP plugin which allows you 
 Read the **[project documentation][doc-home]** for comprehensive information about the requirements, general workflow and installation procedure.
 
 **Quick feature list**:
+
 - Hosted Fields and Hosted Page integration
 - Credit and debit cards
 - DSP2 compliant
@@ -20,13 +21,14 @@ Minimum Shopware version is [6.4.0.0](https://www.shopware.com/en/changelog/)
 This plugin doesn't support Shopware version 5.
 
 The plugin follows shopware requirements for PHP configuration:  
+
 - Version **7.4.3** or higher
 - memory_limit 512M or higher
 - max_execution_time 30 seconds or higher
 
 ## Installation
 
-**Zip/Upload**
+### Zip/Upload
 
 The zip/upload install is temporary unavaible.
 <!--
@@ -50,7 +52,8 @@ Download the asset and follow the next step:
 - Select the plugin and validate
 - Install and Activate the plugin
 -->
-**Composer**
+
+### Composer
 
 This is the method we recommend because you really have control over the installation and updates.  
 Go to your Shopware root directory of your project and use theses commands:
@@ -59,10 +62,10 @@ Go to your Shopware root directory of your project and use theses commands:
 
 Afterward, you can easily activate this plugin via the console and start working with it:
 
-```
+```sh
 bin/console plugin:refresh  
 bin/console plugin:install --activate hipay-enterprise-shopware-6
- ```
+```
 
 ## Support
 
@@ -96,4 +99,3 @@ The **HiPay Enterprise plugin for Shopware 6** is free and available under the *
 [project-license]: LICENSE.md
 [project-changelog]: CHANGELOG.md
 [project-contributing]: CONTRIBUTING.md
-

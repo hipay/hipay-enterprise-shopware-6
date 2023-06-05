@@ -124,7 +124,7 @@ class NotificationService
             throw new AccessDeniedException('Signature does not match');
         }
 
-        if (!$notificationDate = \DateTimeImmutable::createFromFormat('Y-m-d\TH:i:sO', $request->get('date_updated'))) {
+        if (!$request->get('date_updated') || !$notificationDate = \DateTimeImmutable::createFromFormat('Y-m-d\TH:i:sO', $request->get('date_updated'))) {
             throw new MissingMandatoryParametersException('date_updated is mandatory');
         }
 
