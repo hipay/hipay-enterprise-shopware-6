@@ -17,7 +17,7 @@
 {% endblock %}
 
 
-{% block sw_order_detail_customer_comment_card %}
+{% block sw_order_detail_details_payment %}
   {% parent %}
   <sw-card v-if="order.extensions?.hipayOrder?.statusFlows?.length"
     class="card-no-padding"

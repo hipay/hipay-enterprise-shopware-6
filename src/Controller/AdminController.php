@@ -96,7 +96,7 @@ class AdminController extends AbstractController
             }
 
             $hipayOrderData = json_decode($params->get('hipayOrder'));
-            $captureAmount = $params->get('amount');
+            $captureAmount = floatval($params->get('amount'));
 
             $context = Context::createDefaultContext();
 

@@ -120,7 +120,7 @@ class NotificationService
     {
         $context = Context::createDefaultContext();
 
-        if (!$this->validateRequest($request)) {
+        if ($this->validateRequest($request)) {
             throw new AccessDeniedException('Signature does not match');
         }
 
@@ -128,7 +128,8 @@ class NotificationService
             throw new MissingMandatoryParametersException('date_updated is mandatory');
         }
 
-        if (!$orderTransactionId = ($request->request->get('custom_data')['transaction_id'] ?? null)) {
+        $parameters = $request->request->all();
+        if (!$orderTransactionId = ($parameters['custom_data']['transaction_id'] ?? null)) {
             throw new MissingMandatoryParametersException('custom_data.transaction_id is mandatory');
         }
 
@@ -137,10 +138,10 @@ class NotificationService
         }
 
         $transactionCriteria = (new Criteria([$orderTransactionId]))->addAssociation('order');
+        /** @var OrderTransactionEntity $transaction */
         if (!$transaction = $this->transactionRepo->search($transactionCriteria, $context)->first()) {
             throw new NotFoundResourceException('Transaction '.$orderTransactionId.' is not found');
         }
-        /** @var OrderTransactionEntity $transaction */
 
         // Create or update if exists a HiPay order related to this transaction to database
         $orderCriteria = (new Criteria())->addFilter(new EqualsFilter('orderId', $transaction->getOrderId()));
@@ -160,11 +161,13 @@ class NotificationService
         // Create notification to database
         $notification = HipayNotificationEntity::create(
             $this->getStatus($request->request->getInt('status'), $request->request),
-            $request->request->all(),
+            $parameters,
             new \DateTime($notificationDate->format(Defaults::STORAGE_DATE_TIME_FORMAT)),
             $hipayOrder
         );
         $this->notificationRepo->create([$notification->toArray()], $context);
+
+        $this->dispatchNotifications();
     }
 
     /**
@@ -565,7 +568,7 @@ class NotificationService
     /**
      * Add order Transaction capture.
      */
-    private function saveCapture(string $status, ?OrderCaptureEntity $capture, ?float $amount = null, ?string $operationId = null, ?HipayOrderEntity $hipayOrder = null): void
+    private function saveCapture(string $status, ?OrderCaptureEntity $capture, float $amount = null, string $operationId = null, HipayOrderEntity $hipayOrder = null): void
     {
         $context = Context::createDefaultContext();
         if (!$capture) {
@@ -580,7 +583,7 @@ class NotificationService
     /**
      * Add order Transaction refund.
      */
-    private function saveRefund(string $status, ?OrderRefundEntity $refund, ?float $amount = null, ?string $operationId = null, ?HipayOrderEntity $hipayOrder = null): void
+    private function saveRefund(string $status, ?OrderRefundEntity $refund, float $amount = null, string $operationId = null, HipayOrderEntity $hipayOrder = null): void
     {
         $context = Context::createDefaultContext();
         if (!$refund) {
