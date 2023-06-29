@@ -9,13 +9,18 @@
 
 {% set hipayConfig = hipayConfig|merge({
     firstnameValue: context.customer.firstname,
-    lastnameValue: context.customer.lastname 
+    lastnameValue: context.customer.lastname
 }) %}
 
 <div {{componentName}}-plugin data-{{componentName}}-plugin-options="{{ hipayConfig|json_encode }}">
     {% block hipay_giropay_html %}
 
-    <div class="hostedfield" id="hipay-sdd-gender" style="display: none"></div>
+    <div class="form-group">
+        <label class="form-label" for="hipay-sdd-gender">
+            {{ 'hipay.hosted-fields.sdd.gender'|trans }}
+        </label>
+        <div class="hostedfield radio-control" id="hipay-sdd-gender"></div>
+    </div>
 
     <div class="form-group">
         <label class="form-label" for="hipay-sdd-firstname">
