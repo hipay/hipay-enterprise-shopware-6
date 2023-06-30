@@ -94,7 +94,7 @@ build-test:
     name: gcr.io/kaniko-project/executor:v1.6.0-debug
   variables:
     TZ: Europe/Paris
-    NODE_VERSION: 16
+    NODE_VERSION: 18
     COMPOSER_HOME: /var/www/html/var/cache/composer
     APP_URL: http://web
   script:
@@ -168,7 +168,7 @@ smoke-test:
     - build-test
   variables:
     TZ: Europe/Paris
-    NODE_VERSION: 16
+    NODE_VERSION: 18
     COMPOSER_HOME: /var/www/html/var/cache/composer
     APP_URL: http://web
   services:
