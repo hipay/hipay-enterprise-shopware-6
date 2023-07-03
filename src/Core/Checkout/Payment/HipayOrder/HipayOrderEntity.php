@@ -24,9 +24,13 @@ class HipayOrderEntity extends Entity
 
     protected string $orderId;
 
+    protected string $orderVersionId;
+
     protected ?OrderEntity $order;
 
     protected string $transactionId;
+
+    protected string $orderTransactionVersionId;
 
     protected ?OrderTransactionEntity $transaction;
 
@@ -76,6 +80,16 @@ class HipayOrderEntity extends Entity
         $this->orderId = $orderId;
     }
 
+    public function getOrderVersionId(): string
+    {
+        return $this->orderVersionId;
+    }
+
+    public function setOrderVersionId(string $orderVersionId): void
+    {
+        $this->orderVersionId = $orderVersionId;
+    }
+
     public function getOrder(): ?OrderEntity
     {
         return $this->order;
@@ -95,6 +109,16 @@ class HipayOrderEntity extends Entity
     public function setTransactionId(string $transactionId): void
     {
         $this->transactionId = $transactionId;
+    }
+
+    public function getOrderTransactionVersionId(): string
+    {
+        return $this->orderTransactionVersionId;
+    }
+
+    public function setOrderTransactionVersionId(string $orderTransactionVersionId): void
+    {
+        $this->orderTransactionVersionId = $orderTransactionVersionId;
     }
 
     public function getTransaction(): ?OrderTransactionEntity
@@ -221,8 +245,8 @@ class HipayOrderEntity extends Entity
     public function toArray(): array
     {
         $hipayOrder = $this->jsonSerialize();
-        $hipayOrder['order'] = ['id' => $this->orderId];
-        $hipayOrder['transaction'] = ['id' => $this->transactionId];
+        $hipayOrder['order'] = ['id' => $this->orderId, 'versionId' => $this->orderVersionId];
+        $hipayOrder['transaction'] = ['id' => $this->transactionId, 'versionId' => $this->orderVersionId];
         $hipayOrder['captures'] = null;
         $hipayOrder['refunds'] = null;
         $hipayOrder['statusFlows'] = null;

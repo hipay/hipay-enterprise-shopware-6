@@ -17,6 +17,7 @@ use Shopware\Core\Framework\DataAbstractionLayer\Field\FloatField;
 use Shopware\Core\Framework\DataAbstractionLayer\Field\IdField;
 use Shopware\Core\Framework\DataAbstractionLayer\Field\OneToManyAssociationField;
 use Shopware\Core\Framework\DataAbstractionLayer\Field\OneToOneAssociationField;
+use Shopware\Core\Framework\DataAbstractionLayer\Field\ReferenceVersionField;
 use Shopware\Core\Framework\DataAbstractionLayer\Field\StringField;
 use Shopware\Core\Framework\DataAbstractionLayer\FieldCollection;
 
@@ -53,7 +54,9 @@ class HipayOrderDefinition extends EntityDefinition
             (new OneToManyAssociationField('refunds', OrderRefundDefinition::class, 'hipay_order_id'))->addFlags(new CascadeDelete()),
             (new OneToManyAssociationField('statusFlows', HipayStatusFlowDefinition::class, 'hipay_order_id'))->addFlags(new CascadeDelete()),
             (new FkField('order_id', 'orderId', OrderDefinition::class))->addFlags(new Required()),
+            (new ReferenceVersionField(OrderDefinition::class))->addFlags(new Required()),
             (new FkField('transaction_id', 'transactionId', OrderTransactionDefinition::class))->addFlags(new Required()),
+            (new ReferenceVersionField(OrderTransactionDefinition::class))->addFlags(new Required()),
             new OneToOneAssociationField('order', 'order_id', 'id', OrderDefinition::class, false),
             new OneToOneAssociationField('transaction', 'transaction_id', 'id', OrderTransactionDefinition::class, false),
         ]);
