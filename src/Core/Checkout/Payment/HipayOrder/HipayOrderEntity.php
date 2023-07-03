@@ -30,7 +30,7 @@ class HipayOrderEntity extends Entity
 
     protected string $transactionId;
 
-    protected string $orderTransactionVersionId;
+    protected string $transactionVersionId;
 
     protected ?OrderTransactionEntity $transaction;
 
@@ -99,6 +99,7 @@ class HipayOrderEntity extends Entity
     {
         $this->order = $order;
         $this->setOrderId($order->getId());
+        $this->setOrderVersionId($order->getVersionId());
     }
 
     public function getTransactionId(): string
@@ -111,14 +112,14 @@ class HipayOrderEntity extends Entity
         $this->transactionId = $transactionId;
     }
 
-    public function getOrderTransactionVersionId(): string
+    public function getTransactionVersionId(): string
     {
-        return $this->orderTransactionVersionId;
+        return $this->transactionVersionId;
     }
 
-    public function setOrderTransactionVersionId(string $orderTransactionVersionId): void
+    public function setTransactionVersionId(string $transactionVersionId): void
     {
-        $this->orderTransactionVersionId = $orderTransactionVersionId;
+        $this->transactionVersionId = $transactionVersionId;
     }
 
     public function getTransaction(): ?OrderTransactionEntity
@@ -130,6 +131,7 @@ class HipayOrderEntity extends Entity
     {
         $this->transaction = $transaction;
         $this->setTransactionId($transaction->getId());
+        $this->setTransactionVersionId($transaction->getVersionId());
     }
 
     public function getTransanctionReference(): string
@@ -246,7 +248,7 @@ class HipayOrderEntity extends Entity
     {
         $hipayOrder = $this->jsonSerialize();
         $hipayOrder['order'] = ['id' => $this->orderId, 'versionId' => $this->orderVersionId];
-        $hipayOrder['transaction'] = ['id' => $this->transactionId, 'versionId' => $this->orderVersionId];
+        $hipayOrder['transaction'] = ['id' => $this->transactionId, 'versionId' => $this->transactionVersionId];
         $hipayOrder['captures'] = null;
         $hipayOrder['refunds'] = null;
         $hipayOrder['statusFlows'] = null;
