@@ -174,10 +174,6 @@ Shopware.Component.override('sw-order-detail', {
     }
   },
   methods: {
-    beforeDestroyComponent() {
-      console.log('beforeDestroyComponent');
-      this.$super('beforeDestroyComponent');
-    },
     formatCurrency(number) {
       return this.hipayService
         .getCurrencyFormater(this.currency)

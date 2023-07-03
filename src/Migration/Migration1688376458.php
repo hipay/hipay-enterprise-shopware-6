@@ -18,8 +18,8 @@ class Migration1688376458 extends MigrationStep
     {
         $sql = <<<SQL
         ALTER TABLE `hipay_order`
-            ADD `order_version_id` BINARY(16) UNIQUE NOT NULL,
-            ADD `transaction_version_id` BINARY(16) UNIQUE NOT NULL,
+            ADD `order_version_id` BINARY(16) NOT NULL,
+            ADD `transaction_version_id` BINARY(16) NOT NULL,
             DROP CONSTRAINT `fk.hipay_order.order_id`,
             DROP CONSTRAINT `fk.hipay_order.transaction_id`;
         SQL;
@@ -27,10 +27,12 @@ class Migration1688376458 extends MigrationStep
 
         $sql = <<<SQL
         ALTER TABLE `hipay_order`
+            ADD UNIQUE KEY `fk.hipay_order.order_id` (`order_id`,`order_version_id`),
+            ADD UNIQUE KEY `fk.hipay_order.transaction_id` (`transaction_id`,`transaction_version_id`),
             ADD CONSTRAINT `fk.hipay_order.order_id` FOREIGN KEY (`order_id`, `order_version_id`)
-            REFERENCES `order` (`id`, `version_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+            REFERENCES `order` (`id`, `version_id`) ON DELETE RESTRICT ON UPDATE CASCADE,
             ADD CONSTRAINT `fk.hipay_order.transaction_id` FOREIGN KEY (`transaction_id`, `transaction_version_id`)
-            REFERENCES `order_transaction` (`id`, `version_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+            REFERENCES `order_transaction` (`id`, `version_id`) ON DELETE RESTRICT ON UPDATE CASCADE;
         SQL;
         $connection->executeStatement($sql);
     }
@@ -41,8 +43,10 @@ class Migration1688376458 extends MigrationStep
         ALTER TABLE `hipay_order`
             DROP `order_version_id`,
             DROP `transaction_version_id`,
-            DROP CONSTRAINT `fk.hipay_order.order_id`,
-            DROP CONSTRAINT `fk.hipay_order.transaction_id`;
+            DROP FOREIGN KEY `fk.hipay_order.order_id`,
+            DROP FOREIGN KEY `fk.hipay_order.transaction_id`,
+            DROP KEY `fk.hipay_order.order_id`,
+            DROP KEY `fk.hipay_order.transaction_id`;
         SQL;
         $connection->executeStatement($sql);
 
