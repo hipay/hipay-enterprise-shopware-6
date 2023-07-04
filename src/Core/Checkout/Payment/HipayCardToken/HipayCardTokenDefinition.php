@@ -14,27 +14,28 @@ use Shopware\Core\Framework\DataAbstractionLayer\FieldCollection;
 
 class HipayCardTokenDefinition extends EntityDefinition
 {
-    public const ENTITY_NAME = 'hipay_card_token';
+    final public const ENTITY_NAME = 'hipay_card_token';
 
-    /** {@inheritDoc} */
     public function getEntityName(): string
     {
         return self::ENTITY_NAME;
     }
 
-    /** {@inheritDoc} */
     public function getEntityClass(): string
     {
         return HipayCardTokenEntity::class;
     }
 
-    /** {@inheritDoc} */
     public function getCollectionClass(): string
     {
         return HipayCardTokenCollection::class;
     }
 
-    /** {@inheritDoc} */
+    protected function getParentDefinitionClass(): ?string
+    {
+        return CustomerDefinition::class;
+    }
+
     protected function defineFields(): FieldCollection
     {
         return new FieldCollection([

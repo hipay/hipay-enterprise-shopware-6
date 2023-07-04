@@ -15,7 +15,7 @@ use Shopware\Core\Framework\DataAbstractionLayer\FieldCollection;
 
 class OrderCaptureDefinition extends EntityDefinition
 {
-    public const ENTITY_NAME = 'hipay_order_capture';
+    final public const ENTITY_NAME = 'hipay_order_capture';
 
     public function getEntityName(): string
     {
@@ -30,6 +30,11 @@ class OrderCaptureDefinition extends EntityDefinition
     public function getCollectionClass(): string
     {
         return OrderCaptureCollection::class;
+    }
+
+    protected function getParentDefinitionClass(): ?string
+    {
+        return HipayOrderDefinition::class;
     }
 
     protected function defineFields(): FieldCollection

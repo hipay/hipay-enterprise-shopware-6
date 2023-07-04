@@ -15,7 +15,7 @@ use Shopware\Core\Framework\DataAbstractionLayer\FieldCollection;
 
 class OrderRefundDefinition extends EntityDefinition
 {
-    public const ENTITY_NAME = 'hipay_order_refund';
+    final public const ENTITY_NAME = 'hipay_order_refund';
 
     public function getEntityName(): string
     {
@@ -30,6 +30,11 @@ class OrderRefundDefinition extends EntityDefinition
     public function getCollectionClass(): string
     {
         return OrderRefundCollection::class;
+    }
+
+    protected function getParentDefinitionClass(): ?string
+    {
+        return HipayOrderDefinition::class;
     }
 
     protected function defineFields(): FieldCollection

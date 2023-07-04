@@ -18,7 +18,7 @@ use Shopware\Core\Framework\DataAbstractionLayer\FieldCollection;
 // Remove Transaction relation
 class HipayStatusFlowDefinition extends EntityDefinition
 {
-    public const ENTITY_NAME = 'hipay_status_flow';
+    final public const ENTITY_NAME = 'hipay_status_flow';
 
     public function getEntityName(): string
     {
@@ -33,6 +33,11 @@ class HipayStatusFlowDefinition extends EntityDefinition
     public function getCollectionClass(): string
     {
         return HipayStatusFlowCollection::class;
+    }
+
+    protected function getParentDefinitionClass(): ?string
+    {
+        return HipayOrderDefinition::class;
     }
 
     protected function defineFields(): FieldCollection
