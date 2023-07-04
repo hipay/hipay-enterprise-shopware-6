@@ -87,7 +87,7 @@ Shopware.Component.override('sw-order-detail', {
       );
     },
     canCapture() {
-      return ['paid_partially', 'authorized'].includes(
+      return ['refunded_partially', 'paid_partially', 'authorized'].includes(
         this.lastTransaction?.stateMachineState?.technicalName
       );
     },
