@@ -149,11 +149,7 @@ class AdminController extends AbstractController
             // Save HiPay capture to database
             $this->hipayOrderCaptureRepo->create([$capture->toArray()], $context);
 
-            return new JsonResponse([
-                'success' => true,
-                'captures' => $hipayOrder->getCapturesToArray() + [$capture],
-                'captured_amount' => $hipayOrder->getCapturedAmount() + $capture->getAmount(),
-            ]);
+            return new JsonResponse(['success' => true]);
         } catch (\Exception $e) {
             /* @infection-ignore-all */
             $this->logger->error($e->getCode().' : '.$e->getMessage());
@@ -217,11 +213,7 @@ class AdminController extends AbstractController
             // Save HiPay refund to database
             $this->hipayOrderRefundRepo->create([$refund->toArray()], $context);
 
-            return new JsonResponse([
-                'success' => true,
-                'refunds' => $hipayOrder->getRefundsToArray() + [$refund],
-                'refunded_amount' => $hipayOrder->getRefundedAmount() + $refund->getAmount(),
-            ]);
+            return new JsonResponse(['success' => true]);
         } catch (\Exception $e) {
             /* @infection-ignore-all */
             $this->logger->error($e->getCode().' : '.$e->getMessage());
@@ -274,9 +266,7 @@ class AdminController extends AbstractController
                 (array) $maintenanceResponse
             );
 
-            return new JsonResponse([
-                'success' => true,
-            ]);
+            return new JsonResponse(['success' => true]);
         } catch (\Exception $e) {
             /* @infection-ignore-all */
             $this->logger->error($e->getCode().' : '.$e->getMessage());

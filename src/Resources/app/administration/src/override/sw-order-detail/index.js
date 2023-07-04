@@ -77,7 +77,6 @@ Shopware.Component.override('sw-order-detail', {
       return criteria;
     },
     showOnHipayMethod() {
-      console.log(JSON.parse(JSON.stringify(this.order)));
       return /hipay/.test(
         this.lastTransaction?.paymentMethod?.formattedHandlerIdentifier
       );
@@ -332,18 +331,12 @@ Shopware.Component.override('sw-order-detail', {
             throw new Error(response.message);
           }
 
+          this.onSaveEdits();
+
           this.createNotificationSuccess({
             title: this.$tc('hipay.notification.capture.title'),
             message: this.$tc('hipay.notification.capture.success')
           });
-
-          if (response.captures) {
-            this.hipayOrderData.captures = response.captures;
-          }
-          if (response.captured_amount) {
-            this.hipayOrderData.capturedAmountInProgress =
-              response.captured_amount;
-          }
 
           // Close modals
           this.showOrderStateForCapture = false;
@@ -377,18 +370,12 @@ Shopware.Component.override('sw-order-detail', {
             throw new Error(response.message);
           }
 
+          this.onSaveEdits();
+
           this.createNotificationSuccess({
             title: this.$tc('hipay.notification.refund.title'),
             message: this.$tc('hipay.notification.refund.success')
           });
-
-          if (response.refunds) {
-            this.hipayOrderData.refunds = response.refunds;
-          }
-          if (response.refunded_amount) {
-            this.hipayOrderData.refundedAmountInProgress =
-              response.refunded_amount;
-          }
 
           // Close modals
           this.showOrderStateForRefund = false;
