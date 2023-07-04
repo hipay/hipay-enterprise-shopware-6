@@ -138,10 +138,10 @@ class NotificationService
         }
 
         $transactionCriteria = (new Criteria([$orderTransactionId]))->addAssociation('order');
-        /** @var OrderTransactionEntity $transaction */
         if (!$transaction = $this->transactionRepo->search($transactionCriteria, $context)->first()) {
             throw new NotFoundResourceException('Transaction '.$orderTransactionId.' is not found');
         }
+        /** @var OrderTransactionEntity $transaction */
 
         // Create or update if exists a HiPay order related to this transaction to database
         $orderCriteria = (new Criteria())->addFilter(new EqualsFilter('orderId', $transaction->getOrderId()));
