@@ -15,7 +15,7 @@ use Shopware\Core\Framework\DataAbstractionLayer\FieldCollection;
 
 class OrderRefundDefinition extends EntityDefinition
 {
-    final public const ENTITY_NAME = 'hipay_order_refund';
+    public const ENTITY_NAME = 'hipay_order_refund';
 
     public function getEntityName(): string
     {

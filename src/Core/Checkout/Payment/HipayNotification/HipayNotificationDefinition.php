@@ -16,7 +16,7 @@ use Shopware\Core\Framework\DataAbstractionLayer\FieldCollection;
 
 class HipayNotificationDefinition extends EntityDefinition
 {
-    final public const ENTITY_NAME = 'hipay_notification';
+    public const ENTITY_NAME = 'hipay_notification';
 
     public function getEntityName(): string
     {

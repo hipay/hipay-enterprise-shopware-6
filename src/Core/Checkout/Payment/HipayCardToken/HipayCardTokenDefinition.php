@@ -14,7 +14,7 @@ use Shopware\Core\Framework\DataAbstractionLayer\FieldCollection;
 
 class HipayCardTokenDefinition extends EntityDefinition
 {
-    final public const ENTITY_NAME = 'hipay_card_token';
+    public const ENTITY_NAME = 'hipay_card_token';
 
     public function getEntityName(): string
     {

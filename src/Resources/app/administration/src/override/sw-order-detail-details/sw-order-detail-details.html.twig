@@ -1,22 +1,3 @@
-
- {% block sw_order_detail_base_status_change_transaction %}
-
-  <template v-if="isHipayPayment">
-    <sw-order-state-select
-        v-if="!isLoading && transaction"
-        class="sw-order-state-select__payment-state"
-        rounded-style
-        :disabled="true"
-        :transition-options="transactionOptions"
-        :placeholder="transactionOptionPlaceholder"
-        :background-style="transactionOptionsBackground"
-        @state-select="onQuickTransactionStatusChange"
-    />
-  </template>
-  <template v-else>{% parent %}</template>
-{% endblock %}
-
-
 {% block sw_order_detail_details_payment %}
   {% parent %}
   <sw-card v-if="order.extensions?.hipayOrder?.statusFlows?.length"

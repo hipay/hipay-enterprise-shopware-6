@@ -24,7 +24,7 @@ use Shopware\Core\Framework\DataAbstractionLayer\FieldCollection;
 // Remove Transaction relation
 class HipayOrderDefinition extends EntityDefinition
 {
-    final public const ENTITY_NAME = 'hipay_order';
+    public const ENTITY_NAME = 'hipay_order';
 
     public function getEntityName(): string
     {
