@@ -582,6 +582,7 @@ class NotificationServiceTest extends TestCase
 
         $order = new OrderEntity();
         $order->setId('ORDER_ID');
+        $order->setVersionId('ORDER_VERSION_ID');
         $order->setOrderCustomer($orderCustomer);
 
         $stateMachine = new StateMachineStateEntity();
@@ -589,6 +590,7 @@ class NotificationServiceTest extends TestCase
 
         $transaction = new OrderTransactionEntity();
         $transaction->setId('TRX_ID');
+        $transaction->setVersionId('TRX_VERSION_ID');
         $transaction->setOrder($order);
         $transaction->setOrderId($order->getId());
         $transaction->setStateMachineState($stateMachine);
@@ -760,9 +762,9 @@ class NotificationServiceTest extends TestCase
                 ],
                 'sort' => [
                     [
+                        'extensions' => [],
                         'field' => 'status',
                         'naturalSorting' => false,
-                        'extensions' => [],
                         'order' => 'ASC',
                     ],
                 ],
@@ -909,9 +911,9 @@ class NotificationServiceTest extends TestCase
                 ],
                 'sort' => [
                     [
+                        'extensions' => [],
                         'field' => 'status',
                         'naturalSorting' => false,
-                        'extensions' => [],
                         'order' => 'ASC',
                     ],
                 ],
@@ -1218,9 +1220,9 @@ class NotificationServiceTest extends TestCase
                 ],
                 'sort' => [
                     [
+                        'extensions' => [],
                         'field' => 'status',
                         'naturalSorting' => false,
-                        'extensions' => [],
                         'order' => 'ASC',
                     ],
                 ],

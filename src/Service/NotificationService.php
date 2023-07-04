@@ -120,7 +120,7 @@ class NotificationService
     {
         $context = Context::createDefaultContext();
 
-        if ($this->validateRequest($request)) {
+        if (!$this->validateRequest($request)) {
             throw new AccessDeniedException('Signature does not match');
         }
 
@@ -166,8 +166,6 @@ class NotificationService
             $hipayOrder
         );
         $this->notificationRepo->create([$notification->toArray()], $context);
-
-        $this->dispatchNotifications();
     }
 
     /**
