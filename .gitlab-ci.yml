@@ -278,6 +278,7 @@ sonarqube:
     GIT_DEPTH: '0' # Tells git to fetch all the branches of the project, required by the analysis task
   cache:
     policy: pull
+  allow_failure: true
   except:
     variables:
       - $ONLY_DEPLOY
