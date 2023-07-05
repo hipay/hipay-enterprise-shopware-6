@@ -21,7 +21,7 @@ class HipayOrderEntityTest extends TestCase
 
         $hipayOrder = HipayOrderEntity::create('REF', $order, $transaction, [116]);
 
-        $this->assertEquals('REF', $hipayOrder->getTransanctionReference());
+        $this->assertEquals('REF', $hipayOrder->getTransactionReference());
         $this->assertEquals('ORDER_ID', $hipayOrder->getOrderId());
         $this->assertEquals('TRX_ID', $hipayOrder->getTransactionId());
     }
@@ -40,12 +40,12 @@ class HipayOrderEntityTest extends TestCase
         $hipayOrder->setId('HIPAY_ID');
         $hipayOrder->setOrder($order);
         $hipayOrder->setTransaction($transaction);
-        $hipayOrder->setTransanctionReference('TRX_REF');
+        $hipayOrder->setTransactionReference('TRX_REF');
 
         $formattedHipayOrder = $hipayOrder->toArray();
 
         $this->assertEquals($hipayOrder->getId(), $formattedHipayOrder['id']);
-        $this->assertEquals($hipayOrder->getTransanctionReference(), $formattedHipayOrder['transactionReference']);
+        $this->assertEquals($hipayOrder->getTransactionReference(), $formattedHipayOrder['transactionReference']);
         $this->assertEquals($hipayOrder->getOrderId(), $formattedHipayOrder['orderId']);
         $this->assertEquals($hipayOrder->getOrderVersionId(), $formattedHipayOrder['orderVersionId']);
         $this->assertEquals(['id' => $hipayOrder->getOrderId(), 'versionId' => $hipayOrder->getOrderVersionId()], $formattedHipayOrder['order']);

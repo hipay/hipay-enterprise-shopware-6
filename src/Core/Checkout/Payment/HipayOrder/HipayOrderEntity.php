@@ -63,7 +63,7 @@ class HipayOrderEntity extends Entity
     public static function create(string $transactionReference, OrderEntity $order, OrderTransactionEntity $transaction): self
     {
         $hipayOrder = new static();
-        $hipayOrder->setTransanctionReference($transactionReference);
+        $hipayOrder->setTransactionReference($transactionReference);
         $hipayOrder->setOrder($order);
         $hipayOrder->setTransaction($transaction);
 
@@ -134,12 +134,12 @@ class HipayOrderEntity extends Entity
         $this->setTransactionVersionId($transaction->getVersionId());
     }
 
-    public function getTransanctionReference(): string
+    public function getTransactionReference(): string
     {
         return $this->transactionReference;
     }
 
-    public function setTransanctionReference(string $transactionReference): void
+    public function setTransactionReference(string $transactionReference): void
     {
         $this->transactionReference = $transactionReference;
     }

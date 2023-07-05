@@ -466,7 +466,7 @@ class AdminControllerTest extends TestCase
     public function testValidCancel()
     {
         $order = new HipayOrderEntity();
-        $order->setTransanctionReference('FOO_TRANSACTION_ID');
+        $order->setTransactionReference('FOO_TRANSACTION_ID');
 
         /** @var EntitySearchResult&MockObject */
         $search = $this->createMock(EntitySearchResult::class);

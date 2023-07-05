@@ -608,7 +608,7 @@ class NotificationServiceTest extends TestCase
         $hipayOrder->setId('HIPAY_ID');
         $hipayOrder->setOrder($transaction->getOrder());
         $hipayOrder->setTransaction($transaction);
-        $hipayOrder->setTransanctionReference(md5(random_int(0, PHP_INT_MAX)));
+        $hipayOrder->setTransactionReference(md5(random_int(0, PHP_INT_MAX)));
 
         if ($previousHipayStatus) {
             foreach ($previousHipayStatus as $status) {

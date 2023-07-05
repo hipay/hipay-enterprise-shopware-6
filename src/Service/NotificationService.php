@@ -23,6 +23,7 @@ use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStat
 use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStates;
 use Shopware\Core\Defaults;
 use Shopware\Core\Framework\Context;
+use Shopware\Core\Framework\DataAbstractionLayer\Entity;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\EntitySearchResult;
@@ -146,13 +147,15 @@ class NotificationService
         // Create or update if exists a HiPay order related to this transaction to database
         $orderCriteria = (new Criteria())->addFilter(new EqualsFilter('orderId', $transaction->getOrderId()));
 
-        if (!$hipayOrder = $this->getAssociatedHiPayOrder($orderCriteria)) {
+        /** @var ?HipayOrderEntity $hipayOrder */
+        $hipayOrder = $this->getAssociatedHiPayOrder($orderCriteria);
+        if (!$hipayOrder) {
             $hipayOrder = HipayOrderEntity::create($transactionReference, $transaction->getOrder(), $transaction);
             $this->hipayOrderRepo->create([$hipayOrder->toArray()], $context);
             /** @var HipayOrderEntity $hipayOrder after Creation */
             $hipayOrder = $this->getAssociatedHiPayOrder($orderCriteria);
         } else {
-            $hipayOrder->setTransanctionReference($transactionReference);
+            $hipayOrder->setTransactionReference($transactionReference);
             $hipayOrder->setOrder($transaction->getOrder());
             $hipayOrder->setTransaction($transaction);
             $this->hipayOrderRepo->update([$hipayOrder->toArray()], $context);
@@ -607,7 +610,7 @@ class NotificationService
         return $this->notificationRepo->search($criteria, Context::createDefaultContext());
     }
 
-    private function getAssociatedHiPayOrder(Criteria $criteria): ?HipayOrderEntity
+    private function getAssociatedHiPayOrder(Criteria $criteria): ?Entity
     {
         return $this->hipayOrderRepo->search($criteria, Context::createDefaultContext())->first();
     }

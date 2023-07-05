@@ -134,7 +134,7 @@ class AdminController extends AbstractController
                 ->getConfiguredClient()
                 ->requestMaintenanceOperation(
                     $maintenanceRequest->operation,
-                    $hipayOrder->getTransanctionReference(),
+                    $hipayOrder->getTransactionReference(),
                     $maintenanceRequest->amount,
                     $maintenanceRequest->operation_id,
                     $maintenanceRequest
@@ -198,7 +198,7 @@ class AdminController extends AbstractController
                 ->getConfiguredClient()
                 ->requestMaintenanceOperation(
                     $maintenanceRequest->operation,
-                    $hipayOrder->getTransanctionReference(),
+                    $hipayOrder->getTransactionReference(),
                     $maintenanceRequest->amount,
                     $maintenanceRequest->operation_id,
                     $maintenanceRequest
@@ -257,7 +257,7 @@ class AdminController extends AbstractController
                 ->getConfiguredClient()
                 ->requestMaintenanceOperation(
                     $maintenanceRequest->operation,
-                    $hipayOrder->getTransanctionReference()
+                    $hipayOrder->getTransactionReference()
                 );
 
             /* @infection-ignore-all */
