@@ -478,14 +478,17 @@ class NotificationService
 
         switch ($notification->getStatus()) {
             case static::PAY_PARTIALLY:
+                if ($hipayOrder->getTransaction()->getStateMachineState()->getTechnicalName() === static::CONVERT_STATE[static::REFUNDED_PARTIALLY]) {
+                    // Transition to OPEN before PAY_PARTIALLY because Shopware cannot change status from REFUNDED_PARTIALLY
+                    $this->orderTransactionStateHandler->reopen($hipayOrder->getTransactionId(), $context);
+                }
                 $this->orderTransactionStateHandler->payPartially($hipayOrder->getTransactionId(), $context);
                 break;
 
             case static::PAID:
-                if ($hipayOrder->getTransaction()->getStateMachineState()->getTechnicalName() === static::CONVERT_STATE[static::PAY_PARTIALLY]) {
-                    // Transition to IN_PROGRESS before PAID because Shopware cannot change status from paid_partially to paid
-                    // Issue : https://issues.shopware.com/issues/NEXT-22317
-                    $this->orderTransactionStateHandler->process($hipayOrder->getTransactionId(), $context);
+                if ($hipayOrder->getTransaction()->getStateMachineState()->getTechnicalName() === static::CONVERT_STATE[static::REFUNDED_PARTIALLY]) {
+                    // Transition to OPEN before PAID because Shopware cannot change status from REFUNDED_PARTIALLY
+                    $this->orderTransactionStateHandler->reopen($hipayOrder->getTransactionId(), $context);
                 }
                 $this->orderTransactionStateHandler->paid($hipayOrder->getTransactionId(), $context);
                 break;

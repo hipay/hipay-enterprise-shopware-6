@@ -87,8 +87,10 @@ Shopware.Component.override('sw-order-detail', {
       );
     },
     canCapture() {
-      return ['refunded_partially', 'paid_partially', 'authorized'].includes(
-        this.lastTransaction?.stateMachineState?.technicalName
+      return (
+        ['refunded_partially', 'paid_partially', 'authorized'].includes(
+          this.lastTransaction?.stateMachineState?.technicalName
+        ) && this.orderAmount > this.capturedAmountInProgress
       );
     },
     canPartialCapture() {
@@ -99,8 +101,10 @@ Shopware.Component.override('sw-order-detail', {
       );
     },
     canRefund() {
-      return ['paid_partially', 'paid', 'refunded_partially'].includes(
-        this.lastTransaction?.stateMachineState?.technicalName
+      return (
+        ['paid_partially', 'paid', 'refunded_partially'].includes(
+          this.lastTransaction?.stateMachineState?.technicalName
+        ) && this.capturedAmount > this.refundedAmountInProgress
       );
     },
     canPartialRefund() {
@@ -305,6 +309,9 @@ Shopware.Component.override('sw-order-detail', {
             title: this.$tc('hipay.notification.cancel.title'),
             message: this.$tc('hipay.notification.cancel.success')
           });
+
+          // Close modals
+          this.showOrderStateForCancel = false;
         })
         .catch(() => {
           this.createNotificationError({

@@ -53,6 +53,12 @@ $custom-checkbox-indicator-icon-indeterminate: str-replace(
 }
 
 .hipay-token {
+  .flex {
+    display: flex;
+    align-items: center;
+    column-gap: 8px;
+  }
+
   input:disabled ~ .hipay-token-label {
     .hipay-card-image {
       opacity: 0.5;
