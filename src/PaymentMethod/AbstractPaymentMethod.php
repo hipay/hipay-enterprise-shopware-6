@@ -706,7 +706,6 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
     private function getOrderCustomers(string $customerId): OrderCustomerCollection
     {
         return new OrderCustomerCollection(
-            // @phpstan-ignore-next-line
             $this->orderCustomerRepo->search(
                 (new Criteria())
                     ->addFilter(new EqualsFilter('customerId', $customerId))

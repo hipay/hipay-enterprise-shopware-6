@@ -109,7 +109,6 @@ class AdminController extends AbstractController
             $config = $hipayOrder->getTransaction()->getPaymentMethod()->getExtension('hipayConfig');
             $totalTransaction = $hipayOrder->getTransaction()->getAmount()->getTotalPrice();
 
-            // @phpstan-ignore-next-line
             if (!boolval($config['allowPartialCapture']) && $captureAmount !== $totalTransaction) {
                 throw new InvalidParameterException('Only the full capture is allowed');
             }

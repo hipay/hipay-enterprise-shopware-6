@@ -9,10 +9,6 @@ class HipayCardTokenRouteResponse extends StoreApiResponse
 {
     public function getCardTokens(): HipayCardTokenCollection
     {
-        /** @var HipayCardTokenCollection $collection */
-        /** @phpstan-ignore-next-line */
-        $collection = $this->object->getEntities();
-
-        return $collection;
+        return $this->object->getEntities();
     }
 }

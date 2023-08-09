@@ -17,11 +17,11 @@ class HipayNotificationEntity extends Entity
      */
     protected ?array $data;
 
-    protected ?\DateTimeInterface  $notificationUpdatedAt;
+    protected ?\DateTimeInterface $notificationUpdatedAt;
 
     protected string $hipayOrderId;
 
-    protected ?HipayOrderEntity  $hipayOrder;
+    protected ?HipayOrderEntity $hipayOrder;
 
     final public function __construct()
     {
