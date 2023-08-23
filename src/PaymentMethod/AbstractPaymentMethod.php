@@ -307,6 +307,8 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
         $orderRequest = $this->hydrateGenericOrderRequest(new HostedPaymentPageRequest(), $transaction, $locale);
         $orderRequest->payment_product_list = static::getProductCode();
 
+        $orderRequest->display_cancel_button = $this->config->isCancelButtonDisplayed();
+
         return $this->hydrateHostedPage($orderRequest, $transaction);
     }
 

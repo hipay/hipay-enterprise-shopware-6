@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## Version 1.1.3
+
+- **Add** : EC-3342 - Add cancel button option to hosted page
+
 ## Version 1.0.3
 
 - **Fix** : EC-3315 - Fixed Database definition
