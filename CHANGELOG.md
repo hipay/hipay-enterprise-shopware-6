@@ -1,12 +1,16 @@
 # CHANGELOG
 
-## Version 1.1.3
+## Version 1.1.1
 
-- **Add** : EC-3342 - Add cancel button option to hosted page
+- **Fixed** :  Add `iDeal` bank choice when submitting checkout
+
+## Version 1.1.0
+
+- **Add** : Add cancel button option to hosted page
 
 ## Version 1.0.3
 
-- **Fix** : EC-3315 - Fixed Database definition
+- **Fix** : Fixed Database definition
 
 ## Version 1.0.2
 
