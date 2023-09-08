@@ -1,12 +1,10 @@
 # CHANGELOG
 
-## Version 1.1.1
-
-- **Fixed** :  Add `iDeal` bank choice when submitting checkout
-
 ## Version 1.1.0
 
 - **Add** : Add cancel button option to hosted page
+- **Add** : Update Giropay Logo
+- **Fixed** :  Add `iDeal` bank choice when submitting checkout
 
 ## Version 1.0.3
 
