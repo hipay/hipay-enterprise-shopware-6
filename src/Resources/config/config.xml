@@ -266,6 +266,12 @@
             <label lang="de-DE">One-Click-Zahlung</label>
         </input-field>
 
+        <input-field type="bool">
+            <name>cancelButton</name>
+            <label>Display cancel button</label>
+            <label lang="de-DE">Die Schaltfläche "Abbrechen" anzeigen</label>
+        </input-field>
+
         <!--<input-field
         type="bool">
             <name>rememberCart</name>

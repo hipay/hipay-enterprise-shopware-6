@@ -467,6 +467,7 @@ class AbstractPaymentMethodTest extends TestCase
         $config = [
             'operationMode' => 'hostedPage',
             'captureMode' => 'auto',
+            'cancelButton' => true
         ];
 
         $hostedPaymentPageRequest = new HostedPaymentPageRequest();
@@ -521,6 +522,7 @@ class AbstractPaymentMethodTest extends TestCase
         $config = [
             'operationMode' => 'hostedPage',
             'captureMode' => 'auto',
+            'cancelButton' => true
         ];
 
         $responses = [

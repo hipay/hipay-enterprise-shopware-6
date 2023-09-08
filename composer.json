@@ -2,7 +2,7 @@
   "name": "hipay/hipay-enterprise-shopware-6",
   "description": "HiPay enterprise plugin for Shopware 6",
   "license": "Apache-2.0",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "authors": [
     {
       "email": "support.tpp@hipay.com",
@@ -49,7 +49,7 @@
     }
   },
   "require": {
-    "hipay/hipay-fullservice-sdk-php": "^2.11",
+    "hipay/hipay-fullservice-sdk-php": "^2.14.0",
     "giggsey/libphonenumber-for-php": "^8.13"
   },
   "require-dev": {
