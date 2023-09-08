@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## Version 1.1.1
+
+- **Fixed** :  Fixed PHP SDK version
+
 ## Version 1.1.0
 
 - **Add** : Add cancel button option to hosted page
