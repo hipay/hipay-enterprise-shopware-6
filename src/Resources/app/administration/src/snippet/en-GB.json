@@ -29,7 +29,8 @@
       }
     },
     "action": {
-      "cancel": "Cancel",
+      "cancelTransaction": "Cancel",
+      "cancelOrder": "Cancel order",
       "capture": "Capture",
       "refund": "Refund",
       "full_capture": "Full Capture",
