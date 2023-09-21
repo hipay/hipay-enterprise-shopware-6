@@ -35,6 +35,11 @@ class HipayStatusFlowDefinition extends EntityDefinition
         return HipayStatusFlowCollection::class;
     }
 
+    protected function getParentDefinitionClass(): ?string
+    {
+        return HipayOrderDefinition::class;
+    }
+
     protected function defineFields(): FieldCollection
     {
         return new FieldCollection([

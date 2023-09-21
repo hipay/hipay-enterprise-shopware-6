@@ -18,25 +18,26 @@ class HipayNotificationDefinition extends EntityDefinition
 {
     public const ENTITY_NAME = 'hipay_notification';
 
-    /** {@inheritDoc} */
     public function getEntityName(): string
     {
         return self::ENTITY_NAME;
     }
 
-    /** {@inheritDoc} */
     public function getEntityClass(): string
     {
         return HipayNotificationEntity::class;
     }
 
-    /** {@inheritDoc} */
     public function getCollectionClass(): string
     {
         return HipayNotificationCollection::class;
     }
 
-    /** {@inheritDoc} */
+    protected function getParentDefinitionClass(): ?string
+    {
+        return HipayOrderDefinition::class;
+    }
+
     protected function defineFields(): FieldCollection
     {
         return new FieldCollection([

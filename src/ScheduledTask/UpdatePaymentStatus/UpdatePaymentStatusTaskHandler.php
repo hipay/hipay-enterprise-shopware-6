@@ -19,8 +19,6 @@ class UpdatePaymentStatusTaskHandler extends ScheduledTaskHandler
     }
 
     /**
-     * {@inheritDoc}
-     *
      * @return string[]
      */
     public static function getHandledMessages(): iterable
@@ -28,7 +26,6 @@ class UpdatePaymentStatusTaskHandler extends ScheduledTaskHandler
         return [UpdatePaymentStatusTask::class];
     }
 
-    /** {@inheritDoc} */
     public function run(): void
     {
         $this->notificationService->dispatchNotifications();

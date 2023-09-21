@@ -24,9 +24,13 @@ class HipayOrderEntity extends Entity
 
     protected string $orderId;
 
+    protected string $orderVersionId;
+
     protected ?OrderEntity $order;
 
     protected string $transactionId;
+
+    protected string $transactionVersionId;
 
     protected ?OrderTransactionEntity $transaction;
 
@@ -59,7 +63,7 @@ class HipayOrderEntity extends Entity
     public static function create(string $transactionReference, OrderEntity $order, OrderTransactionEntity $transaction): self
     {
         $hipayOrder = new static();
-        $hipayOrder->setTransanctionReference($transactionReference);
+        $hipayOrder->setTransactionReference($transactionReference);
         $hipayOrder->setOrder($order);
         $hipayOrder->setTransaction($transaction);
 
@@ -76,6 +80,16 @@ class HipayOrderEntity extends Entity
         $this->orderId = $orderId;
     }
 
+    public function getOrderVersionId(): string
+    {
+        return $this->orderVersionId;
+    }
+
+    public function setOrderVersionId(string $orderVersionId): void
+    {
+        $this->orderVersionId = $orderVersionId;
+    }
+
     public function getOrder(): ?OrderEntity
     {
         return $this->order;
@@ -85,6 +99,7 @@ class HipayOrderEntity extends Entity
     {
         $this->order = $order;
         $this->setOrderId($order->getId());
+        $this->setOrderVersionId($order->getVersionId());
     }
 
     public function getTransactionId(): string
@@ -97,6 +112,16 @@ class HipayOrderEntity extends Entity
         $this->transactionId = $transactionId;
     }
 
+    public function getTransactionVersionId(): string
+    {
+        return $this->transactionVersionId;
+    }
+
+    public function setTransactionVersionId(string $transactionVersionId): void
+    {
+        $this->transactionVersionId = $transactionVersionId;
+    }
+
     public function getTransaction(): ?OrderTransactionEntity
     {
         return $this->transaction;
@@ -106,14 +131,15 @@ class HipayOrderEntity extends Entity
     {
         $this->transaction = $transaction;
         $this->setTransactionId($transaction->getId());
+        $this->setTransactionVersionId($transaction->getVersionId());
     }
 
-    public function getTransanctionReference(): string
+    public function getTransactionReference(): string
     {
         return $this->transactionReference;
     }
 
-    public function setTransanctionReference(string $transactionReference): void
+    public function setTransactionReference(string $transactionReference): void
     {
         $this->transactionReference = $transactionReference;
     }
@@ -221,8 +247,8 @@ class HipayOrderEntity extends Entity
     public function toArray(): array
     {
         $hipayOrder = $this->jsonSerialize();
-        $hipayOrder['order'] = ['id' => $this->orderId];
-        $hipayOrder['transaction'] = ['id' => $this->transactionId];
+        $hipayOrder['order'] = ['id' => $this->orderId, 'versionId' => $this->orderVersionId];
+        $hipayOrder['transaction'] = ['id' => $this->transactionId, 'versionId' => $this->transactionVersionId];
         $hipayOrder['captures'] = null;
         $hipayOrder['refunds'] = null;
         $hipayOrder['statusFlows'] = null;

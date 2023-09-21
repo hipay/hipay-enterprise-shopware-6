@@ -1,6 +1,5 @@
 {% block sw_order_detail_actions_slot_smart_bar_actions %}
-  <template v-if="showOnHipayMethod">
-   
+  <template v-if="showOnHipayMethod">   
     <sw-button variant="contrast"
       v-if="canCapture"
       @click="openCapture"
@@ -75,7 +74,7 @@
         </sw-button>
       </template>
     </sw-modal>
-    <sw-order-state-change-modal :order="orderData"
+    <sw-order-state-change-modal :order="order"
       :isLoading="isLoadingRequest"
       technicalName=""
       v-if="showOrderStateForCapture"
@@ -136,7 +135,7 @@
           {{ $tc('hipay.action.full_refund') }}
         </sw-button>
       </template>
-      <sw-order-state-change-modal :order="orderData"
+      <sw-order-state-change-modal :order="order"
         :isLoading="isLoadingRequest"
         technicalName=""
         v-if="showOrderStateForRefund"
@@ -144,7 +143,7 @@
         @page-leave-confirm="makeRefund"></sw-order-state-change-modal>
     </sw-modal>
 
-    <sw-order-state-change-modal :order="orderData"
+    <sw-order-state-change-modal :order="order"
         :isLoading="isLoadingRequest"
         technicalName=""
         v-if="showOrderStateForCancel"

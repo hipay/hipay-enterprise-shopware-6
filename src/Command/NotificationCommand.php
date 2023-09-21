@@ -23,17 +23,11 @@ class NotificationCommand extends Command
         $this->notifService = $notificationService;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     protected function configure(): void
     {
         $this->setDescription('Dispatch received HiPay notifications.');
     }
 
-    /**
-     * {@inheritDoc}
-     */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         try {

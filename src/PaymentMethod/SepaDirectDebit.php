@@ -21,12 +21,8 @@ class SepaDirectDebit extends AbstractPaymentMethod
     /** {@inheritDoc} */
     protected const PAYMENT_IMAGE = 'sepa-direct-debit.svg';
 
-    /** {@inheritDoc} */
     protected static PaymentProduct $paymentConfig;
 
-    /**
-     * {@inheritDoc}
-     */
     public static function getName(string $lang): ?string
     {
         $names = [
@@ -37,9 +33,6 @@ class SepaDirectDebit extends AbstractPaymentMethod
         return $names[$lang] ?? null;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public static function getDescription(string $lang): ?string
     {
         $descriptions = [
@@ -50,25 +43,16 @@ class SepaDirectDebit extends AbstractPaymentMethod
         return $descriptions[$lang] ?? null;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public static function getCurrencies(): ?array
     {
         return ['EUR'];
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public static function getCountries(): ?array
     {
         return ['BE', 'FR', 'GP', 'GF', 'IT', 'RE', 'MA', 'MC', 'PT', 'MQ', 'YT', 'NC', 'SP', 'CH'];
     }
 
-    /**
-     * {@inheritDoc}
-     */
     protected function hydrateHostedFields(OrderRequest $orderRequest, array $payload, AsyncPaymentTransactionStruct $transaction): OrderRequest
     {
         $paymentMethod = new SEPADirectDebitPaymentMethod();

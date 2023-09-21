@@ -14,7 +14,7 @@ export default class HipayHostedFieldsPlugin extends Plugin {
     errorClass: 'is-invalid',
     errorPrefix: 'error',
     styles: null
-  } 
+  };
 
   /**
    * Plugin initialisation
@@ -22,13 +22,15 @@ export default class HipayHostedFieldsPlugin extends Plugin {
   init() {
     // ensure is a abstract class
     if (this.constructor === HipayHostedFieldsPlugin) {
-      throw new TypeError('Class "HipayHostedFieldsPlugin" cannot be instantiated directly');
+      throw new TypeError(
+        'Class "HipayHostedFieldsPlugin" cannot be instantiated directly'
+      );
     }
 
     this.options = {
       ...this.getPaymentDefaultOption(),
       ...this.options
-    }
+    };
 
     this._configHostedFields = this.getConfigHostedFields();
     this._form = document.querySelector('#' + this.options.idResponse).form;
@@ -53,10 +55,10 @@ export default class HipayHostedFieldsPlugin extends Plugin {
 
       let valid = false;
       // Generate
-      this._cardInstance.on('change', (response) => {
+      this._cardInstance.on('change', response => {
         valid = response.valid;
         if (valid) {
-          this._cardInstance.getPaymentData().then((result) => {
+          this._cardInstance.getPaymentData().then(result => {
             inputResponse.setAttribute('value', JSON.stringify(result));
           });
         } else {
@@ -65,13 +67,13 @@ export default class HipayHostedFieldsPlugin extends Plugin {
       });
 
       // handle errors on form validation
-      inputResponse.addEventListener('invalid', (e) => {
+      inputResponse.addEventListener('invalid', e => {
         if (!valid) {
           this._cardInstance.getPaymentData().then(
             () => {},
-            (result) => {
+            result => {
               inputResponse.setAttribute('value', '');
-              result.forEach((element) =>
+              result.forEach(element =>
                 this._errorHandler(element.field, true, element.error)
               );
             }
@@ -99,9 +101,11 @@ export default class HipayHostedFieldsPlugin extends Plugin {
       node.classList.remove(this.options.errorClass);
     }
 
-    const errorNode = document.querySelector('#' + this.options.errorPrefix + '-' + targetId);
-    if(errorNode) {
-      errorNode.innerHTML= errorMessage;
+    const errorNode = document.querySelector(
+      `#${this.options.errorPrefix}-${targetId}`
+    );
+    if (errorNode) {
+      errorNode.innerHTML = errorMessage;
     }
   }
 

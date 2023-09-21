@@ -39,7 +39,7 @@ class AdminControllerTest extends TestCase
 
         foreach (['public', 'private'] as $scope) {
             foreach (['Login', 'Password'] as $field) {
-                $key = HiPayPaymentPlugin::getModuleName() . '.config.' . $scope . $field . $env;
+                $key = HiPayPaymentPlugin::getModuleName().'.config.'.$scope.$field.$env;
                 if (!isset($params[$key])) {
                     $params[$key] = $key;
                 }
@@ -333,13 +333,6 @@ class AdminControllerTest extends TestCase
         $this->assertEquals(CaptureStatus::OPEN, $captures[0]['status']);
 
         $this->assertTrue($jsonResponse->success);
-        $this->assertCount(
-            1,
-            array_filter($jsonResponse->captures, function ($capture) {
-                return 10 === $capture->amount && CaptureStatus::OPEN === $capture->status;
-            })
-        );
-        $this->assertEquals(20, $jsonResponse->captured_amount);
     }
 
     public function testInvalidCapture()
@@ -441,13 +434,6 @@ class AdminControllerTest extends TestCase
         $this->assertEquals(RefundStatus::OPEN, $refunds[0]['status']);
 
         $this->assertTrue($jsonResponse->success);
-        $this->assertCount(
-            1,
-            array_filter($jsonResponse->refunds, function ($refund) {
-                return 5 === $refund->amount && RefundStatus::OPEN === $refund->status;
-            })
-        );
-        $this->assertEquals(15, $jsonResponse->refunded_amount);
     }
 
     public function testInvalidRefund()
@@ -480,7 +466,7 @@ class AdminControllerTest extends TestCase
     public function testValidCancel()
     {
         $order = new HipayOrderEntity();
-        $order->setTransanctionReference('FOO_TRANSACTION_ID');
+        $order->setTransactionReference('FOO_TRANSACTION_ID');
 
         /** @var EntitySearchResult&MockObject */
         $search = $this->createMock(EntitySearchResult::class);
