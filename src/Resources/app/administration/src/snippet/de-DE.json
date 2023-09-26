@@ -29,7 +29,10 @@
       }
     },
     "action": {
-      "cancel": "Absagen",
+      "cancelOrder": "Bestellung stornieren",
+      "resetModifications": "Zurücksetzen",
+      "resetModificationsInfo": "Änderungen des Formulars zurücksetzen",
+      "cancelOrderInfo": "HiPay-Transaktion abbrechen",
       "capture": "Erfassung",
       "refund": "Erstattung",
       "full_capture": "Vollständige Erfassung",

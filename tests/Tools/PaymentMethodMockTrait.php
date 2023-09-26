@@ -357,6 +357,7 @@ trait PaymentMethodMockTrait
         $config = [
             'operationMode' => 'hostedPage',
             'captureMode' => 'auto',
+            'cancelButton' => true
         ];
 
         if (null === $redirectUri) {

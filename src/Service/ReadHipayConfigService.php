@@ -156,6 +156,14 @@ class ReadHipayConfigService
     }
 
     /**
+     * Check if the cancel button is displayed.
+     */
+    public function isCancelButtonDisplayed(): bool
+    {
+        return $this->configHipay->getBool(HiPayPaymentPlugin::getModuleName().'.config.cancelButton');
+    }
+
+    /**
      * Check if cart remembering is activated.
      */
     public function isRememberCart(): bool

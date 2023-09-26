@@ -12,12 +12,15 @@
       :disabled="!acl.can('order.editor')">
       {{ $tc('hipay.action.refund') }}
     </sw-button>
-    <sw-button variant="danger"
+    <sw-button 
+      :title="$tc('hipay.action.cancelOrderInfo')"
+      variant="danger"
       v-if="canCancel"
       @click="openCancel"
       :disabled="!acl.can('order.editor')">
-      {{ $tc('hipay.action.cancel') }}
+      {{ $tc('hipay.action.cancelOrder') }}
     </sw-button>
+    <div class="separator"></div>
     {% parent %}
     <sw-modal :title="$tc('hipay.action.capture')"
       v-if="showOrderCapture"
@@ -150,4 +153,19 @@
         @page-leave="closeCancelModal"
         @page-leave-confirm="makeCancel"></sw-order-state-change-modal>
   </template>
+{% endblock %}
+{% block sw_order_detail_actions_abort %}
+  <sw-button
+    :title="$tc('hipay.action.resetModificationsInfo')"
+    v-tooltip="{
+      message: $tc('sw-privileges.tooltip.warning'),
+      disabled: acl.can('order.editor'),
+      showOnDisabledElements: true
+      }"
+    class="sw-order-detail__smart-bar-cancel-button"
+    :disabled="isLoading || !acl.can('order.editor')"
+    @click="onCancelEditing"
+    >
+      {{ $tc('hipay.action.resetModifications') }}
+  </sw-button>
 {% endblock %}

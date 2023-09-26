@@ -256,6 +256,17 @@ class ReadHipayConfigServiceTest extends TestCase
         );
     }
 
+    public function testIsCancelButtonDisplayed()
+    {
+        $cancelButton = 0 === random_int(0, 1);
+        $mock = $this->generateService(['cancelButton' => $cancelButton]);
+
+        $this->assertEquals(
+            $cancelButton,
+            $mock->isCancelButtonDisplayed()
+        );
+    }
+
     public function testIsRememberCart()
     {
         $rembemberCart = 0 === random_int(0, 1);
