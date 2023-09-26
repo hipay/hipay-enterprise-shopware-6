@@ -31,6 +31,8 @@
     "action": {
       "cancelOrder": "Cancel order",
       "resetModifications": "Reset",
+      "resetModificationsInfo": "Reset Form Modifications",
+      "cancelOrderInfo": "Cancel HiPay Transaction",
       "capture": "Capture",
       "refund": "Refund",
       "full_capture": "Full Capture",
