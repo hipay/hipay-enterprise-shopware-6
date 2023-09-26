@@ -12,11 +12,11 @@
       :disabled="!acl.can('order.editor')">
       {{ $tc('hipay.action.refund') }}
     </sw-button>
-    <sw-button title="Cancel transaction" variant="danger"
+    <sw-button title="Cancel HiPay Transaction" variant="danger"
       v-if="canCancel"
       @click="openCancel"
       :disabled="!acl.can('order.editor')">
-      {{ $tc('hipay.action.cancelTransaction') }}
+      {{ $tc('hipay.action.cancelOrder') }}
     </sw-button>
     <div class="separator"></div>
     {% parent %}
@@ -154,7 +154,7 @@
 {% endblock %}
 {% block sw_order_detail_actions_abort %}
   <sw-button
-    title="Cancel order"
+    title="Reset Form Modifications"
     v-tooltip="{
       message: $tc('sw-privileges.tooltip.warning'),
       disabled: acl.can('order.editor'),
@@ -164,6 +164,6 @@
     :disabled="isLoading || !acl.can('order.editor')"
     @click="onCancelEditing"
     >
-      {{ $tc('hipay.action.cancelOrder') }}
+      {{ $tc('hipay.action.resetModifications') }}
   </sw-button>
 {% endblock %}

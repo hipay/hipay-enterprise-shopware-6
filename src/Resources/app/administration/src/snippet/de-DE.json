@@ -29,8 +29,8 @@
       }
     },
     "action": {
-      "cancel": "Stornieren",
       "cancelOrder": "Bestellung stornieren",
+      "resetModifications": "Zurücksetzen",
       "capture": "Erfassung",
       "refund": "Erstattung",
       "full_capture": "Vollständige Erfassung",
