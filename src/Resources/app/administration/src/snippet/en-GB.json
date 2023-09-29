@@ -29,6 +29,7 @@
       }
     },
     "action": {
+      "cancel": "Cancel",
       "cancelOrder": "Cancel order",
       "resetModifications": "Reset",
       "resetModificationsInfo": "Reset Form Modifications",

@@ -29,6 +29,7 @@
       }
     },
     "action": {
+      "cancel": "Absagen",
       "cancelOrder": "Bestellung stornieren",
       "resetModifications": "Zurücksetzen",
       "resetModificationsInfo": "Änderungen des Formulars zurücksetzen",
