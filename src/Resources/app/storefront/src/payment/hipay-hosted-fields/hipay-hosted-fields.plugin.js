@@ -80,6 +80,16 @@ export default class HipayHostedFieldsPlugin extends Plugin {
           );
         }
       });
+
+      this._form.addEventListener('submit', e => {
+        e.preventDefault();
+        const target = e.currentTarget;
+
+        this._cardInstance.getPaymentData().then(result => {
+          inputResponse.setAttribute('value', JSON.stringify(result));
+          target.submit();
+        });
+      });
     });
   }
 

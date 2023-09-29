@@ -1,12 +1,22 @@
 # CHANGELOG
 
-## Version 1.1.3
+## UNRELEASED
 
-- **Add** : EC-3342 - Add cancel button option to hosted page
+- **Add** : Added support of new Shopware version **6.5**
+
+## Version 1.1.1
+
+- **Fixed** :  Fixed PHP SDK version
+
+## Version 1.1.0
+
+- **Add** : Add cancel button option to hosted page
+- **Add** : Update Giropay Logo
+- **Fixed** :  Add `iDeal` bank choice when submitting checkout
 
 ## Version 1.0.3
 
-- **Fix** : EC-3315 - Fixed Database definition
+- **Fix** : Fixed Database definition
 
 ## Version 1.0.2
 
