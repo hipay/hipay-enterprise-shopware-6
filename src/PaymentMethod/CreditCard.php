@@ -19,12 +19,8 @@ class CreditCard extends AbstractPaymentMethod
     /** {@inheritDoc} */
     protected const PAYMENT_IMAGE = 'credit_card.svg';
 
-    /** {@inheritDoc} */
     protected static PaymentProduct $paymentConfig;
 
-    /**
-     * {@inheritDoc}
-     */
     protected static function loadPaymentConfig(): PaymentProduct
     {
         return new PaymentProduct([
@@ -35,9 +31,6 @@ class CreditCard extends AbstractPaymentMethod
         ]);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public static function getName(string $lang): ?string
     {
         $names = [
@@ -48,9 +41,6 @@ class CreditCard extends AbstractPaymentMethod
         return $names[$lang] ?? null;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public static function getDescription(string $lang): ?string
     {
         $descriptions = [
@@ -61,9 +51,6 @@ class CreditCard extends AbstractPaymentMethod
         return $descriptions[$lang] ?? null;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public static function addDefaultCustomFields(): array
     {
         return [
@@ -71,9 +58,6 @@ class CreditCard extends AbstractPaymentMethod
         ];
     }
 
-    /**
-     * {@inheritDoc}
-     */
     protected function hydrateHostedFields(OrderRequest $orderRequest, array $payload, AsyncPaymentTransactionStruct $transaction): OrderRequest
     {
         $paymentMethod = new CardTokenPaymentMethod();
@@ -91,9 +75,6 @@ class CreditCard extends AbstractPaymentMethod
         return $orderRequest;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     protected function hydrateHostedPage(HostedPaymentPageRequest $orderRequest, AsyncPaymentTransactionStruct $transaction): HostedPaymentPageRequest
     {
         $customFields = $transaction->getOrderTransaction()->getPaymentMethod()->getCustomFields();

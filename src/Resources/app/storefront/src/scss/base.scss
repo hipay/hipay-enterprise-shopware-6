@@ -1,104 +1,141 @@
+$component-active-color: $white !default;
+$component-active-bg: theme-color('primary') !default;
+
+$custom-checkbox-indicator-border-radius: 2px !default;
+$custom-control-indicator-checked-color: $component-active-color !default;
+$custom-checkbox-indicator-indeterminate-color: $custom-control-indicator-checked-color !default;
+$custom-checkbox-indicator-icon-checked: str-replace(
+  url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath fill='#{$custom-control-indicator-checked-color}' d='M6.564.75l-3.59 3.612-1.538-1.55L0 4.26 2.974 7.25 8 2.193z'/%3E%3C/svg%3E"),
+  '#',
+  '%23'
+) !default;
+$custom-checkbox-indicator-indeterminate-bg: $component-active-bg !default;
+$custom-checkbox-indicator-indeterminate-box-shadow: none !default;
+$custom-checkbox-indicator-icon-indeterminate: str-replace(
+  url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 4'%3E%3Cpath stroke='#{$custom-checkbox-indicator-indeterminate-color}' d='M0 2h4'/%3E%3C/svg%3E"),
+  '#',
+  '%23'
+) !default;
 
 .payment-method-image {
-    width: 13.75rem;
-    height: 2rem;
-    display: flex;
-    svg{
-        display: inline-block
-    }
+  width: 13.75rem;
+  height: 2rem;
+  display: flex;
+  svg {
+    display: inline-block;
+  }
 }
 
 .force-checkbox.custom-checkbox {
-    .custom-control-label{
-        cursor: pointer;
+  .custom-control-label {
+    cursor: pointer;
+  }
+  .custom-control-label::before {
+    @include border-radius($custom-checkbox-indicator-border-radius);
+  }
+
+  .custom-control-input:checked ~ .custom-control-label {
+    &::after {
+      background-image: $custom-checkbox-indicator-icon-checked;
     }
-    .custom-control-label::before {
-        @include border-radius($custom-checkbox-indicator-border-radius);
+  }
+
+  .custom-control-input:indeterminate ~ .custom-control-label {
+    &::before {
+      //   border-color: $custom-checkbox-indicator-indeterminate-border-color;
+      @include gradient-bg($custom-checkbox-indicator-indeterminate-bg);
+      @include box-shadow($custom-checkbox-indicator-indeterminate-box-shadow);
     }
-    
-    .custom-control-input:checked ~ .custom-control-label {
-        &::after {
-            background-image: $custom-checkbox-indicator-icon-checked;
-        }
+    &::after {
+      background-image: $custom-checkbox-indicator-icon-indeterminate;
     }
-    
-    .custom-control-input:indeterminate ~ .custom-control-label {
-        
-        &::before {
-            border-color: $custom-checkbox-indicator-indeterminate-border-color;
-            @include gradient-bg($custom-checkbox-indicator-indeterminate-bg);
-            @include box-shadow($custom-checkbox-indicator-indeterminate-box-shadow);
-        }
-        &::after {
-            background-image: $custom-checkbox-indicator-icon-indeterminate;
-        }
-    }    
+  }
 }
 
+.hipay-token {
+  .flex {
+    display: flex;
+    align-items: center;
+    column-gap: 8px;
+  }
 
+  input:disabled ~ .hipay-token-label {
+    .hipay-card-image {
+      opacity: 0.5;
+    }
+  }
 
-.hipay-token{
-
-    input:disabled ~ .hipay-token-label {
-        .hipay-card-image{ opacity: 0.5 }
+  .hipay-token-label {
+    display: flex;
+    &::before,
+    &::after {
+      top: 12px;
     }
 
-    .hipay-token-label{
-        display: flex;
-        &::before, &::after{top : 12px;}
-
-        &[for="token-new-creditcard"]{
-            flex-flow: column;
-            &::before, &::after{top : 3px;}
-        }
+    &[for='token-new-creditcard'] {
+      flex-flow: column;
+      &::before,
+      &::after {
+        top: 3px;
+      }
     }
+  }
 
-    
-
-    .hipay-card-image{
-        width: 2.875rem;
-        overflow: hidden;
-        img{
-            height: 2.2rem;
-            margin-top: 0.15625rem;
-        }
-        .hipay-card-image-visa{
-            margin-left: -3.4375rem;
-        }
-        .hipay-card-image-mastercard{
-            margin-left: -6.8125rem;
-        }
-        .hipay-card-image-maestro{
-            margin-left: -10.1875rem;
-        }
-        .hipay-card-image-amex{
-            margin-left: -13.125rem;
-        }
-        .hipay-card-image-bancontact{
-            margin-left: -16.96875rem;
-        }
-
+  .hipay-card-image {
+    width: 2.875rem;
+    overflow: hidden;
+    img {
+      height: 2.2rem;
+      margin-top: 0.15625rem;
     }
-
-
-    .hipay-card-content{
-        display: block;
-        margin-left: 1rem;
+    .hipay-card-image-visa {
+      margin-left: -3.4375rem;
     }
-
-    .hipay-card-pan{
-        font-weight: bold;
+    .hipay-card-image-mastercard {
+      margin-left: -6.8125rem;
     }
-
-    .hipay-card-expiration::before{
-        content: ' - ';
+    .hipay-card-image-maestro {
+      margin-left: -10.1875rem;
     }
-
-    .delete-card{
-        display: inline-block;
-        margin-left: 1rem;
-        color: var(--dark);
-        font-weight: 600;
-        cursor: pointer;
+    .hipay-card-image-amex {
+      margin-left: -13.125rem;
     }
+    .hipay-card-image-bancontact {
+      margin-left: -16.96875rem;
+    }
+  }
+
+  .hipay-card-content {
+    display: block;
+    margin-left: 1rem;
+  }
+
+  .hipay-card-pan {
+    font-weight: bold;
+  }
+
+  .hipay-card-expiration::before {
+    content: ' - ';
+  }
+
+  .delete-card {
+    display: inline-block;
+    margin-left: 1rem;
+    color: var(--dark);
+    font-weight: 600;
+    cursor: pointer;
+  }
+}
+
+.hostedfield.radio-control {
+  height: calc(1em + 1rem + 2px);
+}
+
+.hostedfield.form-control {
+  height: calc(1.5em + 1.125rem + 2px);
+  border-radius: 3px;
+}
+
+.hostedfield.form-control.is-invalid {
+  border-color: #e52427;
 }

@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## UNRELEASED
+
+- **Add** : Added support of new Shopware version **6.5**
+
 ## Version 1.1.1
 
 - **Fixed** :  Fixed PHP SDK version

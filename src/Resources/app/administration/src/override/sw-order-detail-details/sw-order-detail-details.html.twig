@@ -1,0 +1,13 @@
+{% block sw_order_detail_details_payment %}
+  {% parent %}
+  <sw-card v-if="order.extensions?.hipayOrder?.statusFlows?.length"
+    class="card-no-padding"
+    position-identifier="sw-settings-payment-detail-content"
+    :title="getTitle"
+    :is-loading="isLoading">
+    <sw-data-grid :dataSource="datasource"
+      :columns="columns"
+      :showSelection="false"
+      :showActions="false"></sw-data-grid>
+  </sw-card>
+{% endblock %}

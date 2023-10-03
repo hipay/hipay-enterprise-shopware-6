@@ -7,7 +7,7 @@ metadata:
 data:
   # Shopware env var
   TZ: Europe/Paris
-  NODE_VERSION: '16'
+  NODE_VERSION: '18'
   COMPOSER_HOME: /var/www/html/var/cache/composer
   APP_URL: http://{{ .Values.shopware_url }}
   # HiPay env var

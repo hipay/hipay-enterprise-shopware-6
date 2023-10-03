@@ -32,6 +32,11 @@ class OrderCaptureDefinition extends EntityDefinition
         return OrderCaptureCollection::class;
     }
 
+    protected function getParentDefinitionClass(): ?string
+    {
+        return HipayOrderDefinition::class;
+    }
+
     protected function defineFields(): FieldCollection
     {
         return new FieldCollection([

@@ -9,7 +9,6 @@ Shopware.Component.override('sw-order-detail', {
   inject: ['hipayService'],
   data() {
     return {
-      orderData: null,
       hipayOrderData: null,
       showOrderCapture: false,
       showOrderRefund: false,
@@ -40,7 +39,43 @@ Shopware.Component.override('sw-order-detail', {
       isLoadingRequest: false
     };
   },
+  watch: {
+    order() {
+      this.currency = this.order.currency.isoCode;
+      this.lastTransaction = this.order.transactions.last();
+      this.hipayOrderData = this.order.extensions?.hipayOrder;
+
+      // Set lineItems from order & add currentQuantity field to lineItems
+      const lineItems = JSON.parse(JSON.stringify(this.order.lineItems));
+
+      if (this.order.shippingCosts.totalPrice > 0) {
+        // Add a shipping item to line items
+        lineItems.push({
+          label: this.$tc('hipay.basket.column.shipping'),
+          quantity: 1,
+          totalPrice: this.order.shippingCosts.totalPrice,
+          unitPrice: this.order.shippingCosts.totalPrice,
+          shipping: true
+        });
+      }
+
+      for (const index in lineItems) {
+        lineItems[index].currentQuantity = lineItems[index].quantity;
+      }
+      this.lineItems = lineItems;
+    }
+  },
   computed: {
+    orderCriteria() {
+      const criteria = this.$super('orderCriteria');
+
+      criteria.addAssociation('hipayOrder');
+      criteria.addAssociation('hipayOrder.captures');
+      criteria.addAssociation('hipayOrder.refunds');
+      criteria.addAssociation('hipayOrder.statusFlows');
+
+      return criteria;
+    },
     showOnHipayMethod() {
       return /hipay/.test(
         this.lastTransaction?.paymentMethod?.formattedHandlerIdentifier
@@ -52,32 +87,46 @@ Shopware.Component.override('sw-order-detail', {
       );
     },
     canCapture() {
-      return ['paid_partially', 'authorized'].includes(
-        this.lastTransaction?.stateMachineState?.technicalName
+      return (
+        ['refunded_partially', 'paid_partially', 'authorized'].includes(
+          this.lastTransaction?.stateMachineState?.technicalName
+        ) && this.orderAmount > this.capturedAmountInProgress
       );
     },
     canPartialCapture() {
-      return this.canCapture && this.lastTransaction?.paymentMethod?.extensions?.hipayConfig?.allowPartialCapture !== false;
+      return (
+        this.canCapture &&
+        this.lastTransaction?.paymentMethod?.extensions?.hipayConfig
+          ?.allowPartialCapture !== false
+      );
     },
     canRefund() {
-      return ['paid_partially', 'paid', 'refunded_partially'].includes(
-        this.lastTransaction?.stateMachineState?.technicalName
+      return (
+        ['paid_partially', 'paid', 'refunded_partially'].includes(
+          this.lastTransaction?.stateMachineState?.technicalName
+        ) && this.capturedAmount > this.refundedAmountInProgress
       );
     },
     canPartialRefund() {
-      return this.canRefund && this.lastTransaction?.paymentMethod?.extensions?.hipayConfig?.allowPartialRefund !== false;
+      return (
+        this.canRefund &&
+        this.lastTransaction?.paymentMethod?.extensions?.hipayConfig
+          ?.allowPartialRefund !== false
+      );
     },
     orderBasket() {
       // Returns lineItems as source to data grid & show currency next to totalPrice
       for (const lineItem of this.lineItems) {
-        lineItem.totalPrice = this.formatCurrency(lineItem.unitPrice * lineItem.currentQuantity);
+        lineItem.totalPrice = this.formatCurrency(
+          lineItem.unitPrice * lineItem.currentQuantity
+        );
         lineItem.editable = this.canPartialCapture;
       }
 
       return this.lineItems;
     },
     orderAmount() {
-      return this.orderData.amountTotal;
+      return this.order.amountTotal;
     },
     capturedAmount() {
       return this.hipayOrderData.capturedAmount;
@@ -128,8 +177,10 @@ Shopware.Component.override('sw-order-detail', {
     }
   },
   methods: {
-    formatCurrency(number) {     
-        return this.hipayService.getCurrencyFormater(this.currency).format(number);
+    formatCurrency(number) {
+      return this.hipayService
+        .getCurrencyFormater(this.currency)
+        .format(number);
     },
     openCapture() {
       this.showOrderCapture = true;
@@ -139,39 +190,6 @@ Shopware.Component.override('sw-order-detail', {
     },
     openCancel() {
       this.showOrderStateForCancel = true;
-    },
-    createdComponent() {
-      this.$super('createdComponent');
-      this.$root.$on('order-loaded', this.orderLoaded);
-    },
-    destroyedComponent() {
-      this.$root.$off('order-loaded', this.orderLoaded);
-      this.$super('destroyedComponent');
-    },
-    orderLoaded(order) {
-      this.orderData = order;
-      this.currency = order.currency.isoCode;
-      this.lastTransaction = this.orderData.transactions.last();
-      this.hipayOrderData = this.orderData.extensions?.hipayOrder;
-
-      // Set lineItems from orderData & add currentQuantity field to lineItems
-      const lineItems = JSON.parse(JSON.stringify(this.orderData.lineItems));
-
-      if (this.orderData.shippingCosts.totalPrice > 0) {
-        // Add a shipping item to line items
-        lineItems.push({
-          label: this.$tc('hipay.basket.column.shipping'),
-          quantity: 1,
-          totalPrice: this.orderData.shippingCosts.totalPrice,
-          unitPrice: this.orderData.shippingCosts.totalPrice,
-          shipping: true
-        });
-      }
-
-      for (const index in lineItems) {
-        lineItems[index].currentQuantity = lineItems[index].quantity;
-      }
-      this.lineItems = lineItems;
     },
     closeOrderCaptureModal() {
       this.showOrderCapture = false;
@@ -291,6 +309,9 @@ Shopware.Component.override('sw-order-detail', {
             title: this.$tc('hipay.notification.cancel.title'),
             message: this.$tc('hipay.notification.cancel.success')
           });
+
+          // Close modals
+          this.showOrderStateForCancel = false;
         })
         .catch(() => {
           this.createNotificationError({
@@ -317,18 +338,12 @@ Shopware.Component.override('sw-order-detail', {
             throw new Error(response.message);
           }
 
+          this.onSaveEdits();
+
           this.createNotificationSuccess({
             title: this.$tc('hipay.notification.capture.title'),
             message: this.$tc('hipay.notification.capture.success')
           });
-
-          if (response.captures) {
-            this.hipayOrderData.captures = response.captures;
-          }
-          if (response.captured_amount) {
-            this.hipayOrderData.capturedAmountInProgress =
-              response.captured_amount;
-          }
 
           // Close modals
           this.showOrderStateForCapture = false;
@@ -362,18 +377,12 @@ Shopware.Component.override('sw-order-detail', {
             throw new Error(response.message);
           }
 
+          this.onSaveEdits();
+
           this.createNotificationSuccess({
             title: this.$tc('hipay.notification.refund.title'),
             message: this.$tc('hipay.notification.refund.success')
           });
-
-          if (response.refunds) {
-            this.hipayOrderData.refunds = response.refunds;
-          }
-          if (response.refunded_amount) {
-            this.hipayOrderData.refundedAmountInProgress =
-              response.refunded_amount;
-          }
 
           // Close modals
           this.showOrderStateForRefund = false;

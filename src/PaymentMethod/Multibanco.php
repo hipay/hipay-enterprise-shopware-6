@@ -32,7 +32,6 @@ class Multibanco extends AbstractPaymentMethod
     /** {@inheritDoc} */
     protected const PAYMENT_IMAGE = 'multibanco.svg';
 
-    /** {@inheritDoc} */
     protected static PaymentProduct $paymentConfig;
 
     protected EntityRepository $transactionRepo;
@@ -60,9 +59,6 @@ class Multibanco extends AbstractPaymentMethod
         $this->transactionRepo = $orderTransactionRepository;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public static function getName(string $lang): ?string
     {
         $names = [
@@ -73,9 +69,6 @@ class Multibanco extends AbstractPaymentMethod
         return $names[$lang] ?? null;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public static function getDescription(string $lang): ?string
     {
         $descriptions = [
@@ -86,33 +79,21 @@ class Multibanco extends AbstractPaymentMethod
         return $descriptions[$lang] ?? null;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public static function addDefaultCustomFields(): array
     {
         return ['expiration_limit' => '3'];
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public static function getCurrencies(): ?array
     {
         return ['EUR'];
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public static function getCountries(): ?array
     {
         return ['PT'];
     }
 
-    /**
-     * {@inheritDoc}
-     */
     protected function hydrateHostedFields(OrderRequest $orderRequest, array $payload, AsyncPaymentTransactionStruct $transaction): OrderRequest
     {
         $customFields = $transaction->getOrderTransaction()->getPaymentMethod()->getCustomFields();
@@ -124,9 +105,6 @@ class Multibanco extends AbstractPaymentMethod
         return $orderRequest;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     protected function handleHostedFieldResponse(AsyncPaymentTransactionStruct $transaction, Transaction $response): string
     {
         // error as main return
@@ -159,9 +137,6 @@ class Multibanco extends AbstractPaymentMethod
         return $redirect;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     protected function hydrateHostedPage(HostedPaymentPageRequest $orderRequest, AsyncPaymentTransactionStruct $transaction): HostedPaymentPageRequest
     {
         $customFields = $transaction->getOrderTransaction()->getPaymentMethod()->getCustomFields();

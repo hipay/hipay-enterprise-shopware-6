@@ -113,9 +113,6 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
         static::$paymentConfig = static::loadPaymentConfig();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function pay(
         AsyncPaymentTransactionStruct $transaction,
         RequestDataBag $dataBag,
@@ -134,9 +131,6 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
         return new RedirectResponse($redirectUri);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function finalize(
         AsyncPaymentTransactionStruct $transaction,
         Request $request,
@@ -151,9 +145,6 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
         $this->transactionStateHandler->process($transaction->getId(), Context::createDefaultContext());
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public static function getPosition(): int
     {
         return static::PAYMENT_POSITION;
@@ -172,8 +163,6 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
     }
 
     /**
-     * {@inheritDoc}
-     *
      * @throws UnexpectedValueException
      */
     public static function getConfig(): array
@@ -189,17 +178,11 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
         ];
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public static function addDefaultCustomFields(): array
     {
         return [];
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public static function getImage(): ?string
     {
         return static::PAYMENT_IMAGE;
@@ -725,7 +708,6 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
     private function getOrderCustomers(string $customerId): OrderCustomerCollection
     {
         return new OrderCustomerCollection(
-            // @phpstan-ignore-next-line
             $this->orderCustomerRepo->search(
                 (new Criteria())
                     ->addFilter(new EqualsFilter('customerId', $customerId))
@@ -746,7 +728,7 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
      *
      * @param int $format libphonenumber\PhoneNumberFormat\PhoneNumberFormat const
      */
-    protected function formatPhoneNumber(?string $phoneNumber, ?string $isoCountry = null, int $format = PhoneNumberFormat::E164): ?string
+    protected function formatPhoneNumber(?string $phoneNumber, string $isoCountry = null, int $format = PhoneNumberFormat::E164): ?string
     {
         try {
             $phoneUtil = PhoneNumberUtil::getInstance();

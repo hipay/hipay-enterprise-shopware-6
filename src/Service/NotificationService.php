@@ -23,6 +23,7 @@ use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStat
 use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStates;
 use Shopware\Core\Defaults;
 use Shopware\Core\Framework\Context;
+use Shopware\Core\Framework\DataAbstractionLayer\Entity;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\EntitySearchResult;
@@ -128,7 +129,8 @@ class NotificationService
             throw new MissingMandatoryParametersException('date_updated is mandatory');
         }
 
-        if (!$orderTransactionId = ($request->request->get('custom_data')['transaction_id'] ?? null)) {
+        $parameters = $request->request->all();
+        if (!$orderTransactionId = ($parameters['custom_data']['transaction_id'] ?? null)) {
             throw new MissingMandatoryParametersException('custom_data.transaction_id is mandatory');
         }
 
@@ -145,13 +147,15 @@ class NotificationService
         // Create or update if exists a HiPay order related to this transaction to database
         $orderCriteria = (new Criteria())->addFilter(new EqualsFilter('orderId', $transaction->getOrderId()));
 
-        if (!$hipayOrder = $this->getAssociatedHiPayOrder($orderCriteria)) {
+        /** @var ?HipayOrderEntity $hipayOrder */
+        $hipayOrder = $this->getAssociatedHiPayOrder($orderCriteria);
+        if (!$hipayOrder) {
             $hipayOrder = HipayOrderEntity::create($transactionReference, $transaction->getOrder(), $transaction);
             $this->hipayOrderRepo->create([$hipayOrder->toArray()], $context);
             /** @var HipayOrderEntity $hipayOrder after Creation */
             $hipayOrder = $this->getAssociatedHiPayOrder($orderCriteria);
         } else {
-            $hipayOrder->setTransanctionReference($transactionReference);
+            $hipayOrder->setTransactionReference($transactionReference);
             $hipayOrder->setOrder($transaction->getOrder());
             $hipayOrder->setTransaction($transaction);
             $this->hipayOrderRepo->update([$hipayOrder->toArray()], $context);
@@ -160,7 +164,7 @@ class NotificationService
         // Create notification to database
         $notification = HipayNotificationEntity::create(
             $this->getStatus($request->request->getInt('status'), $request->request),
-            $request->request->all(),
+            $parameters,
             new \DateTime($notificationDate->format(Defaults::STORAGE_DATE_TIME_FORMAT)),
             $hipayOrder
         );
@@ -474,14 +478,17 @@ class NotificationService
 
         switch ($notification->getStatus()) {
             case static::PAY_PARTIALLY:
+                if ($hipayOrder->getTransaction()->getStateMachineState()->getTechnicalName() === static::CONVERT_STATE[static::REFUNDED_PARTIALLY]) {
+                    // Transition to OPEN before PAY_PARTIALLY because Shopware cannot change status from REFUNDED_PARTIALLY
+                    $this->orderTransactionStateHandler->reopen($hipayOrder->getTransactionId(), $context);
+                }
                 $this->orderTransactionStateHandler->payPartially($hipayOrder->getTransactionId(), $context);
                 break;
 
             case static::PAID:
-                if ($hipayOrder->getTransaction()->getStateMachineState()->getTechnicalName() === static::CONVERT_STATE[static::PAY_PARTIALLY]) {
-                    // Transition to IN_PROGRESS before PAID because Shopware cannot change status from paid_partially to paid
-                    // Issue : https://issues.shopware.com/issues/NEXT-22317
-                    $this->orderTransactionStateHandler->process($hipayOrder->getTransactionId(), $context);
+                if ($hipayOrder->getTransaction()->getStateMachineState()->getTechnicalName() === static::CONVERT_STATE[static::REFUNDED_PARTIALLY]) {
+                    // Transition to OPEN before PAID because Shopware cannot change status from REFUNDED_PARTIALLY
+                    $this->orderTransactionStateHandler->reopen($hipayOrder->getTransactionId(), $context);
                 }
                 $this->orderTransactionStateHandler->paid($hipayOrder->getTransactionId(), $context);
                 break;
@@ -565,7 +572,7 @@ class NotificationService
     /**
      * Add order Transaction capture.
      */
-    private function saveCapture(string $status, ?OrderCaptureEntity $capture, ?float $amount = null, ?string $operationId = null, ?HipayOrderEntity $hipayOrder = null): void
+    private function saveCapture(string $status, ?OrderCaptureEntity $capture, float $amount = null, string $operationId = null, HipayOrderEntity $hipayOrder = null): void
     {
         $context = Context::createDefaultContext();
         if (!$capture) {
@@ -580,7 +587,7 @@ class NotificationService
     /**
      * Add order Transaction refund.
      */
-    private function saveRefund(string $status, ?OrderRefundEntity $refund, ?float $amount = null, ?string $operationId = null, ?HipayOrderEntity $hipayOrder = null): void
+    private function saveRefund(string $status, ?OrderRefundEntity $refund, float $amount = null, string $operationId = null, HipayOrderEntity $hipayOrder = null): void
     {
         $context = Context::createDefaultContext();
         if (!$refund) {
@@ -606,7 +613,7 @@ class NotificationService
         return $this->notificationRepo->search($criteria, Context::createDefaultContext());
     }
 
-    private function getAssociatedHiPayOrder(Criteria $criteria): ?HipayOrderEntity
+    private function getAssociatedHiPayOrder(Criteria $criteria): ?Entity
     {
         return $this->hipayOrderRepo->search($criteria, Context::createDefaultContext())->first();
     }
