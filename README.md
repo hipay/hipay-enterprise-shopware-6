@@ -55,10 +55,20 @@ Download the asset and follow the next step:
 
 ### Composer
 
-This is the method we recommend because you really have control over the installation and updates.  
-Go to your Shopware root directory of your project and use theses commands:
+This is the method we recommend because you really have control over the installation and updates.
 
-`composer require hipay/hipay-enterprise-shopware-6`
+Due to the fact Shopware 6 offers different major versions with breaking changes, we are forced to offer different versions of our module.
+
+We will create a major version of our module for each major version of Shopware 6.
+
+> :warning: Please use the correct version when installing our module according to your Shopware version !
+
+Go to your Shopware root directory of your project and use the folowing command:
+
+| Shopware | Module | command |
+| --- | --- | --- |
+| 6.4 | 1.x | `composer require hipay/hipay-enterprise-shopware-6 "^1"` |
+| 6.5 | 2.x | `composer require hipay/hipay-enterprise-shopware-6 "^2"` |
 
 Afterward, you can easily activate this plugin via the console and start working with it:
 
