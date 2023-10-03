@@ -16,7 +16,7 @@ if [ "$1" = '' ] || [ "$1" = '--help' ]; then
     printf "\n      - test                      : Run the configured tests                              "
     printf "\n      - l                         : Show container logs                                   "
     printf "\n      - watch admin               : Watch admin front                                     "
-    printf "\n      - watch store               : Watch store front                                     "
+    printf "\n      - watch front               : Watch store front                                     "
     printf "\n      - stop-watch                : Stop watching store front                             "
     printf "\n      - twig-format               : Prettier twig files                                   "
     printf "\n"

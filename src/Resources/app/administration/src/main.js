@@ -10,7 +10,7 @@ import './settings/hipay-settings-cards-selector';
 import './settings/hipay-settings-multibanco';
 
 import './override/sw-data-grid';
-import './override/sw-order-detail-base';
+import './override/sw-order-detail-details';
 import './override/sw-order-detail';
 import './override/sw-settings-payment-detail';
 import './override/sw-order-state-history-card';

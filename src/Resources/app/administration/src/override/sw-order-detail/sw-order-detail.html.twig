@@ -1,6 +1,5 @@
 {% block sw_order_detail_actions_slot_smart_bar_actions %}
   <template v-if="showOnHipayMethod">
-   
     <sw-button variant="contrast"
       v-if="canCapture"
       @click="openCapture"
@@ -13,12 +12,15 @@
       :disabled="!acl.can('order.editor')">
       {{ $tc('hipay.action.refund') }}
     </sw-button>
-    <sw-button variant="danger"
+    <sw-button
+      :title="$tc('hipay.action.cancelOrderInfo')"
+      variant="danger"
       v-if="canCancel"
       @click="openCancel"
       :disabled="!acl.can('order.editor')">
-      {{ $tc('hipay.action.cancel') }}
+      {{ $tc('hipay.action.cancelOrder') }}
     </sw-button>
+    <div class="separator" v-if="canCapture || canRefund || canCancel"></div>
     {% parent %}
     <sw-modal :title="$tc('hipay.action.capture')"
       v-if="showOrderCapture"
@@ -75,7 +77,7 @@
         </sw-button>
       </template>
     </sw-modal>
-    <sw-order-state-change-modal :order="orderData"
+    <sw-order-state-change-modal :order="order"
       :isLoading="isLoadingRequest"
       technicalName=""
       v-if="showOrderStateForCapture"
@@ -136,7 +138,7 @@
           {{ $tc('hipay.action.full_refund') }}
         </sw-button>
       </template>
-      <sw-order-state-change-modal :order="orderData"
+      <sw-order-state-change-modal :order="order"
         :isLoading="isLoadingRequest"
         technicalName=""
         v-if="showOrderStateForRefund"
@@ -144,11 +146,26 @@
         @page-leave-confirm="makeRefund"></sw-order-state-change-modal>
     </sw-modal>
 
-    <sw-order-state-change-modal :order="orderData"
+    <sw-order-state-change-modal :order="order"
         :isLoading="isLoadingRequest"
         technicalName=""
         v-if="showOrderStateForCancel"
         @page-leave="closeCancelModal"
         @page-leave-confirm="makeCancel"></sw-order-state-change-modal>
   </template>
+{% endblock %}
+{% block sw_order_detail_actions_abort %}
+  <sw-button
+    :title="$tc('hipay.action.resetModificationsInfo')"
+    v-tooltip="{
+      message: $tc('sw-privileges.tooltip.warning'),
+      disabled: acl.can('order.editor'),
+      showOnDisabledElements: true
+      }"
+    class="sw-order-detail__smart-bar-cancel-button"
+    :disabled="isLoading || !acl.can('order.editor')"
+    @click="onCancelEditing"
+    >
+      {{ $tc('hipay.action.resetModifications') }}
+  </sw-button>
 {% endblock %}

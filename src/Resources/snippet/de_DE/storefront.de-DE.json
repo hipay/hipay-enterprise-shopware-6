@@ -23,6 +23,7 @@
         "phone": "Telefon"
       },
       "sdd": {
+        "gender": "Geschlecht",
         "firstname": "Vorname",
         "lastname": "Nachname",
         "bank-name": "Bank Name",

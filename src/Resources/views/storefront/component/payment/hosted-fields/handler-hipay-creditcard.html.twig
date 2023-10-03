@@ -10,7 +10,7 @@
     {% if config('HiPayPaymentPlugin.config.oneClickPayment') && page.extensions.card_tokens.elements %}      
         {% for cardToken in page.extensions.card_tokens %}
         <div class="form-group hipay-token">
-          <div class="{{ formRadioWrapperClass }}">
+          <div class="flex {{ formRadioWrapperClass }}">
             <input type="radio"
               class="{{ formCheckInputClass }}"
               id="token-{{ cardToken.id }}"
@@ -37,7 +37,7 @@
         {% endfor %}
         {# new credit card #}
         <div class="form-group hipay-token">
-          <div class="{{ formRadioWrapperClass }}">
+          <div class="flex {{ formRadioWrapperClass }}">
             <input type="radio"
               class="{{ formCheckInputClass }}"
               id="token-new-creditcard"

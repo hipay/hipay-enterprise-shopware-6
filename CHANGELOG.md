@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## Version 2.0.0
+
+- **BREAKING CHANGE** : Added support for Shopware version **6.5**
+
+> :warning: This version is not compatible with Shopware version **6.4**
+
 ## Version 1.1.1
 
 - **Fixed** :  Fixed PHP SDK version

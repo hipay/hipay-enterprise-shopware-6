@@ -4,32 +4,35 @@ import HipayHostedFieldsPlugin from '../hipay-hosted-fields.plugin';
  * Plugin hipay for hosted fields
  */
 export default class HandlerHipayCreditcardPlugin extends HipayHostedFieldsPlugin {
-
   init() {
     super.init();
 
-    const inputResponse =  document.querySelector('#' + this.options.idResponse);
+    const inputResponse = document.querySelector(`#${this.options.idResponse}`);
     const cardInstance = this._cardInstance;
-    document.querySelector('#hipay-multiuse').addEventListener('change', function(e) {
-      cardInstance.setMultiUse(e.target.checked);
-    });
+    document
+      .querySelector('#hipay-multiuse')
+      ?.addEventListener('change', function(e) {
+        cardInstance.setMultiUse(e.target.checked);
+      });
 
-    document.querySelectorAll('input[name="hipay-token"]').forEach(
-      radio => radio.addEventListener('change', function(e) {
-          var value = '';
-          var displayNewCardBlock = 'block';
+    document.querySelectorAll('input[name="hipay-token"]').forEach(radio =>
+      radio.addEventListener('change', function(e) {
+        var value = '';
+        var displayNewCardBlock = 'block';
 
-          if(e.target.getAttribute('value')) {
-            displayNewCardBlock = 'none';
-            value = {
-              token: e.target.value,
-              device_fingerprint: cardInstance.sdkInstance.getDeviceFingerprint(),
-              browser_info: cardInstance.sdkInstance.getBrowserInfo(),
-              payment_product: e.target.dataset.brand             
-            };
-          }
-          inputResponse.setAttribute('value', JSON.stringify(value));
-          document.querySelector('#hipay-new-creditcard-block').style.display = displayNewCardBlock;          
+        if (e.target.getAttribute('value')) {
+          displayNewCardBlock = 'none';
+          value = {
+            token: e.target.value,
+            device_fingerprint: cardInstance.sdkInstance.getDeviceFingerprint(),
+            browser_info: cardInstance.sdkInstance.getBrowserInfo(),
+            payment_product: e.target.dataset.brand
+          };
+        }
+        inputResponse.setAttribute('value', JSON.stringify(value));
+        document.querySelector(
+          '#hipay-new-creditcard-block'
+        ).style.display = displayNewCardBlock;
       })
     );
   }

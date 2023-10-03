@@ -112,7 +112,7 @@ export default class HipayHostedFieldsPlugin extends Plugin {
     }
 
     const errorNode = document.querySelector(
-      '#' + this.options.errorPrefix + '-' + targetId
+      `#${this.options.errorPrefix}-${targetId}`
     );
     if (errorNode) {
       errorNode.innerHTML = errorMessage;

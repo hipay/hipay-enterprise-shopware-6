@@ -23,12 +23,8 @@ class Mbway extends AbstractPaymentMethod
     /** {@inheritDoc} */
     protected const PAYMENT_IMAGE = 'mbway.svg';
 
-    /** {@inheritDoc} */
     protected static PaymentProduct $paymentConfig;
 
-    /**
-     * {@inheritDoc}
-     */
     public static function getName(string $lang): ?string
     {
         $names = [
@@ -39,9 +35,6 @@ class Mbway extends AbstractPaymentMethod
         return $names[$lang] ?? null;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public static function getDescription(string $lang): ?string
     {
         $descriptions = [
@@ -52,25 +45,16 @@ class Mbway extends AbstractPaymentMethod
         return $descriptions[$lang] ?? null;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public static function getCurrencies(): ?array
     {
         return ['EUR'];
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public static function getCountries(): ?array
     {
         return ['PT'];
     }
 
-    /**
-     * {@inheritDoc}
-     */
     protected function hydrateHostedFields(OrderRequest $orderRequest, array $payload, AsyncPaymentTransactionStruct $transaction): OrderRequest
     {
         $paymentMethod = new PhonePaymentMethod();
@@ -86,9 +70,6 @@ class Mbway extends AbstractPaymentMethod
         return $orderRequest;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     protected function hydrateHostedPage(HostedPaymentPageRequest $orderRequest, AsyncPaymentTransactionStruct $transaction): HostedPaymentPageRequest
     {
         $orderRequest->customerBillingInfo->phone = $this->formatPhoneNumber(
