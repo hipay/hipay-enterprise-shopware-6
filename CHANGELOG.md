@@ -1,8 +1,10 @@
 # CHANGELOG
 
-## UNRELEASED
+## Version 2.0.0
 
-- **Add** : Added support of new Shopware version **6.5**
+- **BREAKING CHANGE** : Added support for Shopware version **6.5**
+
+> :warning: This version is not compatible with Shopware version **6.4**
 
 ## Version 1.1.1
 
