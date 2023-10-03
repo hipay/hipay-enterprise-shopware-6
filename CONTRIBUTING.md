@@ -1,5 +1,7 @@
 # Contributing to the HiPay Enterprise plugin for Shopware 6
 
+> :warning: This module is supporting versions 6.4 and higher of Shopware 6
+
 > :warning: This repository is a mirror of a private repository for this plugin, so we are not able to merge your PRs directly in GitHub. Any open PRs will be added to the main repository and closed in GitHub. Any contributor will be credited in the plugin's changelog.
 
 Contributions to the HiPay Enterprise module for Shopware 6 should be made via GitHub [pull requests][pull-requests] and discussed using GitHub [issues][issues].
@@ -28,6 +30,21 @@ Clone the HiPay Enterprise shopware project in your environment with Git:
 ```bash
 git clone https://github.com/hipay/hipay-enterprise-shopware-6.git
 ```
+
+### Branch strategy
+
+Due to the fact Shopware 6 offers different major versions with breaking changes, we are forced to offer different versions of our module.
+
+During development, we have to use a specific branch according to a specific version of Shopware 6.
+
+If you want to contribute on our module, you have to use a branch based on the correct one according to the Shopware 6 version :
+
+| Shopware | Module (feature) | Module (release/hotfix) |
+| --- | --- | --- |
+| 6.4 | [develop-6-4](https://github.com/hipay/hipay-enterprise-shopware-6/tree/develop-6-4) | [main-6-4](https://github.com/hipay/hipay-enterprise-shopware-6/tree/main-6-4) |
+| 6.5 | [develop-6-5](https://github.com/hipay/hipay-enterprise-shopware-6/tree/develop-6-5) | [main-6-5](https://github.com/hipay/hipay-enterprise-shopware-6/tree/main-6-5) |
+
+### Startup container
 
 Go in the project root folder and enter this command:
 
