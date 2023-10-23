@@ -20,8 +20,8 @@ class Migration1688376458 extends MigrationStep
         ALTER TABLE `hipay_order`
             ADD `order_version_id` BINARY(16) NOT NULL,
             ADD `transaction_version_id` BINARY(16) NOT NULL,
-            DROP CONSTRAINT `fk.hipay_order.order_id`,
-            DROP CONSTRAINT `fk.hipay_order.transaction_id`;
+            DROP FOREIGN KEY `fk.hipay_order.order_id`,
+            DROP FOREIGN KEY `fk.hipay_order.transaction_id`;
         SQL;
         $connection->executeStatement($sql);
 
