@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## Version 2.0.1
+
+- **Fixed** :  Fixed MySQL migration script
+
 ## Version 2.0.0
 
 - **BREAKING CHANGE** : Added support for Shopware version **6.5**
