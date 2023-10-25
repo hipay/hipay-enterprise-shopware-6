@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## Version 2.0.2
+
+- **Fixed** : Fixed german translation
+
 ## Version 2.0.1
 
 - **Fixed** :  Fixed MySQL migration script

@@ -249,12 +249,12 @@
                 <option>
                     <id>hostedFields</id>
                     <name>Hosted fields</name>
-                    <name lang="de-DE">Zahlungsseite</name>
+                    <name lang="de-DE">Gehostete Felder</name>
                 </option>
                 <option>
                     <id>hostedPage</id>
                     <name>Hosted page</name>
-                    <name lang="de-DE">Gehostete Felder</name>
+                    <name lang="de-DE">Zahlungsseite</name>
                 </option>
             </options>
             <defaultValue>hostedPage</defaultValue>
