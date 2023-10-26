@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## Version 1.1.2
+
+- **Fixed** : Fixed german translation
+
 ## Version 1.1.1
 
 - **Fixed** :  Fixed PHP SDK version
