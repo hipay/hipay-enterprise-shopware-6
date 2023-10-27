@@ -11,10 +11,11 @@ abstract class MigrationStep extends ShopwareMigrationStep
 {
     protected function constraintExists(Connection $connection, string $referencedTable, string $constraint): bool
     {
+        $schema = $connection->getDatabase();
         $sql = <<<SQL
             SELECT CONSTRAINT_NAME
                 FROM information_schema.REFERENTIAL_CONSTRAINTS
-            WHERE CONSTRAINT_SCHEMA = 'shopware'
+            WHERE CONSTRAINT_SCHEMA = '{$schema}'
                 AND REFERENCED_TABLE_NAME = '{$referencedTable}'
                 AND CONSTRAINT_NAME = '{$constraint}';
         SQL;
