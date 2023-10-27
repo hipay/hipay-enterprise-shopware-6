@@ -132,7 +132,7 @@ class Migration extends MigrationStep
             `id` BINARY(16) NOT NULL,
             `customer_id` BINARY(16) NOT NULL,
             `token` CHAR(64) NOT NULL,
-            `brand` VARCHAR(16) NOT NULL,            
+            `brand` VARCHAR(16) NOT NULL,
             `pan` CHAR(16) NOT NULL,
             `card_holder` VARCHAR(255) NOT NULL,
             `card_expiry_month` VARCHAR(2) NOT NULL,
