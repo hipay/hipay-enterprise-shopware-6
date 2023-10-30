@@ -40,6 +40,8 @@ elif [ "$1" = 'command' ]; then
     docker exec $container $2
 elif [ "$1" = 'l' ]; then
     docker compose logs -f
+elif [ "$1" = 'build' ] && [ "$2" = 'admin' ]; then
+    docker exec $container bash -c "cd ../ && make build-admin"
 elif [ "$1" = 'watch' ] && [ "$2" = 'admin' ]; then
     docker exec $container bash -c "cd ../ && make watch-admin"
 elif [ "$1" = 'watch' ] && [ "$2" = 'front' ]; then
