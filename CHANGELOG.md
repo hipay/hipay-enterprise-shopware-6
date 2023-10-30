@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## Version 2.0.3
+
+- **Fixed** : Fixed Shopware migration when reinstalling HiPay module
+
 ## Version 2.0.2
 
 - **Fixed** : Fixed german translation
