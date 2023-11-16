@@ -55,6 +55,10 @@ elif [ "$1" = 'twig-format' ]; then
         sed -ri "s|___([[:alnum:]])|@\1|g; s|(\{\{.*)__X__([[:alnum:]])|\1\\\$\2|g" $tmpFile
         mv $tmpFile $f
     done
+elif [ "$1" = 'build' ] && [ "$2" = 'front' ]; then
+    docker exec $container bash -c "./bin/build-storefront.sh && php bin/console theme:dump"
+elif [ "$1" = 'build' ] && [ "$2" = 'admin' ]; then
+    docker exec $container bash -c "cd ../ && make build-admin"
 elif [ "$1" = 'test' ]; then
 
     find=false
