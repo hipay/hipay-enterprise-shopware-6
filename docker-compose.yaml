@@ -26,17 +26,17 @@ services:
     container_name: proxy
     image: dockware/proxy:latest
     ports:
-      - "80:80"
-      - "443:443"
-      - "8888:8888"
-      - "9999:9999"
-      - "9998:9998"
+      - '80:80'
+      - '443:443'
+      - '8888:8888'
+      - '9999:9999'
+      - '9998:9998'
     depends_on:
       - shopware
     networks:
       - shopware
     volumes:
-      - "./bin/docker/conf/nginx/proxy.conf:/etc/nginx/conf.d/proxy.conf"
+      - './bin/docker/conf/nginx/proxy.conf:/etc/nginx/conf.d/proxy.conf'
 
 volumes:
   shopware_data:

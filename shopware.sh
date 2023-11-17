@@ -1,6 +1,7 @@
 #!/bin/bash
 
 container=hipay-enterprise-shopware-6
+domain=hipay.shopware.com
 
 if [ "$1" = '' ] || [ "$1" = '--help' ]; then
     printf "\n                                                      "
@@ -10,25 +11,27 @@ if [ "$1" = '' ] || [ "$1" = '--help' ]; then
     printf "\n                                                      "
     printf "\n      - init                      : Build images and run containers                       "
     printf "\n      - copy                      : Copy Shopware root directory to local web folder      "
-    printf "\n      - init-without-sources      : Build images and run containers without mounting point"
+    printf "\n      - init-with-sources         : Build images and run containers without mounting point"
     printf "\n      - restart                   : Run containers if they exist yet                      "
     printf "\n      - command                   : Run custom command in container                       "
     printf "\n      - test                      : Run the configured tests                              "
     printf "\n      - l                         : Show container logs                                   "
+    printf "\n      - build admin               : Build admin front                                     "
+    printf "\n      - build front               : Build store front                                     "
     printf "\n      - watch admin               : Watch admin front                                     "
-    printf "\n      - watch store               : Watch store front                                     "
+    printf "\n      - watch front               : Watch store front                                     "
     printf "\n      - stop-watch                : Stop watching store front                             "
     printf "\n      - twig-format               : Prettier twig files                                   "
     printf "\n"
 fi
 
-if [ "$1" = 'init' ] || [ "$1" = 'init-without-sources' ]; then
+if [ "$1" = 'init' ] || [ "$1" = 'init-with-sources' ]; then
     docker compose down -v
     COMPOSE_HTTP_TIMEOUT=200
     docker compose up -d --build
 fi
 
-if [ "$1" = 'init' ] || [ "$1" = 'copy' ]; then
+if [ "$1" = 'init-with-sources' ] || [ "$1" = 'copy' ]; then
     rm -rf web/
     docker cp $container:/var/www/html/ web/
 elif [ "$1" = 'restart' ]; then
@@ -40,11 +43,17 @@ elif [ "$1" = 'command' ]; then
     docker exec $container $2
 elif [ "$1" = 'l' ]; then
     docker compose logs -f
+elif [ "$1" = 'build' ] && [ "$2" = 'admin' ]; then
+    docker exec $container bash -c "cd ../ && make build-admin"
+elif [ "$1" = 'build' ] && [ "$2" = 'front' ]; then
+    docker exec $container bash -c "./bin/build-storefront.sh && php bin/console theme:dump"
 elif [ "$1" = 'watch' ] && [ "$2" = 'admin' ]; then
     docker exec $container bash -c "cd ../ && make watch-admin"
 elif [ "$1" = 'watch' ] && [ "$2" = 'front' ]; then
+    docker exec $container bash -c "sudo mysql -u root --password=root -D shopware -e \"update sales_channel_domain set url='http://$domain' where url = 'https://$domain';\""
     docker exec $container bash -c "cd ../ && make watch-storefront"
 elif [ "$1" = 'stop-watch' ]; then
+    docker exec $container bash -c "sudo mysql -u root --password=root -D shopware -e \"update sales_channel_domain set url='https://$domain' where url = 'http://$domain';\""
     docker exec $container bash -c "cd ../ && make stop-watch-storefront"
 elif [ "$1" = 'twig-format' ]; then
     for f in $(find ./src -name '*.html.twig'); do
@@ -55,10 +64,6 @@ elif [ "$1" = 'twig-format' ]; then
         sed -ri "s|___([[:alnum:]])|@\1|g; s|(\{\{.*)__X__([[:alnum:]])|\1\\\$\2|g" $tmpFile
         mv $tmpFile $f
     done
-elif [ "$1" = 'build' ] && [ "$2" = 'front' ]; then
-    docker exec $container bash -c "./bin/build-storefront.sh && php bin/console theme:dump"
-elif [ "$1" = 'build' ] && [ "$2" = 'admin' ]; then
-    docker exec $container bash -c "cd ../ && make build-admin"
 elif [ "$1" = 'test' ]; then
 
     find=false
