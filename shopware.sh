@@ -54,7 +54,7 @@ elif [ "$1" = 'watch' ] && [ "$2" = 'front' ]; then
     docker exec $container bash -c "cd ../ && make watch-storefront"
 elif [ "$1" = 'stop-watch' ]; then
     docker exec $container bash -c "sudo mysql -u root --password=root -D shopware -e \"update sales_channel_domain set url='https://$domain' where url = 'http://$domain';\""
-    docker exec $container bash -c "cd ../ && make stop-watch-storefront"
+    docker exec $container bash -c "cd ../ && make stop-watch-storefront && fuser -k 9998/tcp"
 elif [ "$1" = 'twig-format' ]; then
     for f in $(find ./src -name '*.html.twig'); do
         tmpFile="${f/html.twig/"bck.html.twig"}"
