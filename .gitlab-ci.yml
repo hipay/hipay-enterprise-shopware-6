@@ -88,7 +88,7 @@ stages:
 #### TEST INIT ####
 
 # Build image
-build-test:
+.build-test:
   stage: test-init
   image:
     name: gcr.io/kaniko-project/executor:v1.6.0-debug
@@ -111,7 +111,7 @@ build-test:
     - small
 
 # Install dependencies for test
-install-test:
+.install-test:
   stage: test-init
   needs:
     - build-test
@@ -132,20 +132,20 @@ install-test:
 
 #### TEST ####
 
-nodejs-scan-sast:
+.nodejs-scan-sast:
   rules:
     - if: $ONLY_DEPLOY || $CI_PIPELINE_SOURCE == "merge_request_event"
       when: never
     - when: on_success
 
-phpcs-security-audit-sast:
+.phpcs-security-audit-sast:
   rules:
     - if: $ONLY_DEPLOY || $CI_PIPELINE_SOURCE == "merge_request_event"
       when: never
     - when: on_success
 
 # Code style
-code-style:
+.code-style:
   stage: test
   extends:
     - .test-dependencies
@@ -162,7 +162,7 @@ code-style:
       - $ONLY_DEPLOY
 
 # Smoke test
-smoke-test:
+.smoke-test:
   stage: test
   needs:
     - build-test
@@ -184,7 +184,7 @@ smoke-test:
     - small
 
 # Unit test and coverage
-phpunit:
+.phpunit:
   stage: test
   extends:
     - .test-dependencies
@@ -207,7 +207,7 @@ phpunit:
       - $PATH_REPORTS_PHPUNIT
 
 # Check Code
-phpstan:
+.phpstan:
   stage: test
   extends:
     - .test-dependencies
@@ -237,7 +237,7 @@ phpstan:
     when: always
 
 # Mutation test
-infection:
+.infection:
   stage: test
   extends:
     - .test-dependencies
@@ -262,7 +262,7 @@ infection:
       - $ONLY_DEPLOY
 
 # Sonar
-sonarqube:
+.sonarqube:
   stage: analyse
   extends:
     - .phpstan-conf
@@ -294,7 +294,7 @@ sonarqube:
       -Dsonar.qualitygate.wait=true
 
 # Package into zip
-package:
+.package:
   stage: package
   image:
     name: $REGISTRY_CI/test-jobs-${DOCKER_STACK}-${DOCKER_SERVICE}_web:${CI_COMMIT_REF_SLUG}
