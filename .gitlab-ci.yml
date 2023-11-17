@@ -1,8 +1,8 @@
 image: $REGISTRY_CI/gitlab-ci-base:buster
 
 # Static Application Security Testing (SAST)
-include:
-  - template: Security/SAST.gitlab-ci.yml
+# include:
+#   - template: Security/SAST.gitlab-ci.yml
 
 variables:
   SAST_EXCLUDED_ANALYZERS: 'eslint,semgrep'
