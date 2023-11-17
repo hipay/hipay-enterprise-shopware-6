@@ -76,7 +76,7 @@ spec:
         cd-hipay: cron-delete
     spec:
       containers:
-      - image: dockware/proxy:latest
+      - image: {{ .Values.proxy_image }}:{{ .Values.proxy_tag }}
         imagePullPolicy: Always
         name: shopware-{{ .Release.Name }}
         resources:
