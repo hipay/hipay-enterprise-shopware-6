@@ -7,8 +7,10 @@
 
 bin/
 !bin/docker/images/shopware/entrypoint.sh
+!bin/docker/conf/nginx/proxy_helm.conf
 web/
 log/
+node_modules/
 .gitlab-ci.yml
 .gitignore
 .dockerignore
