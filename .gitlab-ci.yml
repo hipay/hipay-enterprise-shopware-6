@@ -334,6 +334,7 @@ build:
       --build-arg DOCKWARE_VERSION=$DOCKWARE_VERSION
       --destination "${REGISTRY_CD}/${DOCKER_STACK}-${DOCKER_SERVICE}-web:${CI_COMMIT_REF_SLUG}"
     - sed -i "s|RELEASE_NAME|$RELEASE_NAME|" ./bin/docker/conf/nginx/proxy_helm.conf
+    - sed -i "s|URL_DOMAIN|${DOCKER_STACK}-${DOCKER_SERVICE}-${CI_COMMIT_REF_SLUG}.${URL_CD}|" ./bin/docker/conf/nginx/proxy_helm.conf
     - /kaniko/executor
       --cache=true
       --context "dir://${CI_PROJECT_DIR}"
