@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: shopware-service-{{ .Release.Name }}
+  name: shopware-web-{{ .Release.Name }}
   labels:
     app: shopware-{{ .Release.Name }}
     cd-hipay: cron-delete
@@ -30,7 +30,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: shopware-service-{{ .Release.Name }}
+  name: shopware-web-{{ .Release.Name }}
   labels:
     app: shopware-{{ .Release.Name }}
     cd-hipay: cron-delete
@@ -53,7 +53,7 @@ spec:
         name: web-{{ .Release.Name }}
         resources:
           requests:
-            memory: "512M"
+            memory: "2.5G"
             cpu: "1000m"
         envFrom:
           - configMapRef:
@@ -61,11 +61,7 @@ spec:
         ports:
           - containerPort: 3306
             name: web
-        volumeMounts:
-          - name: shopware-storage-{{ .Release.Name }}
-            mountPath: /var/lib/mysql
-            subPath: mysql
       volumes:
-        - name: shopware-storage-{{ .Release.Name }}
+        - name: shopware-persistent-storage-{{ .Release.Name }}
           persistentVolumeClaim:
             claimName: shopware-pv-claim-{{ .Release.Name }}
