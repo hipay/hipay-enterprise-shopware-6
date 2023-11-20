@@ -7,6 +7,10 @@ metadata:
     cd-hipay: cron-delete
 spec:
   ports:
+    - port: 80
+      protocol: TCP
+      name: web
+      targetPort: 80
     - port: 443
       protocol: TCP
       name: websecure
@@ -35,6 +39,24 @@ spec:
           port: 443
   tls:
     certResolver: default
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: ingressroute-{{ .Release.Name }}
+  namespace: default
+  labels:
+    cd-hipay: cron-delete
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`{{ .Values.shopware_url  }}`)
+      kind: Rule
+      priority: 1
+      services:
+        - name: proxy-service-{{ .Release.Name }}
+          port: 80
 ---
 apiVersion: apps/v1
 kind: Deployment
