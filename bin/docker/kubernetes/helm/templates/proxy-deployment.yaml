@@ -36,7 +36,7 @@ spec:
       priority: 1
       services:
         - name: proxy-service-{{ .Release.Name }}
-          port: 80
+          port: 443
   tls:
     certResolver: default
 ---
