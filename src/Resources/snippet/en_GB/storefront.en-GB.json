@@ -27,6 +27,11 @@
         "lastname": "Lastname",
         "bank-name": "Bank name",
         "iban": "IBAN"
+      },
+      "applepay": {
+        "tos": "Please accept the terms of service.",
+        "infoMessage": "This browser does not handle Apple Pay. Please use another payment method.",
+        "card-missing": "Please select a card to complete the Apple Pay payment."
       }
     },
     "finish-details": {

@@ -175,6 +175,8 @@ class NotificationService
      */
     private function validateRequest(Request $request): bool
     {
+        $isApplePay = $request->request->get('custom_data')['isApplePay'];
+
         $algos = [
             'sha256' => HashAlgorithm::SHA256,
             'sha512' => HashAlgorithm::SHA512,
@@ -189,7 +191,7 @@ class NotificationService
         }
 
         return Signature::isValidHttpSignature(
-            $this->config->getPassphrase(),
+            $isApplePay ? $this->config->getApplePayPassphrase() : $this->config->getPassphrase(),
             $algos[$this->config->getHash()],
             $signature,
             (string) $request->getContent()

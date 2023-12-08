@@ -43,12 +43,20 @@ class HiPayHttpClientService
      *
      * @throws InvalidSettingValueException
      */
-    public function getConfiguredClient(): GatewayClient
+    public function getConfiguredClient($isApplePay = false): GatewayClient
     {
-        return $this->getClient([
-            static::API_USERNAME => $this->config->getPrivateLogin(),
-            static::API_PASSWORD => $this->config->getPrivatePassword(),
-            static::API_ENV => strtolower($this->config->getEnvironment()),
-        ]);
+        if($isApplePay){
+            return $this->getClient([
+                static::API_USERNAME => $this->config->getPrivateApplePayLogin(),
+                static::API_PASSWORD => $this->config->getPrivateApplePayPassword(),
+                static::API_ENV => strtolower($this->config->getEnvironment()),
+            ]);
+        }else{
+            return $this->getClient([
+                static::API_USERNAME => $this->config->getPrivateLogin(),
+                static::API_PASSWORD => $this->config->getPrivatePassword(),
+                static::API_ENV => strtolower($this->config->getEnvironment()),
+            ]);
+        }
     }
 }
