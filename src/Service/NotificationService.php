@@ -175,7 +175,10 @@ class NotificationService
      */
     private function validateRequest(Request $request): bool
     {
-        $isApplePay = $request->request->get('custom_data')['isApplePay'];
+        $isApplePay = false;
+        if(isset($request->request->get('custom_data')['isApplePay'])){
+            $isApplePay = true;
+        }
 
         $algos = [
             'sha256' => HashAlgorithm::SHA256,

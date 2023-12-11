@@ -41,6 +41,7 @@ class HiPayHttpClientService
     /**
      * Create a configured SimpleHttpClient.
      *
+     * @param boolean $isApplePay
      * @throws InvalidSettingValueException
      */
     public function getConfiguredClient($isApplePay = false): GatewayClient

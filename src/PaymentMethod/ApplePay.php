@@ -4,15 +4,8 @@ namespace HiPay\Payment\PaymentMethod;
 
 use HiPay\Fullservice\Data\PaymentProduct;
 use HiPay\Fullservice\Gateway\Request\Order\OrderRequest;
-use HiPay\Payment\Logger\HipayLogger;
-use HiPay\Payment\Service\HiPayHttpClientService;
-use HiPay\Payment\Service\ReadHipayConfigService;
 use HiPay\Fullservice\Gateway\Request\PaymentMethod\CardTokenPaymentMethod;
-use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStateHandler;
 use Shopware\Core\Checkout\Payment\Cart\AsyncPaymentTransactionStruct;
-use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
-use Shopware\Core\Framework\Store\Authentication\LocaleProvider;
-use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * ApplePay payment Methods.
@@ -27,31 +20,6 @@ class ApplePay extends AbstractPaymentMethod
 
     /** {@inheritDoc} */
     protected static PaymentProduct $paymentConfig;
-
-    protected EntityRepository $transactionRepo;
-
-    public function __construct(
-        OrderTransactionStateHandler $transactionStateHandler,
-        ReadHipayConfigService $config,
-        HiPayHttpClientService $clientService,
-        RequestStack $requestStack,
-        LocaleProvider $localeProvider,
-        EntityRepository $orderCustomerRepository,
-        HipayLogger $hipayLogger,
-        EntityRepository $orderTransactionRepository
-    ) {
-        parent::__construct(
-            $transactionStateHandler,
-            $config,
-            $clientService,
-            $requestStack,
-            $localeProvider,
-            $orderCustomerRepository,
-            $hipayLogger
-        );
-
-        $this->transactionRepo = $orderTransactionRepository;
-    }
 
     /**
      * {@inheritDoc}
@@ -90,22 +58,6 @@ class ApplePay extends AbstractPaymentMethod
         ];
 
         return $descriptions[$lang] ?? null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public static function getCurrencies(): ?array
-    {
-        return ['EUR'];
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public static function getCountries(): ?array
-    {
-        return ['FR'];
     }
 
     /**
