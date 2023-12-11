@@ -10,9 +10,9 @@ import HipayManageCreditCardPlugin from './account/payment/hipay-manage-creditca
 const PluginManager = window.PluginManager;
 
 PluginManager.register(
-  'HandlerHipayApplePlugin',
+  'HandlerHipayApplePayPlugin',
   HandlerHipayApplePayPlugin,
-  '[handler-hipay-apple-plugin]'
+  '[handler-hipay-apple-pay-plugin]'
 );
 
 PluginManager.register(
