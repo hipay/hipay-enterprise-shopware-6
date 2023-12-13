@@ -35,7 +35,8 @@
         {% set hipayConfig = {
             username: config('HiPayPaymentPlugin.config.publicApplePayLogin' ~ environment),
             password: config('HiPayPaymentPlugin.config.publicApplePayPassword' ~ environment),
-            merchantId: config('HiPayPaymentPlugin.config.merchantId' ~ environment),
+            merchantId: payment.customFields.merchantId,
+            merchantName: payment.customFields.merchantName,
             shopname: page.metaInformation.metaTitle,
             environment: environment|lower,
             lang: page.header.activeLanguage.translationCode.code|slice(0, 2),

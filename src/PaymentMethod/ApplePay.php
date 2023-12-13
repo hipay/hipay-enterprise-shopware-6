@@ -66,8 +66,10 @@ class ApplePay extends AbstractPaymentMethod
     public static function addDefaultCustomFields(): array
     {
         return [
+            'merchantName' => '',
             'buttonType' => 'default',
             'buttonStyle' => 'black',
+            'merchantId' => ''
         ];
     }
 
