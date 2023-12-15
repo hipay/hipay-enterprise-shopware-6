@@ -26,6 +26,8 @@ export default class HandlerHipayApplePayPlugin extends Plugin {
       merchantId: this.options.merchantId,
       environment: this.options.environment,
       lang: this.options.lang,
+      countryCode: this.options.countryCode,
+      currency: this.options.currency,
       buttonType: this.options.styles.buttonType,
       buttonStyle: this.options.styles.buttonStyle,
       totalAmount: (this.options.amount).toString(),
@@ -157,8 +159,8 @@ export default class HandlerHipayApplePayPlugin extends Plugin {
     }
 
     const request = {
-      countryCode: 'FR',
-      currencyCode: 'EUR',
+      countryCode: parameters.countryCode,
+      currencyCode: parameters.currency,
       total: total,
       supportedNetworks: ['visa', 'masterCard']
     };

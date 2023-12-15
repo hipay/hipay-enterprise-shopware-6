@@ -40,7 +40,9 @@
             shopname: page.metaInformation.metaTitle,
             environment: environment|lower,
             lang: page.header.activeLanguage.translationCode.code|slice(0, 2),
+            countryCode: page.header.activeLanguage.translationCode.code|slice(3, 2),
             amount: summary.price.rawTotal,
+            currency: page.header.activeCurrency.isoCode,
             styles: {
               base: {
                 color: config('HiPayPaymentPlugin.config.hostedFieldsTextColor'),

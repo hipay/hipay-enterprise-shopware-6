@@ -307,9 +307,7 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
             $request = $this->generateRequestHostedFields($transaction, $locale);
             $this->logger->info('Sending an hosted fields request', [$request]);
 
-            if(isset($request->custom_data['isApplePay'])){
-                $isApplePay = true;
-            }
+            $isApplePay = isset($request->custom_data['isApplePay']);
 
             $client = $this->clientService->getConfiguredClient($isApplePay);
 
@@ -324,9 +322,7 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
             $request = $this->generateRequestHostedPage($transaction, $locale);
             $this->logger->info('Sending an hosted page request', [$request]);
 
-            if(isset($request->custom_data['isApplePay'])){
-                $isApplePay = true;
-            }
+            $isApplePay = isset($request->custom_data['isApplePay']);
 
             $client = $this->clientService->getConfiguredClient($isApplePay);
 
