@@ -83,11 +83,6 @@ export default class HandlerHipayApplePayPlugin extends Plugin {
       this._applePayInstance.completePaymentWithSuccess();
     });
 
-    this._applePayInstance.on('cancel', function () {
-      // The user has cancelled its payment
-      // this.completePaymentWithFailure();
-    });
-
     this._applePayInstance.on('paymentUnauthorized', function () {
       // The payment is not authorized (Token creation has failed, domain validation has failed...)
       this.completePaymentWithFailure();
@@ -126,12 +121,7 @@ export default class HandlerHipayApplePayPlugin extends Plugin {
         return canMakePayments;
       });
     } else {
-      try {
-        return window.ApplePaySession && window.ApplePaySession.canMakePayments();
-      } catch (e) {
-        console.error('Error on ApplePaySession.canMakePayments', e);
-        return false;
-      }
+      return window.ApplePaySession?.canMakePayments();
     }
   }
 

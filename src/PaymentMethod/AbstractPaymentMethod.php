@@ -237,10 +237,8 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
             throw new UnexpectedValueException('Constant '.__CLASS__.'::PAYMENT_CODE must be defined');
         }
 
-        if (!$config = static::getLocalItem(static::PAYMENT_CODE)){
-            if (!$config = Collection::getItem(static::PAYMENT_CODE)) {
-                throw new UnexpectedValueException('The constant '.__CLASS__.'::PAYMENT_CODE is invalid');
-            }
+        if ($config = (static::getLocalItem(static::PAYMENT_CODE) || Collection::getItem(static::PAYMENT_CODE))) {
+            throw new UnexpectedValueException('The constant '.__CLASS__.'::PAYMENT_CODE is invalid');
         }
 
         return $config;
