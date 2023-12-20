@@ -28,7 +28,7 @@ Component.register('hipay-check-server-access', {
     completeSucess() {
       this.sucess = false;
     },
-    validateConfig(environment) {
+    validateConfig() {
       this.isLoading = true;
 
       const title = this.$tc('hipay.config.checkAccess.title');
@@ -67,7 +67,8 @@ Component.register('hipay-check-server-access', {
       const config = systemConfigComponent.actualConfigData;
 
       return Object.assign({}, config.null, config[selectedSalesChannelId], {
-        environment: this.$parent.bind.value
+        environment: this.$parent.bind.env,
+        isApplePay: this.$parent.bind.isApplePay === "true"
       });
     }
   }

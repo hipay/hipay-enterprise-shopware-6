@@ -121,7 +121,7 @@ export default class HandlerHipayApplePayPlugin extends Plugin {
         return canMakePayments;
       });
     } else {
-      return window.ApplePaySession?.canMakePayments();
+      return window.ApplePaySession && window.ApplePaySession.canMakePayments();
     }
   }
 

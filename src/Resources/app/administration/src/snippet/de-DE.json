@@ -18,8 +18,6 @@
       "title": {
         "privateKey": "Private Anmeldedaten",
         "publicKey": "Öffentliche Anmeldedaten",
-        "privateKeyApplePay": "Apple Pay Zugangsdaten (privat)",
-        "publicKeyApplePay": "Apple Pay Zugangsdaten (öffentlich)",
         "notification": "Einstellungen für Benachrichtigungen"
       },
       "info": "Um Sie über Ereignisse im Zusammenhang mit Ihrem Zahlungssystem zu informieren, z. B. über eine neue Transaktion oder eine 3-D Secure-Transaktion, kann die HiPay Plattform Ihrer Anwendung eine Server-to-Server-Benachrichtigung senden. Loggen Sie sich bei HiPay Console ein, wählen Sie einen Account und klicken Sie Integration > Sicherheitseinstellungen um die geheime Passphrase abzurufen.",

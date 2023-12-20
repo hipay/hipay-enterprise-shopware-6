@@ -37,7 +37,7 @@
         </input-field>
     </card>
 
-    <!-- live credentials -->
+    <!-- PRODUCTION CREDENTIALS -->
     <card>
         <title>Live configuration</title>
         <title lang="de-DE">Live-Konfiguration</title>
@@ -82,51 +82,6 @@
 
         <component name="hipay-html-bloc">
             <name>h3</name>
-            <value>hipay.config.title.publicKeyApplePay</value>
-        </component>
-
-        <input-field type="text">
-            <name>publicApplePayLoginProduction</name>
-            <label>Username</label>
-            <label lang="de-DE">Benutzername</label>
-            <required>true</required>
-        </input-field>
-
-        <input-field type="password">
-            <name>publicApplePayPasswordProduction</name>
-            <label>Password</label>
-            <label lang="de-DE">Passwort</label>
-            <required>true</required>
-        </input-field>
-
-        <component name="hipay-html-bloc">
-            <name>h3</name>
-            <value>hipay.config.title.privateKeyApplePay</value>
-        </component>
-
-        <input-field type="text">
-            <name>privateApplePayLoginProduction</name>
-            <label>Username</label>
-            <label lang="de-DE">Benutzername</label>
-            <required>true</required>
-        </input-field>
-
-        <input-field type="password">
-            <name>privateApplePayPasswordProduction</name>
-            <label>Password</label>
-            <label lang="de-DE">Passwort</label>
-            <required>true</required>
-        </input-field>
-
-        <input-field type="password">
-            <name>applePayPassphraseProduction</name>
-            <label>Secret Apple Pay passphrase</label>
-            <label lang="de-DE">geheime Apple Pay Passphrase</label>
-            <required>true</required>
-        </input-field>
-
-        <component name="hipay-html-bloc">
-            <name>h3</name>
             <value>hipay.config.title.notification</value>
         </component>
 
@@ -161,11 +116,96 @@
 
         <component name="hipay-check-server-access">
             <name>checkServerAccess</name>
-            <value>Production</value>
+            <env>Production</env>
+            <isApplePay>false</isApplePay>
         </component>
     </card>
 
-    <!-- test credentials -->
+    <!-- APPLE PAY PRODUCTION CREDENTIALS -->
+    <card>
+        <title>Apple Pay live configuration</title>
+        <title lang="de-DE">Apple Pay Testkonfiguration</title>
+
+        <component name="hipay-html-bloc">
+            <name>h3</name>
+            <value>hipay.config.title.privateKey</value>
+        </component>
+
+        <input-field type="text">
+            <name>privateApplePayLoginProduction</name>
+            <label>Username</label>
+            <label lang="de-DE">Benutzername</label>
+            <required>true</required>
+        </input-field>
+
+        <input-field type="password">
+            <name>privateApplePayPasswordProduction</name>
+            <label>Password</label>
+            <label lang="de-DE">Passwort</label>
+            <required>true</required>
+        </input-field>
+
+        <component name="hipay-html-bloc">
+            <name>h3</name>
+            <value>hipay.config.title.publicKey</value>
+        </component>
+
+        <input-field type="text">
+            <name>publicApplePayLoginProduction</name>
+            <label>Username</label>
+            <label lang="de-DE">Benutzername</label>
+            <required>true</required>
+        </input-field>
+
+        <input-field type="password">
+            <name>publicApplePayPasswordProduction</name>
+            <label>Password</label>
+            <label lang="de-DE">Passwort</label>
+            <required>true</required>
+        </input-field>
+
+        <component name="hipay-html-bloc">
+            <name>h3</name>
+            <value>hipay.config.title.notification</value>
+        </component>
+
+        <component name="hipay-help-info">
+            <name>paragraph</name>
+            <value>hipay.config.info</value>
+        </component>
+
+        <input-field type="password">
+            <name>applePayPassphraseProduction</name>
+            <label>Secret Apple Pay passphrase</label>
+            <label lang="de-DE">geheime Apple Pay Passphrase</label>
+            <required>true</required>
+        </input-field>
+
+        <input-field type="single-select">
+            <name>hashProductionApplePay</name>
+            <label>Hashing algorithm</label>
+            <label lang="de-DE">Hash-Algorithmus</label>
+            <required>true</required>
+            <options>
+                <option>
+                    <id>sha256</id>
+                    <name>SHA-256</name>
+                </option>
+                <option>
+                    <id>sha512</id>
+                    <name>SHA-512</name>
+                </option>
+            </options>
+        </input-field>
+
+        <component name="hipay-check-server-access">
+            <name>checkServerAccess</name>
+            <env>Production</env>
+            <isApplePay>true</isApplePay>
+        </component>
+    </card>
+
+    <!-- STAGE CREDENTIALS -->
     <card>
 
         <title>Test configuration</title>
@@ -211,51 +251,6 @@
 
         <component name="hipay-html-bloc">
             <name>h3</name>
-            <value>hipay.config.title.publicKeyApplePay</value>
-        </component>
-
-        <input-field type="text">
-            <name>publicApplePayLoginStage</name>
-            <label>Username</label>
-            <label lang="de-DE">Benutzername</label>
-            <required>true</required>
-        </input-field>
-
-        <input-field type="password">
-            <name>publicApplePayPasswordStage</name>
-            <label>Password</label>
-            <label lang="de-DE">Passwort</label>
-            <required>true</required>
-        </input-field>
-
-        <component name="hipay-html-bloc">
-            <name>h3</name>
-            <value>hipay.config.title.privateKeyApplePay</value>
-        </component>
-
-        <input-field type="text">
-            <name>privateApplePayLoginStage</name>
-            <label>Username</label>
-            <label lang="de-DE">Benutzername</label>
-            <required>true</required>
-        </input-field>
-
-        <input-field type="password">
-            <name>privateApplePayPasswordStage</name>
-            <label>Password</label>
-            <label lang="de-DE">Passwort</label>
-            <required>true</required>
-        </input-field>
-
-        <input-field type="password">
-            <name>applePayPassphraseStage</name>
-            <label>Secret stage Apple Pay passphrase</label>
-            <label lang="de-DE">geheime Apple Pay Passphrase</label>
-            <required>true</required>
-        </input-field>
-
-        <component name="hipay-html-bloc">
-            <name>h3</name>
             <value>hipay.config.title.notification</value>
         </component>
 
@@ -290,9 +285,93 @@
 
         <component name="hipay-check-server-access">
             <name>checkServerAccess</name>
-            <value>Stage</value>
+            <env>Stage</env>
+            <isApplePay>false</isApplePay>
+        </component>
+    </card>
+
+    <!-- APPLE PAY STAGE CREDENTIALS -->
+    <card>
+        <title>Apple Pay stage configuration</title>
+        <title lang="de-DE">Apple Pay Testkonfiguration</title>
+
+        <component name="hipay-html-bloc">
+            <name>h3</name>
+            <value>hipay.config.title.privateKey</value>
         </component>
 
+        <input-field type="text">
+            <name>privateApplePayLoginStage</name>
+            <label>Username</label>
+            <label lang="de-DE">Benutzername</label>
+            <required>true</required>
+        </input-field>
+
+        <input-field type="password">
+            <name>privateApplePayPasswordStage</name>
+            <label>Password</label>
+            <label lang="de-DE">Passwort</label>
+            <required>true</required>
+        </input-field>
+
+        <component name="hipay-html-bloc">
+            <name>h3</name>
+            <value>hipay.config.title.publicKey</value>
+        </component>
+
+        <input-field type="text">
+            <name>publicApplePayLoginStage</name>
+            <label>Username</label>
+            <label lang="de-DE">Benutzername</label>
+            <required>true</required>
+        </input-field>
+
+        <input-field type="password">
+            <name>publicApplePayPasswordStage</name>
+            <label>Password</label>
+            <label lang="de-DE">Passwort</label>
+            <required>true</required>
+        </input-field>
+
+        <component name="hipay-html-bloc">
+            <name>h3</name>
+            <value>hipay.config.title.notification</value>
+        </component>
+
+        <component name="hipay-help-info">
+            <name>paragraph</name>
+            <value>hipay.config.info</value>
+        </component>
+
+        <input-field type="password">
+            <name>applePayPassphraseStage</name>
+            <label>Secret Apple Pay passphrase</label>
+            <label lang="de-DE">geheime Apple Pay Passphrase</label>
+            <required>true</required>
+        </input-field>
+
+        <input-field type="single-select">
+            <name>hashStageApplePay</name>
+            <label>Hashing algorithm</label>
+            <label lang="de-DE">Hash-Algorithmus</label>
+            <required>true</required>
+            <options>
+                <option>
+                    <id>sha256</id>
+                    <name>SHA-256</name>
+                </option>
+                <option>
+                    <id>sha512</id>
+                    <name>SHA-512</name>
+                </option>
+            </options>
+        </input-field>
+
+        <component name="hipay-check-server-access">
+            <name>checkServerAccess</name>
+            <env>Stage</env>
+            <isApplePay>true</isApplePay>
+        </component>
     </card>
 
     <!-- configuration transaction -->

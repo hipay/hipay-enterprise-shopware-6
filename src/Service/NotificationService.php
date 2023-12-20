@@ -185,8 +185,14 @@ class NotificationService
             'sha512' => HashAlgorithm::SHA512,
         ];
 
-        if (!isset($algos[$this->config->getHash()])) {
-            throw new ApiErrorException('Bad configuration unknown algorythm "'.$this->config->getHash().'"');
+        if($isApplePay){
+            if (!isset($algos[$this->config->getHashApplePay()])) {
+                throw new ApiErrorException('Bad configuration unknown algorythm "'.$this->config->getHash().'"');
+            }
+        }else{
+            if (!isset($algos[$this->config->getHash()])) {
+                throw new ApiErrorException('Bad configuration unknown algorythm "'.$this->config->getHash().'"');
+            }
         }
 
         if (!$signature = $request->headers->get('x-allopass-signature', null)) {
@@ -195,7 +201,7 @@ class NotificationService
 
         return Signature::isValidHttpSignature(
             $isApplePay ? $this->config->getApplePayPassphrase() : $this->config->getPassphrase(),
-            $algos[$this->config->getHash()],
+            $isApplePay ? $algos[$this->config->getHashApplePay()] : $algos[$this->config->getHash()],
             $signature,
             (string) $request->getContent()
         );

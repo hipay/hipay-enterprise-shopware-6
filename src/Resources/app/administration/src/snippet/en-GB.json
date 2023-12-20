@@ -16,8 +16,6 @@
       "title": {
         "privateKey": "Private credentials",
         "publicKey": "Public credentials",
-        "privateKeyApplePay": "Apple Pay credentials (private)",
-        "publicKeyApplePay": "Apple Pay credentials (public)",
         "notification": "Notification settings"
       },
       "capture-help": "<b>Automatic</b>: All transactions will be automatically captured.<br/><b>Manual</b>: All transactions will be captured manually in your HiPay or Shopware back office.",

@@ -306,20 +306,23 @@ class AdminController extends AbstractController
     private function extractConfigurationFromPluginConfig(RequestDataBag $params, string $scope): Configuration
     {
         $environement = ucfirst($params->getAlpha('environment'));
+        $isApplePay = $params->get('isApplePay');
 
+        $login = $isApplePay ? "ApplePayLogin" : "Login";
+        $password = $isApplePay ? "ApplePayPassword" : "Password";
         $payload = [
             HiPayHttpClientService::API_USERNAME => $params->get(
                 HiPayPaymentPlugin::getModuleName()
                     .'.config.'
                     .$scope
-                    .'Login'
+                    .$login
                     .$environement
             ),
             HiPayHttpClientService::API_PASSWORD => $params->get(
                 HiPayPaymentPlugin::getModuleName()
                     .'.config.'
                     .$scope
-                    .'Password'
+                    .$password
                     .$environement
             ),
             HiPayHttpClientService::API_ENV => strtolower($environement),
