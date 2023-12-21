@@ -124,7 +124,7 @@
     <!-- APPLE PAY PRODUCTION CREDENTIALS -->
     <card>
         <title>Apple Pay live configuration</title>
-        <title lang="de-DE">Apple Pay Testkonfiguration</title>
+        <title lang="de-DE">Apple Pay live-konfigurieren</title>
 
         <component name="hipay-html-bloc">
             <name>h3</name>

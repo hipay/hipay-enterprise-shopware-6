@@ -187,7 +187,7 @@ class NotificationService
 
         if($isApplePay){
             if (!isset($algos[$this->config->getHashApplePay()])) {
-                throw new ApiErrorException('Bad configuration unknown algorythm "'.$this->config->getHash().'"');
+                throw new ApiErrorException('Bad configuration unknown algorythm "'.$this->config->getHashApplePay().'"');
             }
         }else{
             if (!isset($algos[$this->config->getHash()])) {
@@ -201,7 +201,7 @@ class NotificationService
 
         return Signature::isValidHttpSignature(
             $isApplePay ? $this->config->getApplePayPassphrase() : $this->config->getPassphrase(),
-            $isApplePay ? $algos[$this->config->getHashApplePay()] : $algos[$this->config->getHash()],
+            $algos[$isApplePay ? $this->config->getHashApplePay() : $this->config->getHash()],
             $signature,
             (string) $request->getContent()
         );
