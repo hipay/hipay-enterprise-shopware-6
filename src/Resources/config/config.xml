@@ -292,7 +292,7 @@
 
     <!-- APPLE PAY STAGE CREDENTIALS -->
     <card>
-        <title>Apple Pay stage configuration</title>
+        <title>Apple Pay test configuration</title>
         <title lang="de-DE">Apple Pay Testkonfiguration</title>
 
         <component name="hipay-html-bloc">
