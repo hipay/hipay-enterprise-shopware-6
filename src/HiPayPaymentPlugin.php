@@ -6,6 +6,8 @@ namespace HiPay\Payment;
 
 use Composer\InstalledVersions;
 use HiPay\Fullservice\Exception\UnexpectedValueException;
+use HiPay\Payment\PaymentMethod\Alma3X;
+use HiPay\Payment\PaymentMethod\Alma4X;
 use HiPay\Payment\PaymentMethod\Bancontact;
 use HiPay\Payment\PaymentMethod\CreditCard;
 use HiPay\Payment\PaymentMethod\Giropay;
@@ -68,6 +70,8 @@ class HiPayPaymentPlugin extends Plugin
     ];
 
     private const PAYMENT_METHODS = [
+        Alma3X::class,
+        Alma4X::class,
         Bancontact::class,
         CreditCard::class,
         Giropay::class,
@@ -389,9 +393,11 @@ class HiPayPaymentPlugin extends Plugin
 
         $countries = $classname::getCountries();
         $currencies = $classname::getCurrencies();
+        $minAmount = $classname::getMinAmount();
+        $maxAmount = $classname::getMaxAmount();
 
         // No rule
-        if (!$countries && !$currencies) {
+        if (!$countries && !$currencies && !$minAmount && !$maxAmount) {
             return null;
         }
 
@@ -433,6 +439,24 @@ class HiPayPaymentPlugin extends Plugin
                 'type' => 'currency',
                 'position' => 0,
                 'value' => ['operator' => Rule::OPERATOR_EQ, 'currencyIds' => $currencyIds],
+                'parentId' => $andId,
+            ];
+        }
+
+        if ($minAmount){
+            $conditions[] = [
+                'type' => 'cartCartAmount',
+                'position' => 1,
+                'value' => ['operator' => Rule::OPERATOR_GTE, 'amount' => $minAmount],
+                'parentId' => $andId,
+            ];
+        }
+
+        if ($maxAmount){
+            $conditions[] = [
+                'type' => 'cartCartAmount',
+                'position' => 1,
+                'value' => ['operator' => Rule::OPERATOR_LTE, 'amount' => $maxAmount],
                 'parentId' => $andId,
             ];
         }
