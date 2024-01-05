@@ -114,7 +114,7 @@ class AdminController extends AbstractController
                 throw new InvalidParameterException('Only the full capture is allowed');
             }
 
-            $isApplePay = $hipayOrder->getTransaction()->getPaymentMethod()->getShortName() === "apple_pay";
+            $isApplePay = 'apple_pay' === $hipayOrder->getTransaction()->getPaymentMethod()->getShortName();
 
             $maintenanceRequestFormatter = new MaintenanceRequestFormatter();
             $maintenanceRequest = $maintenanceRequestFormatter->makeRequest([
@@ -194,7 +194,7 @@ class AdminController extends AbstractController
             /** @var HipayOrderEntity */
             $hipayOrder = $this->hipayOrderRepo->search($hipayOrderCriteria, $context)->first();
 
-            $isApplePay = $hipayOrder->getTransaction()->getPaymentMethod()->getShortName() === "apple_pay";
+            $isApplePay = 'apple_pay' === $hipayOrder->getTransaction()->getPaymentMethod()->getShortName();
 
             // Create HiPay refund related to this transaction
             $refund = OrderRefundEntity::create(
@@ -267,7 +267,7 @@ class AdminController extends AbstractController
             /** @var HipayOrderEntity */
             $hipayOrder = $this->hipayOrderRepo->search($hipayOrderCriteria, $context)->first();
 
-            $isApplePay = $hipayOrder->getTransaction()->getPaymentMethod()->getShortName() === "apple_pay";
+            $isApplePay = 'apple_pay' === $hipayOrder->getTransaction()->getPaymentMethod()->getShortName();
 
             /* @infection-ignore-all */
             $this->logger->info(
@@ -305,25 +305,24 @@ class AdminController extends AbstractController
      */
     private function extractConfigurationFromPluginConfig(RequestDataBag $params, string $scope): Configuration
     {
+        $prefix = HiPayPaymentPlugin::getModuleName().'.config.';
         $environement = ucfirst($params->getAlpha('environment'));
         $isApplePay = $params->get('isApplePay');
 
-        $login = $isApplePay ? "ApplePayLogin" : "Login";
-        $password = $isApplePay ? "ApplePayPassword" : "Password";
+        $login = $isApplePay ? 'ApplePayLogin' : 'Login';
+        $password = $isApplePay ? 'ApplePayPassword' : 'Password';
         $payload = [
             HiPayHttpClientService::API_USERNAME => $params->get(
-                HiPayPaymentPlugin::getModuleName()
-                    .'.config.'
-                    .$scope
-                    .$login
-                    .$environement
+                $prefix
+                .$scope
+                .$login
+                .$environement
             ),
             HiPayHttpClientService::API_PASSWORD => $params->get(
-                HiPayPaymentPlugin::getModuleName()
-                    .'.config.'
-                    .$scope
-                    .$password
-                    .$environement
+                $prefix
+                .$scope
+                .$password
+                .$environement
             ),
             HiPayHttpClientService::API_ENV => strtolower($environement),
         ];

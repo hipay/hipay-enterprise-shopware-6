@@ -35,7 +35,7 @@ Component.register('hipay-check-server-access', {
 
       this.hipayService
         .validateConfig(this.getConfig())
-        .then((response) => {
+        .then(response => {
           if (!response.success) {
             throw new Error(response.message);
           }
@@ -47,7 +47,7 @@ Component.register('hipay-check-server-access', {
 
           this.success = true;
         })
-        .catch((error) => {
+        .catch(error => {
           this.createNotificationError({
             title,
             message:
@@ -68,7 +68,7 @@ Component.register('hipay-check-server-access', {
 
       return Object.assign({}, config.null, config[selectedSalesChannelId], {
         environment: this.$parent.bind.env,
-        isApplePay: this.$parent.bind.isApplePay === "true"
+        isApplePay: this.$parent.bind.isApplePay === 'true'
       });
     }
   }
