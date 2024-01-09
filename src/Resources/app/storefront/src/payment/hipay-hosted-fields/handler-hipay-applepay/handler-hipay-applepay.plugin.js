@@ -43,18 +43,22 @@ export default class HandlerHipayApplePayPlugin extends Plugin {
 
     $('#apple-pay-button').hide();
     this._hfInstance = this.createHostedFieldsInstance(parameters);
-    if (this.canMakeApplePayPayment(parameters.merchantId)) {
-      $('#apple-pay-info-message').hide();
-      $('#apple-pay-error-message').css('display', 'inline');
-      $('#apple-pay-error-message').text($('#apple-pay-termes-of-service-error-message').text());
-
-      this._applePayInstance = this.createApplePayInstance(parameters);
-      this.handleTermsOfService();
-      this.handleApplePayEvents();
-    } else {
-      $('#apple-pay-info-message').show();
-      $('#apple-pay-error-message').hide();
-    }
+    this.canMakeApplePayPayment(parameters.merchantId).then((canMakePayment) => {
+      if (canMakePayment) {
+          $('#apple-pay-info-message').hide();
+          $('#apple-pay-error-message').css('display', 'inline');
+          $('#apple-pay-error-message').text(
+              $('#apple-pay-termes-of-service-error-message').text()
+          );
+  
+          this._applePayInstance = this.createApplePayInstance(parameters);
+          this.handleTermsOfService();
+          this.handleApplePayEvents();
+      } else {
+          $('#apple-pay-info-message').show();
+          $('#apple-pay-error-message').hide();
+      }
+    });
   }
 
   /**
@@ -116,15 +120,21 @@ export default class HandlerHipayApplePayPlugin extends Plugin {
    * @returns boolean
    */
   canMakeApplePayPayment(merchantId) {
-    if(merchantId) {
-      this._hfInstance.canMakePaymentsWithActiveCard().then(canMakePayments => {
-        return canMakePayments;
-      });
-    } else {
-      return window.ApplePaySession && window.ApplePaySession.canMakePayments();
-    }
+    return new Promise((resolve) => {
+        if (merchantId) {
+            this._hfInstance
+                .canMakePaymentsWithActiveCard(merchantId)
+                .then((canMakePayments) => {
+                    resolve(canMakePayments);
+                });
+        } else {
+            resolve (
+                window.ApplePaySession &&
+                window.ApplePaySession.canMakePayments()
+            );
+        }
+    });
   }
-
   /**
    * Create Hosted Fields instance
    * @returns HF instance
