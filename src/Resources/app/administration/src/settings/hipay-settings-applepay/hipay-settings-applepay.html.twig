@@ -1,0 +1,40 @@
+<sw-card position-identifier="sw-settings-payment-detail-content"
+  :title="$tc('hipay.settings.applepay.title')"
+  :is-loading="isLoading">
+
+  <sw-text-field :label="$tc('hipay.settings.applepay.merchantName')"
+          :value="paymentMethod.customFields?.merchantName"
+          :disabled="false"
+          @change="updateMerchantName">
+  </sw-text-field>
+
+  <sw-select-field :label="$tc('hipay.settings.applepay.buttonType.title')"
+    :value="paymentMethod.customFields?.buttonType || 'default'"
+    @change="updateButtonType">
+        <option
+            v-for="buttonType in buttonTypes"
+            :key="buttonType.value"
+            :value="buttonType.value"
+        >
+            {{ buttonType.label }}
+        </option>
+  </sw-select-field>
+
+  <sw-select-field :label="$tc('hipay.settings.applepay.buttonStyle.title')"
+    :value="paymentMethod.customFields?.buttonStyle || 'black'"
+    @change="updateButtonStyle">
+        <option
+            v-for="buttonStyle in buttonStyles"
+            :key="buttonStyle.value"
+            :value="buttonStyle.value"
+        >
+            {{ buttonStyle.label }}
+        </option>
+  </sw-select-field>
+
+  <sw-text-field :label="$tc('hipay.settings.applepay.merchantId')"
+          :value="paymentMethod.customFields?.merchantId"
+          :disabled="false"
+          @change="updateMerchantId">
+  </sw-text-field>
+</sw-card>
