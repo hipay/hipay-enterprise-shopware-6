@@ -81,7 +81,7 @@ class Alma4XTest extends TestCase
         );
 
         $this->assertSame(
-            ['FR', 'DE', 'IT', 'BE', 'LUX', 'IE', 'AT', 'PT', 'ES'],
+            ['FR', 'DE', 'IT', 'BE', 'LU', 'NL', 'IE', 'AT', 'PT', 'ES'],
             Alma4X::getCountries()
         );
 
