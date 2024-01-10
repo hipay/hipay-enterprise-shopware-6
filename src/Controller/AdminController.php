@@ -114,6 +114,8 @@ class AdminController extends AbstractController
                 throw new InvalidParameterException('Only the full capture is allowed');
             }
 
+            $isApplePay = 'apple_pay' === $hipayOrder->getTransaction()->getPaymentMethod()->getShortName();
+
             $maintenanceRequestFormatter = new MaintenanceRequestFormatter();
             $maintenanceRequest = $maintenanceRequestFormatter->makeRequest([
                 'amount' => $captureAmount,
@@ -121,7 +123,11 @@ class AdminController extends AbstractController
             ]);
 
             // Create HiPay capture related to this transaction
-            $capture = OrderCaptureEntity::create($maintenanceRequest->operation_id, floatval($maintenanceRequest->amount), $hipayOrder);
+            $capture = OrderCaptureEntity::create(
+                $maintenanceRequest->operation_id,
+                floatval($maintenanceRequest->amount),
+                $hipayOrder
+            );
 
             /* @infection-ignore-all */
             $this->logger->info(
@@ -131,7 +137,7 @@ class AdminController extends AbstractController
 
             // Make HiPay Maintenance request to capture transaction
             $maintenanceResponse = $clientService
-                ->getConfiguredClient()
+                ->getConfiguredClient($isApplePay)
                 ->requestMaintenanceOperation(
                     $maintenanceRequest->operation,
                     $hipayOrder->getTransanctionReference(),
@@ -184,12 +190,18 @@ class AdminController extends AbstractController
 
             // Search HiPay order entity by ID
             $hipayOrderCriteria = new Criteria([$hipayOrderData->id]);
-            $hipayOrderCriteria->addAssociation('refunds');
+            $hipayOrderCriteria->addAssociations(['refunds', 'transaction.paymentMethod']);
             /** @var HipayOrderEntity */
             $hipayOrder = $this->hipayOrderRepo->search($hipayOrderCriteria, $context)->first();
 
+            $isApplePay = 'apple_pay' === $hipayOrder->getTransaction()->getPaymentMethod()->getShortName();
+
             // Create HiPay refund related to this transaction
-            $refund = OrderRefundEntity::create($maintenanceRequest->operation_id, floatval($maintenanceRequest->amount), $hipayOrder);
+            $refund = OrderRefundEntity::create(
+                $maintenanceRequest->operation_id,
+                floatval($maintenanceRequest->amount),
+                $hipayOrder
+            );
 
             /* @infection-ignore-all */
             $this->logger->info(
@@ -199,7 +211,7 @@ class AdminController extends AbstractController
 
             // Make HiPay Maintenance request to refund transaction
             $maintenanceResponse = $clientService
-                ->getConfiguredClient()
+                ->getConfiguredClient($isApplePay)
                 ->requestMaintenanceOperation(
                     $maintenanceRequest->operation,
                     $hipayOrder->getTransanctionReference(),
@@ -251,8 +263,11 @@ class AdminController extends AbstractController
 
             // Search HiPay order entity by ID
             $hipayOrderCriteria = new Criteria([$hipayOrderData->id]);
+            $hipayOrderCriteria->addAssociation('transaction.paymentMethod');
             /** @var HipayOrderEntity */
             $hipayOrder = $this->hipayOrderRepo->search($hipayOrderCriteria, $context)->first();
+
+            $isApplePay = 'apple_pay' === $hipayOrder->getTransaction()->getPaymentMethod()->getShortName();
 
             /* @infection-ignore-all */
             $this->logger->info(
@@ -262,7 +277,7 @@ class AdminController extends AbstractController
 
             // Make HiPay Maintenance request to refund transaction
             $maintenanceResponse = $clientService
-                ->getConfiguredClient()
+                ->getConfiguredClient($isApplePay)
                 ->requestMaintenanceOperation(
                     $maintenanceRequest->operation,
                     $hipayOrder->getTransanctionReference()
@@ -290,22 +305,24 @@ class AdminController extends AbstractController
      */
     private function extractConfigurationFromPluginConfig(RequestDataBag $params, string $scope): Configuration
     {
+        $prefix = HiPayPaymentPlugin::getModuleName().'.config.';
         $environement = ucfirst($params->getAlpha('environment'));
+        $isApplePay = $params->get('isApplePay');
 
+        $login = $isApplePay ? 'ApplePayLogin' : 'Login';
+        $password = $isApplePay ? 'ApplePayPassword' : 'Password';
         $payload = [
             HiPayHttpClientService::API_USERNAME => $params->get(
-                HiPayPaymentPlugin::getModuleName()
-                    .'.config.'
-                    .$scope
-                    .'Login'
-                    .$environement
+                $prefix
+                .$scope
+                .$login
+                .$environement
             ),
             HiPayHttpClientService::API_PASSWORD => $params->get(
-                HiPayPaymentPlugin::getModuleName()
-                    .'.config.'
-                    .$scope
-                    .'Password'
-                    .$environement
+                $prefix
+                .$scope
+                .$password
+                .$environement
             ),
             HiPayHttpClientService::API_ENV => strtolower($environement),
         ];

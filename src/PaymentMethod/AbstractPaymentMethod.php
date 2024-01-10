@@ -86,6 +86,9 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
     /** @var ?string Payment image to load */
     protected const PAYMENT_IMAGE = null;
 
+    /** @var string Path to payment methods config folder */
+    protected const PAYMENT_CONFIG_FILE_PATH = __DIR__ . "/../PaymentConfigFiles/local/";
+
     /** @var PaymentProduct Configuration loaded from the json file. MUST be redeclare for each payment method */
     protected static PaymentProduct $paymentConfig;
 
@@ -254,11 +257,37 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
             throw new UnexpectedValueException('Constant '.__CLASS__.'::PAYMENT_CODE must be defined');
         }
 
-        if (!$config = Collection::getItem(static::PAYMENT_CODE)) {
+        if (!$config = (static::getLocalItem(static::PAYMENT_CODE) ?? Collection::getItem(static::PAYMENT_CODE))) {
             throw new UnexpectedValueException('The constant '.__CLASS__.'::PAYMENT_CODE is invalid');
         }
 
         return $config;
+    }
+
+    /**
+     *  Get a Local Payment Product item with a code if it's existed
+     *
+     * @param string $product_code
+     * @return null|PaymentProduct
+     */
+    public static function getLocalItem($product_code)
+    {
+        if (file_exists(static::PAYMENT_CONFIG_FILE_PATH . $product_code . ".json")) {
+            $paymentProductConfig = file_get_contents(static::PAYMENT_CONFIG_FILE_PATH . $product_code . ".json");
+
+            if ($paymentProductConfig === false) {
+                return null;
+            }
+
+            return new PaymentProduct(
+                json_decode(
+                    $paymentProductConfig,
+                    true
+                )
+            );
+        }
+
+        return null;
     }
 
     /**
@@ -289,12 +318,16 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
      */
     private function getRedirectUri(AsyncPaymentTransactionStruct $transaction, string $locale): string
     {
-        $client = $this->clientService->getConfiguredClient();
+        $isApplePay = false;
 
         if ($this->config->isHostedFields()) {
             // hosted fields
             $request = $this->generateRequestHostedFields($transaction, $locale);
             $this->logger->info('Sending an hosted fields request', [$request]);
+
+            $isApplePay = isset($request->custom_data['isApplePay']);
+
+            $client = $this->clientService->getConfiguredClient($isApplePay);
 
             $response = $client->requestNewOrder($request);
             $this->logger->info('Hosted fields response received', $response->toArray());
@@ -306,6 +339,10 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
             // hosted page
             $request = $this->generateRequestHostedPage($transaction, $locale);
             $this->logger->info('Sending an hosted page request', [$request]);
+
+            $isApplePay = isset($request->custom_data['isApplePay']);
+
+            $client = $this->clientService->getConfiguredClient($isApplePay);
 
             $response = $client->requestHostedPaymentPage($request);
             $this->logger->info('Hosted Page response received', $response->toArray());

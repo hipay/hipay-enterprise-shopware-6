@@ -1,0 +1,14 @@
+<div handler-hipay-apple-pay-plugin data-handler-hipay-apple-pay-plugin-options="{{ hipayConfig|json_encode }}">
+  {% block hipay_applepay_html %}
+      <div class="form-group row">
+          <div class="col-md-9">
+              <div id="apple-pay-button" style="height: 30px"></div>
+              <p id="apple-pay-info-message" style="display: none;">{{ 'hipay.hosted-fields.applepay.infoMessage'|trans }}</p>
+              <span class="error-text-hp" id="apple-pay-error-message"></span>
+              <p id="apple-pay-termes-of-service-error-message" style="display: none">
+              {{ 'hipay.hosted-fields.applepay.tos'|trans }}
+              </p>
+          </div>
+      </div>
+  {% endblock %}
+</div>
