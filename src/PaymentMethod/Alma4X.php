@@ -71,7 +71,7 @@ class Alma4X extends AbstractPaymentMethod
         return 50;
     }
 
-        /**
+    /**
      * {@inheritDoc}
      */
     public static function getMaxAmount(): ?float
