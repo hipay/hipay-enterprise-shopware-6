@@ -76,6 +76,28 @@
       "title": "HiPay-Transaktionslebenszyklus"
     },
     "settings": {
+      "applepay": {
+        "title": "Konfiguration",
+        "merchantName": "Händlername",
+        "merchantId": "Händler-ID",
+        "buttonType": {
+          "title": "Schaltflächentyp",
+          "default": "Standard",
+          "buy": "Kaufen",
+          "setup": "Einrichten",
+          "donate": "Spenden",
+          "checkout": "Auschecken",
+          "processing": "Verarbeitung",
+          "book": "Buchen",
+          "subscribe": "Abonnieren"
+        },
+        "buttonStyle": {
+          "title": "Schaltflächenstil",
+          "black": "Schwarz",
+          "white": "Weiß",
+          "whiteOutline": "Weißer Umriss"
+        }
+      },
       "multibanco": {
         "title": "Zahlungsablauflimit"
       },

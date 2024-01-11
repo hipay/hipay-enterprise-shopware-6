@@ -103,7 +103,7 @@ If you encounter an issue while using the modules, before contacting our Support
 
 The **HiPay Enterprise plugin for Shopware 6** is free and available under the **Apache 2.0 License**. Check out the [license file][project-license] for more information.
 
-[doc-home]: https://developer.hipay.com/doc/hipay-enterprise-shopware-6/
+[doc-home]: https://developer.hipay.com/cms-modules/shopware-6
 [hipay-help]: http://help.hipay.com
 [project-issues]: https://github.com/hipay/hipay-enterprise-shopware-6/issues
 [project-license]: LICENSE.md

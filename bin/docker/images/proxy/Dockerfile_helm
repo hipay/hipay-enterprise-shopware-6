@@ -1,0 +1,5 @@
+FROM dockware/proxy:latest
+
+COPY bin/docker/conf/nginx/proxy_helm.conf /etc/nginx/conf.d/default.conf
+
+CMD [ "/entrypoint.sh" ]

@@ -1,63 +1,36 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: shopware-service-{{ .Release.Name }}
-  namespace: default
+  name: shopware-web-{{ .Release.Name }}
   labels:
+    app: shopware-{{ .Release.Name }}
     cd-hipay: cron-delete
 spec:
   ports:
-    - port: 80
-      protocol: TCP
-      name: web
-      targetPort: 80
+    - port: 3306
   selector:
     app: shopware-{{ .Release.Name }}
-    tier: frontend-{{ .Release.Name }}
-  type: NodePort
+    tier: web-{{ .Release.Name }}
+  clusterIP: None
 ---
-apiVersion: traefik.containo.us/v1alpha1
-kind: IngressRoute
+apiVersion: v1
+kind: PersistentVolumeClaim
 metadata:
-  name: ingressroute-tls-{{ .Release.Name }}
-  namespace: default
+  name: shopware-pv-claim-{{ .Release.Name }}
   labels:
+    app: shopware-{{ .Release.Name }}
     cd-hipay: cron-delete
 spec:
-  entryPoints:
-    - websecure
-  routes:
-    - match: Host(`{{ .Values.shopware_url  }}`)
-      kind: Rule
-      priority: 1
-      services:
-        - name: shopware-service-{{ .Release.Name }}
-          port: 80
-  tls:
-    certResolver: default
----
-apiVersion: traefik.containo.us/v1alpha1
-kind: IngressRoute
-metadata:
-  name: ingressroute-{{ .Release.Name }}
-  namespace: default
-  labels:
-    cd-hipay: cron-delete
-spec:
-  entryPoints:
-    - web
-  routes:
-    - match: Host(`{{ .Values.shopware_url  }}`)
-      kind: Rule
-      priority: 1
-      services:
-        - name: shopware-service-{{ .Release.Name }}
-          port: 80
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: shopware-{{ .Release.Name }}
+  name: shopware-web-{{ .Release.Name }}
   labels:
     app: shopware-{{ .Release.Name }}
     cd-hipay: cron-delete
@@ -65,27 +38,30 @@ spec:
   selector:
     matchLabels:
       app: shopware-{{ .Release.Name }}
-      tier: frontend-{{ .Release.Name }}
+      tier: web-{{ .Release.Name }}
   strategy:
     type: Recreate
   template:
     metadata:
       labels:
         app: shopware-{{ .Release.Name }}
-        tier: frontend-{{ .Release.Name }}
+        tier: web-{{ .Release.Name }}
         cd-hipay: cron-delete
     spec:
       containers:
       - image: {{ .Values.shopware_image }}:{{ .Values.shopware_tag }}
-        imagePullPolicy: Always
-        name: shopware-{{ .Release.Name }}
+        name: web-{{ .Release.Name }}
         resources:
           requests:
-            memory: "5G"
-            cpu: "1200m"
+            memory: "2.5G"
+            cpu: "1000m"
         envFrom:
           - configMapRef:
               name: shopware-configmap-{{ .Release.Name }}
         ports:
-          - containerPort: 80
-            name: shopware
+          - containerPort: 3306
+            name: web
+      volumes:
+        - name: shopware-persistent-storage-{{ .Release.Name }}
+          persistentVolumeClaim:
+            claimName: shopware-pv-claim-{{ .Release.Name }}
