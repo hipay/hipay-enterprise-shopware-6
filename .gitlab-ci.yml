@@ -324,7 +324,7 @@ build:
     - if: $ONLY_DEPLOY
       when: on_success
     - if: $CI_PIPELINE_SOURCE == "push"
-      when: manual
+      when: on_success
   extends: .login_to_registry
   script:
     - sed -i "s|RELEASE_NAME|$RELEASE_NAME|" ./bin/docker/conf/nginx/proxy_helm.conf
@@ -353,7 +353,7 @@ deploy2recette:
     - if: $ONLY_DEPLOY
       when: on_success
     - if: $CI_PIPELINE_SOURCE == "push"
-      when: manual
+      when: on_success
   variables:
     GPC_ACCOUNT: ''
   extends: .login_to_cd
