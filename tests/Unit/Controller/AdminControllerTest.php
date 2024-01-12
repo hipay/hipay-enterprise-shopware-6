@@ -478,17 +478,16 @@ class AdminControllerTest extends TestCase
         $paymentMethod = $this->createMock(PaymentMethodEntity::class);
         $paymentMethod->method('getExtension')->willReturn(new ArrayEntity(['allowPartialCapture' => true]));
 
-        /** @var OrderTransactionEntity&MockObject */
         $transaction = $this->createMock(OrderTransactionEntity::class);
         $transaction->method('getPaymentMethod')->willReturn($paymentMethod);
 
-        $order = new HipayOrderEntity();
-        $order->setTransanctionReference('FOO_TRANSACTION_ID');
-        $order->setTransaction($transaction);
+        /** @var HipayOrderEntity&MockObject */
+        $hipayOrderEntity = $this->createMock(HipayOrderEntity::class);
+        $hipayOrderEntity->method('getTransaction')->willReturn($transaction);
 
         /** @var EntitySearchResult&MockObject */
         $search = $this->createMock(EntitySearchResult::class);
-        $search->method('first')->willReturn($order);
+        $search->method('first')->willReturn($hipayOrderEntity);
 
         /** @var EntityRepository&MockObject */
         $orderRepo = $this->createMock(EntityRepository::class);

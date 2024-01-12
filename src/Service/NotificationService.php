@@ -180,7 +180,8 @@ class NotificationService
     private function validateRequest(Request $request): bool
     {
         $isApplePay = false;
-        if (isset($request->request->get('custom_data')['isApplePay'])) {
+        $parameters = $request->request->all();
+        if(isset($parameters['custom_data']['isApplePay'])){
             $isApplePay = true;
         }
 
