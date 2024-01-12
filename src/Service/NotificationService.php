@@ -120,8 +120,9 @@ class NotificationService
     public function saveNotificationRequest(Request $request): void
     {
         $context = Context::createDefaultContext();
+        $parameters = $request->request->all();
 
-        if (!$this->validateRequest($request)) {
+        if (!$this->validateRequest($request, $parameters)) {
             throw new AccessDeniedException('Signature does not match');
         }
 
@@ -129,7 +130,6 @@ class NotificationService
             throw new MissingMandatoryParametersException('date_updated is mandatory');
         }
 
-        $parameters = $request->request->all();
         if (!$orderTransactionId = ($parameters['custom_data']['transaction_id'] ?? null)) {
             throw new MissingMandatoryParametersException('custom_data.transaction_id is mandatory');
         }
@@ -177,15 +177,26 @@ class NotificationService
      * @throws InvalidSettingValueException
      * @throws ApiErrorException
      */
-    private function validateRequest(Request $request): bool
+    private function validateRequest(Request $request, array $parameters): bool
     {
+        $isApplePay = false;
+        if (isset($parameters['custom_data']['isApplePay'])) {
+            $isApplePay = true;
+        }
+
         $algos = [
             'sha256' => HashAlgorithm::SHA256,
             'sha512' => HashAlgorithm::SHA512,
         ];
 
-        if (!isset($algos[$this->config->getHash()])) {
-            throw new ApiErrorException('Bad configuration unknown algorythm "'.$this->config->getHash().'"');
+        if ($isApplePay) {
+            if (!isset($algos[$this->config->getHashApplePay()])) {
+                throw new ApiErrorException('Bad configuration unknown algorythm "'.$this->config->getHashApplePay().'"');
+            }
+        } else {
+            if (!isset($algos[$this->config->getHash()])) {
+                throw new ApiErrorException('Bad configuration unknown algorythm "'.$this->config->getHash().'"');
+            }
         }
 
         if (!$signature = $request->headers->get('x-allopass-signature', null)) {
@@ -193,8 +204,8 @@ class NotificationService
         }
 
         return Signature::isValidHttpSignature(
-            $this->config->getPassphrase(),
-            $algos[$this->config->getHash()],
+            $isApplePay ? $this->config->getApplePayPassphrase() : $this->config->getPassphrase(),
+            $algos[$isApplePay ? $this->config->getHashApplePay() : $this->config->getHash()],
             $signature,
             (string) $request->getContent()
         );
