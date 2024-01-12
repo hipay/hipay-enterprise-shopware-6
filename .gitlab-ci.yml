@@ -350,8 +350,7 @@ build:
 deploy2recette:
   stage: deploy
   image: $REGISTRY_CI/gitlab-ci-base:deployment
-  needs:
-    - build
+  needs: []
   rules:
     - if: $ONLY_DEPLOY
       when: on_success
