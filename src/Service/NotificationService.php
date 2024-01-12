@@ -120,8 +120,9 @@ class NotificationService
     public function saveNotificationRequest(Request $request): void
     {
         $context = Context::createDefaultContext();
+        $parameters = $request->request->all();
 
-        if (!$this->validateRequest($request)) {
+        if (!$this->validateRequest($request, $parameters)) {
             throw new AccessDeniedException('Signature does not match');
         }
 
@@ -129,7 +130,6 @@ class NotificationService
             throw new MissingMandatoryParametersException('date_updated is mandatory');
         }
 
-        $parameters = $request->request->all();
         if (!$orderTransactionId = ($parameters['custom_data']['transaction_id'] ?? null)) {
             throw new MissingMandatoryParametersException('custom_data.transaction_id is mandatory');
         }
@@ -177,10 +177,9 @@ class NotificationService
      * @throws InvalidSettingValueException
      * @throws ApiErrorException
      */
-    private function validateRequest(Request $request): bool
+    private function validateRequest(Request $request, array $parameters): bool
     {
         $isApplePay = false;
-        $parameters = $request->request->all();
         if(isset($parameters['custom_data']['isApplePay'])){
             $isApplePay = true;
         }
