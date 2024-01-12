@@ -180,7 +180,7 @@ class NotificationService
     private function validateRequest(Request $request): bool
     {
         $isApplePay = false;
-        if(isset($request->request->get('custom_data')['isApplePay'])){
+        if (isset($request->request->get('custom_data')['isApplePay'])) {
             $isApplePay = true;
         }
 
@@ -189,11 +189,11 @@ class NotificationService
             'sha512' => HashAlgorithm::SHA512,
         ];
 
-        if($isApplePay){
+        if ($isApplePay) {
             if (!isset($algos[$this->config->getHashApplePay()])) {
                 throw new ApiErrorException('Bad configuration unknown algorythm "'.$this->config->getHashApplePay().'"');
             }
-        }else{
+        } else {
             if (!isset($algos[$this->config->getHash()])) {
                 throw new ApiErrorException('Bad configuration unknown algorythm "'.$this->config->getHash().'"');
             }

@@ -1,8 +1,8 @@
 image: $REGISTRY_CI/gitlab-ci-base:buster
 
 # Static Application Security Testing (SAST)
-# include:
-#   - template: Security/SAST.gitlab-ci.yml
+include:
+  - template: Security/SAST.gitlab-ci.yml
 
 variables:
   SAST_EXCLUDED_ANALYZERS: 'eslint,semgrep'
@@ -88,7 +88,7 @@ stages:
 #### TEST INIT ####
 
 # Build image
-.build-test:
+build-test:
   stage: test-init
   image:
     name: gcr.io/kaniko-project/executor:v1.6.0-debug
@@ -111,7 +111,7 @@ stages:
     - small
 
 # Install dependencies for test
-.install-test:
+install-test:
   stage: test-init
   needs:
     - build-test
@@ -132,20 +132,20 @@ stages:
 
 #### TEST ####
 
-.nodejs-scan-sast:
+nodejs-scan-sast:
   rules:
     - if: $ONLY_DEPLOY || $CI_PIPELINE_SOURCE == "merge_request_event"
       when: never
     - when: on_success
 
-.phpcs-security-audit-sast:
+phpcs-security-audit-sast:
   rules:
     - if: $ONLY_DEPLOY || $CI_PIPELINE_SOURCE == "merge_request_event"
       when: never
     - when: on_success
 
 # Code style
-.code-style:
+code-style:
   stage: test
   extends:
     - .test-dependencies
@@ -162,7 +162,7 @@ stages:
       - $ONLY_DEPLOY
 
 # Smoke test
-.smoke-test:
+smoke-test:
   stage: test
   needs:
     - build-test
@@ -184,7 +184,7 @@ stages:
     - small
 
 # Unit test and coverage
-.phpunit:
+phpunit:
   stage: test
   extends:
     - .test-dependencies
@@ -207,7 +207,7 @@ stages:
       - $PATH_REPORTS_PHPUNIT
 
 # Check Code
-.phpstan:
+phpstan:
   stage: test
   extends:
     - .test-dependencies
@@ -237,7 +237,7 @@ stages:
     when: always
 
 # Mutation test
-.infection:
+infection:
   stage: test
   extends:
     - .test-dependencies
@@ -262,7 +262,7 @@ stages:
       - $ONLY_DEPLOY
 
 # Sonar
-.sonarqube:
+sonarqube:
   stage: analyse
   extends:
     - .phpstan-conf
@@ -295,7 +295,7 @@ stages:
       -Dsonar.qualitygate.wait=true
 
 # Package into zip
-.package:
+package:
   stage: package
   image:
     name: $REGISTRY_CI/test-jobs-${DOCKER_STACK}-${DOCKER_SERVICE}_web:${CI_COMMIT_REF_SLUG}
@@ -326,7 +326,7 @@ build:
     - if: $ONLY_DEPLOY
       when: on_success
     - if: $CI_PIPELINE_SOURCE == "push"
-      when: on_success
+      when: manual
   extends: .login_to_registry
   script:
     - sed -i "s|RELEASE_NAME|$RELEASE_NAME|" ./bin/docker/conf/nginx/proxy_helm.conf
@@ -350,12 +350,13 @@ build:
 deploy2recette:
   stage: deploy
   image: $REGISTRY_CI/gitlab-ci-base:deployment
-  needs: []
+  needs:
+    - build
   rules:
     - if: $ONLY_DEPLOY
       when: on_success
     - if: $CI_PIPELINE_SOURCE == "push"
-      when: on_success
+      when: manual
   variables:
     GPC_ACCOUNT: ''
   extends: .login_to_cd
@@ -374,6 +375,11 @@ deploy2recette:
       --set public_login_stage="$HIPAY_TOKENJS_USERNAME_RE7"
       --set public_password_stage="$HIPAY_TOKENJS_PUBLICKEY_RE7"
       --set passphrase_stage="$HIPAY_SECRET_PASSPHRASE_RE7"
+      --set private_applepay_login_stage="$HIPAY_APPLEPAY_USERNAME_RE7"
+      --set private_applepay_password_stage="$HIPAY_APPLEPAY_PASSWORD_RE7"
+      --set public_applepay_login_stage="$HIPAY_APPLEPAY_TOKENJS_USERNAME_RE7"
+      --set public_applepay_password_stage="$HIPAY_APPLEPAY_TOKENJS_PUBLICKEY_RE7"
+      --set applepay_passphrase_stage="$HIPAY_APPLEPAY_SECRET_PASSPHRASE_RE7"
       --set branch="$CI_COMMIT_REF_NAME"
   allow_failure: true
   environment:

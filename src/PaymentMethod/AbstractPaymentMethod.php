@@ -87,7 +87,7 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
     protected const PAYMENT_IMAGE = null;
 
     /** @var string Path to payment methods config folder */
-    protected const PAYMENT_CONFIG_FILE_PATH = __DIR__ . "/../PaymentConfigFiles/local/";
+    protected const PAYMENT_CONFIG_FILE_PATH = __DIR__.'/../PaymentConfigFiles/local/';
 
     /** @var PaymentProduct Configuration loaded from the json file. MUST be redeclare for each payment method */
     protected static PaymentProduct $paymentConfig;
@@ -228,17 +228,18 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
     }
 
     /**
-     *  Get a Local Payment Product item with a code if it's existed
+     *  Get a Local Payment Product item with a code if it's existed.
      *
      * @param string $product_code
-     * @return null|PaymentProduct
+     *
+     * @return PaymentProduct|null
      */
     public static function getLocalItem($product_code)
     {
-        if (file_exists(static::PAYMENT_CONFIG_FILE_PATH . $product_code . ".json")) {
-            $paymentProductConfig = file_get_contents(static::PAYMENT_CONFIG_FILE_PATH . $product_code . ".json");
+        if (file_exists(static::PAYMENT_CONFIG_FILE_PATH.$product_code.'.json')) {
+            $paymentProductConfig = file_get_contents(static::PAYMENT_CONFIG_FILE_PATH.$product_code.'.json');
 
-            if ($paymentProductConfig === false) {
+            if (false === $paymentProductConfig) {
                 return null;
             }
 

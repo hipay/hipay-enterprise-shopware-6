@@ -18,12 +18,8 @@ class ApplePay extends AbstractPaymentMethod
     /** {@inheritDoc} */
     protected const PAYMENT_IMAGE = 'applepay.svg';
 
-    /** {@inheritDoc} */
     protected static PaymentProduct $paymentConfig;
 
-    /**
-     * {@inheritDoc}
-     */
     protected static function loadPaymentConfig(): PaymentProduct
     {
         return new PaymentProduct([
@@ -34,9 +30,6 @@ class ApplePay extends AbstractPaymentMethod
         ]);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public static function getName(string $lang): ?string
     {
         $names = [
@@ -47,9 +40,6 @@ class ApplePay extends AbstractPaymentMethod
         return $names[$lang] ?? null;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public static function getDescription(string $lang): ?string
     {
         $descriptions = [
@@ -60,22 +50,16 @@ class ApplePay extends AbstractPaymentMethod
         return $descriptions[$lang] ?? null;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public static function addDefaultCustomFields(): array
     {
         return [
             'merchantName' => '',
             'buttonType' => 'default',
             'buttonStyle' => 'black',
-            'merchantId' => ''
+            'merchantId' => '',
         ];
     }
 
-    /**
-     * {@inheritDoc}
-     */
     protected function hydrateHostedFields(OrderRequest $orderRequest, array $payload, AsyncPaymentTransactionStruct $transaction): OrderRequest
     {
         $paymentMethod = new CardTokenPaymentMethod();
