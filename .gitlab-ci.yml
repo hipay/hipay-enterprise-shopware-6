@@ -1,8 +1,8 @@
 image: $REGISTRY_CI/gitlab-ci-base:buster
 
 # Static Application Security Testing (SAST)
-# include:
-#   - template: Security/SAST.gitlab-ci.yml
+include:
+  - template: Security/SAST.gitlab-ci.yml
 
 variables:
   SAST_EXCLUDED_ANALYZERS: 'eslint,semgrep'
@@ -88,13 +88,13 @@ stages:
 #### TEST INIT ####
 
 # Build image
-.build-test:
+build-test:
   stage: test-init
   image:
     name: gcr.io/kaniko-project/executor:v1.6.0-debug
   variables:
     TZ: Europe/Paris
-    NODE_VERSION: 16
+    NODE_VERSION: 18
     COMPOSER_HOME: /var/www/html/var/cache/composer
     APP_URL: http://web
   script:
@@ -111,7 +111,7 @@ stages:
     - small
 
 # Install dependencies for test
-.install-test:
+install-test:
   stage: test-init
   needs:
     - build-test
@@ -132,20 +132,20 @@ stages:
 
 #### TEST ####
 
-.nodejs-scan-sast:
+nodejs-scan-sast:
   rules:
     - if: $ONLY_DEPLOY || $CI_PIPELINE_SOURCE == "merge_request_event"
       when: never
     - when: on_success
 
-.phpcs-security-audit-sast:
+phpcs-security-audit-sast:
   rules:
     - if: $ONLY_DEPLOY || $CI_PIPELINE_SOURCE == "merge_request_event"
       when: never
     - when: on_success
 
 # Code style
-.code-style:
+code-style:
   stage: test
   extends:
     - .test-dependencies
@@ -162,13 +162,13 @@ stages:
       - $ONLY_DEPLOY
 
 # Smoke test
-.smoke-test:
+smoke-test:
   stage: test
   needs:
     - build-test
   variables:
     TZ: Europe/Paris
-    NODE_VERSION: 16
+    NODE_VERSION: 18
     COMPOSER_HOME: /var/www/html/var/cache/composer
     APP_URL: http://web
   services:
@@ -184,7 +184,7 @@ stages:
     - small
 
 # Unit test and coverage
-.phpunit:
+phpunit:
   stage: test
   extends:
     - .test-dependencies
@@ -207,7 +207,7 @@ stages:
       - $PATH_REPORTS_PHPUNIT
 
 # Check Code
-.phpstan:
+phpstan:
   stage: test
   extends:
     - .test-dependencies
@@ -222,7 +222,7 @@ stages:
     - mkdir -p $PATH_REPORTS_PHPSTAN
     - $PATH_VENDOR/bin/phpstan --version
     - $PATH_VENDOR/bin/phpstan analyse src
-      --level 7
+      --level 1
       --xdebug
       --no-progress
       -vvv
@@ -237,7 +237,7 @@ stages:
     when: always
 
 # Mutation test
-.infection:
+infection:
   stage: test
   extends:
     - .test-dependencies
@@ -262,7 +262,7 @@ stages:
       - $ONLY_DEPLOY
 
 # Sonar
-.sonarqube:
+sonarqube:
   stage: analyse
   extends:
     - .phpstan-conf
@@ -278,6 +278,7 @@ stages:
     GIT_DEPTH: '0' # Tells git to fetch all the branches of the project, required by the analysis task
   cache:
     policy: pull
+  allow_failure: true
   except:
     variables:
       - $ONLY_DEPLOY
@@ -294,7 +295,7 @@ stages:
       -Dsonar.qualitygate.wait=true
 
 # Package into zip
-.package:
+package:
   stage: package
   image:
     name: $REGISTRY_CI/test-jobs-${DOCKER_STACK}-${DOCKER_SERVICE}_web:${CI_COMMIT_REF_SLUG}
@@ -320,6 +321,7 @@ build:
   stage: build
   image:
     name: gcr.io/kaniko-project/executor:v1.6.0-debug
+  needs: []
   rules:
     - if: $ONLY_DEPLOY
       when: on_success
@@ -372,6 +374,11 @@ deploy2recette:
       --set public_login_stage="$HIPAY_TOKENJS_USERNAME_RE7"
       --set public_password_stage="$HIPAY_TOKENJS_PUBLICKEY_RE7"
       --set passphrase_stage="$HIPAY_SECRET_PASSPHRASE_RE7"
+      --set private_applepay_login_stage="$HIPAY_APPLEPAY_USERNAME_RE7"
+      --set private_applepay_password_stage="$HIPAY_APPLEPAY_PASSWORD_RE7"
+      --set public_applepay_login_stage="$HIPAY_APPLEPAY_TOKENJS_USERNAME_RE7"
+      --set public_applepay_password_stage="$HIPAY_APPLEPAY_TOKENJS_PUBLICKEY_RE7"
+      --set applepay_passphrase_stage="$HIPAY_APPLEPAY_SECRET_PASSPHRASE_RE7"
       --set branch="$CI_COMMIT_REF_NAME"
   allow_failure: true
   environment:

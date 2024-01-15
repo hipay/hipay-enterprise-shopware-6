@@ -87,7 +87,7 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
     protected const PAYMENT_IMAGE = null;
 
     /** @var string Path to payment methods config folder */
-    protected const PAYMENT_CONFIG_FILE_PATH = __DIR__ . "/../PaymentConfigFiles/local/";
+    protected const PAYMENT_CONFIG_FILE_PATH = __DIR__.'/../PaymentConfigFiles/local/';
 
     /** @var PaymentProduct Configuration loaded from the json file. MUST be redeclare for each payment method */
     protected static PaymentProduct $paymentConfig;
@@ -116,9 +116,6 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
         static::$paymentConfig = static::loadPaymentConfig();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function pay(
         AsyncPaymentTransactionStruct $transaction,
         RequestDataBag $dataBag,
@@ -137,9 +134,6 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
         return new RedirectResponse($redirectUri);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function finalize(
         AsyncPaymentTransactionStruct $transaction,
         Request $request,
@@ -154,9 +148,6 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
         $this->transactionStateHandler->process($transaction->getId(), Context::createDefaultContext());
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public static function getPosition(): int
     {
         return static::PAYMENT_POSITION;
@@ -175,8 +166,6 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
     }
 
     /**
-     * {@inheritDoc}
-     *
      * @throws UnexpectedValueException
      */
     public static function getConfig(): array
@@ -192,17 +181,11 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
         ];
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public static function addDefaultCustomFields(): array
     {
         return [];
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public static function getImage(): ?string
     {
         return static::PAYMENT_IMAGE;
@@ -230,8 +213,6 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
 
     /**
      * Get the min amount authorized rules.
-     *
-     * @return float|null
      */
     public static function getMinAmount(): ?float
     {
@@ -240,8 +221,6 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
 
     /**
      * Get the max amount authorized rules.
-     *
-     * @return float|null
      */
     public static function getMaxAmount(): ?float
     {
@@ -265,17 +244,18 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
     }
 
     /**
-     *  Get a Local Payment Product item with a code if it's existed
+     *  Get a Local Payment Product item with a code if it's existed.
      *
      * @param string $product_code
-     * @return null|PaymentProduct
+     *
+     * @return PaymentProduct|null
      */
     public static function getLocalItem($product_code)
     {
-        if (file_exists(static::PAYMENT_CONFIG_FILE_PATH . $product_code . ".json")) {
-            $paymentProductConfig = file_get_contents(static::PAYMENT_CONFIG_FILE_PATH . $product_code . ".json");
+        if (file_exists(static::PAYMENT_CONFIG_FILE_PATH.$product_code.'.json')) {
+            $paymentProductConfig = file_get_contents(static::PAYMENT_CONFIG_FILE_PATH.$product_code.'.json');
 
-            if ($paymentProductConfig === false) {
+            if (false === $paymentProductConfig) {
                 return null;
             }
 
@@ -803,7 +783,7 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
      *
      * @param int $format libphonenumber\PhoneNumberFormat\PhoneNumberFormat const
      */
-    protected function formatPhoneNumber(?string $phoneNumber, ?string $isoCountry = null, int $format = PhoneNumberFormat::E164): ?string
+    protected function formatPhoneNumber(?string $phoneNumber, string $isoCountry = null, int $format = PhoneNumberFormat::E164): ?string
     {
         try {
             $phoneUtil = PhoneNumberUtil::getInstance();
