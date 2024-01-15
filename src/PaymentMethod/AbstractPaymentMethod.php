@@ -212,6 +212,22 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
     }
 
     /**
+     * Get the min amount authorized rules.
+     */
+    public static function getMinAmount(): ?float
+    {
+        return null;
+    }
+
+    /**
+     * Get the max amount authorized rules.
+     */
+    public static function getMaxAmount(): ?float
+    {
+        return null;
+    }
+
+    /**
      * Generate the config for the payment method.
      */
     protected static function loadPaymentConfig(): PaymentProduct
