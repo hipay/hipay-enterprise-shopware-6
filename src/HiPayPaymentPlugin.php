@@ -461,7 +461,7 @@ class HiPayPaymentPlugin extends Plugin
             ];
         }
 
-        if ($minAmount){
+        if ($minAmount) {
             $conditions[] = [
                 'type' => 'cartCartAmount',
                 'position' => 1,
@@ -470,7 +470,7 @@ class HiPayPaymentPlugin extends Plugin
             ];
         }
 
-        if ($maxAmount){
+        if ($maxAmount) {
             $conditions[] = [
                 'type' => 'cartCartAmount',
                 'position' => 1,
