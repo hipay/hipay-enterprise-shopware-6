@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## Version 1.2.0
+
+- **Add** : Added new payment means
+  - ApplePay
+  - Alma 3x
+  - Alma 4x
+
 ## Version 1.1.2
 
 - **Fixed** : Fixed german translation
