@@ -6,6 +6,9 @@ namespace HiPay\Payment;
 
 use Composer\InstalledVersions;
 use HiPay\Fullservice\Exception\UnexpectedValueException;
+use HiPay\Payment\PaymentMethod\Alma3X;
+use HiPay\Payment\PaymentMethod\Alma4X;
+use HiPay\Payment\PaymentMethod\ApplePay;
 use HiPay\Payment\PaymentMethod\Bancontact;
 use HiPay\Payment\PaymentMethod\CreditCard;
 use HiPay\Payment\PaymentMethod\Giropay;
@@ -52,22 +55,41 @@ class HiPayPaymentPlugin extends Plugin
         'CAPTURE_MODE' => 'HiPayPaymentPlugin.config.captureMode',
         'HIPAY_ENVIRONMENT' => 'HiPayPaymentPlugin.config.environment',
         'OPERATION_MODE' => 'HiPayPaymentPlugin.config.operationMode',
+        'LOG_DEBUG' => 'HiPayPaymentPlugin.config.debugMode',
+        // PRODUCTION
         'PRIVATE_LOGIN_PRODUCTION' => 'HiPayPaymentPlugin.config.publicLoginProduction',
         'PRIVATE_PASSWORD_PRODUCTION' => 'HiPayPaymentPlugin.config.privatePasswordProduction',
         'PUBLIC_LOGIN_PRODUCTION' => 'HiPayPaymentPlugin.config.privateLoginProduction',
         'PUBLIC_PASSWORD_PRODUCTION' => 'HiPayPaymentPlugin.config.publicPasswordProduction',
         'PASSPHRASE_PRODUCTION' => 'HiPayPaymentPlugin.config.passphraseProduction',
         'HASH_PRODUCTION' => 'HiPayPaymentPlugin.config.hashProduction',
+        // PRODUCTION APPLE PAY
+        'PUBLIC_APPLEPAY_LOGIN_PRODUCTION' => 'HiPayPaymentPlugin.config.publicApplePayLoginProduction',
+        'PUBLIC_APPLEPAY_PASSWORD_PRODUCTION' => 'HiPayPaymentPlugin.config.publicApplePayPasswordProduction',
+        'PRIVATE_APPLEPAY_LOGIN_PRODUCTION' => 'HiPayPaymentPlugin.config.privateApplePayLoginProduction',
+        'PRIVATE_APPLEPAY_PASSWORD_PRODUCTION' => 'HiPayPaymentPlugin.config.privateApplePayPasswordProduction',
+        'APPLEPAY_PASSPHRASE_PRODUCTION' => 'HiPayPaymentPlugin.config.applePayPassphraseProduction',
+        'HASH_PRODUCTION_APPLEPAY' => 'HiPayPaymentPlugin.config.hashProductionApplePay',
+        // STAGE
         'PRIVATE_LOGIN_STAGE' => 'HiPayPaymentPlugin.config.privateLoginStage',
         'PRIVATE_PASSWORD_STAGE' => 'HiPayPaymentPlugin.config.privatePasswordStage',
         'PUBLIC_LOGIN_STAGE' => 'HiPayPaymentPlugin.config.publicLoginStage',
         'PUBLIC_PASSWORD_STAGE' => 'HiPayPaymentPlugin.config.publicPasswordStage',
         'PASSPHRASE_STAGE' => 'HiPayPaymentPlugin.config.passphraseStage',
         'HASH_STAGE' => 'HiPayPaymentPlugin.config.hashStage',
-        'LOG_DEBUG' => 'HiPayPaymentPlugin.config.debugMode',
+        // STAGE APPLE PAY
+        'PUBLIC_APPLEPAY_LOGIN_STAGE' => 'HiPayPaymentPlugin.config.publicApplePayLoginStage',
+        'PUBLIC_APPLEPAY_PASSWORD_STAGE' => 'HiPayPaymentPlugin.config.publicApplePayPasswordStage',
+        'PRIVATE_APPLEPAY_LOGIN_STAGE' => 'HiPayPaymentPlugin.config.privateApplePayLoginStage',
+        'PRIVATE_APPLEPAY_PASSWORD_STAGE' => 'HiPayPaymentPlugin.config.privateApplePayPasswordStage',
+        'APPLEPAY_PASSPHRASE_STAGE' => 'HiPayPaymentPlugin.config.applePayPassphraseStage',
+        'HASH_STAGE_APPLEPAY' => 'HiPayPaymentPlugin.config.hashStageApplePay',
     ];
 
     private const PAYMENT_METHODS = [
+        Alma3X::class,
+        Alma4X::class,
+        ApplePay::class,
         Bancontact::class,
         CreditCard::class,
         Giropay::class,
@@ -389,9 +411,11 @@ class HiPayPaymentPlugin extends Plugin
 
         $countries = $classname::getCountries();
         $currencies = $classname::getCurrencies();
+        $minAmount = $classname::getMinAmount();
+        $maxAmount = $classname::getMaxAmount();
 
         // No rule
-        if (!$countries && !$currencies) {
+        if (!$countries && !$currencies && !$minAmount && !$maxAmount) {
             return null;
         }
 
@@ -433,6 +457,24 @@ class HiPayPaymentPlugin extends Plugin
                 'type' => 'currency',
                 'position' => 0,
                 'value' => ['operator' => Rule::OPERATOR_EQ, 'currencyIds' => $currencyIds],
+                'parentId' => $andId,
+            ];
+        }
+
+        if ($minAmount) {
+            $conditions[] = [
+                'type' => 'cartCartAmount',
+                'position' => 1,
+                'value' => ['operator' => Rule::OPERATOR_GTE, 'amount' => $minAmount],
+                'parentId' => $andId,
+            ];
+        }
+
+        if ($maxAmount) {
+            $conditions[] = [
+                'type' => 'cartCartAmount',
+                'position' => 1,
+                'value' => ['operator' => Rule::OPERATOR_LTE, 'amount' => $maxAmount],
                 'parentId' => $andId,
             ];
         }

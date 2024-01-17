@@ -20,3 +20,9 @@ data:
   PUBLIC_PASSWORD_STAGE: '{{ .Values.public_password_stage  }}'
   PASSPHRASE_STAGE: '{{ .Values.passphrase_stage  }}'
   HASH_STAGE: sha256
+  PRIVATE_APPLEPAY_LOGIN_STAGE: '{{ .Values.private_applepay_login_stage  }}'
+  PRIVATE_APPLEPAY_PASSWORD_STAGE: '{{ .Values.private_applepay_password_stage  }}'
+  PUBLIC_APPLEPAY_LOGIN_STAGE: '{{ .Values.public_applepay_login_stage  }}'
+  PUBLIC_APPLEPAY_PASSWORD_STAGE: '{{ .Values.public_applepay_password_stage  }}'
+  APPLEPAY_PASSPHRASE_STAGE: '{{ .Values.applepay_passphrase_stage  }}'
+  HASH_STAGE_APPLEPAY: sha256

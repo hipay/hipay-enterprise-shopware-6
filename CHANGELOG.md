@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## Version 2.1.0
+
+- **Add** : Added new payment means
+  - ApplePay
+  - Alma 3x
+  - Alma 4x
+
 ## Version 2.0.3
 
 - **Fixed** : Fixed Shopware migration when reinstalling HiPay module

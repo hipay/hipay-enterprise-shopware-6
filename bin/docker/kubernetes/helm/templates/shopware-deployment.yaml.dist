@@ -1,0 +1,67 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: shopware-web-{{ .Release.Name }}
+  labels:
+    app: shopware-{{ .Release.Name }}
+    cd-hipay: cron-delete
+spec:
+  ports:
+    - port: 3306
+  selector:
+    app: shopware-{{ .Release.Name }}
+    tier: web-{{ .Release.Name }}
+  clusterIP: None
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: shopware-pv-claim-{{ .Release.Name }}
+  labels:
+    app: shopware-{{ .Release.Name }}
+    cd-hipay: cron-delete
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shopware-web-{{ .Release.Name }}
+  labels:
+    app: shopware-{{ .Release.Name }}
+    cd-hipay: cron-delete
+spec:
+  selector:
+    matchLabels:
+      app: shopware-{{ .Release.Name }}
+      tier: web-{{ .Release.Name }}
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: shopware-{{ .Release.Name }}
+        tier: web-{{ .Release.Name }}
+        cd-hipay: cron-delete
+    spec:
+      containers:
+      - image: {{ .Values.shopware_image }}:{{ .Values.shopware_tag }}
+        name: web-{{ .Release.Name }}
+        resources:
+          requests:
+            memory: "2.5G"
+            cpu: "1000m"
+        envFrom:
+          - configMapRef:
+              name: shopware-configmap-{{ .Release.Name }}
+        ports:
+          - containerPort: 3306
+            name: web
+      volumes:
+        - name: shopware-persistent-storage-{{ .Release.Name }}
+          persistentVolumeClaim:
+            claimName: shopware-pv-claim-{{ .Release.Name }}

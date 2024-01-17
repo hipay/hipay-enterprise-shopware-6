@@ -8,6 +8,7 @@ import './config/hipay-download-logs';
 
 import './settings/hipay-settings-cards-selector';
 import './settings/hipay-settings-multibanco';
+import './settings/hipay-settings-applepay';
 
 import './override/sw-data-grid';
 import './override/sw-order-detail-details';
