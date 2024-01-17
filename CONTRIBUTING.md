@@ -44,6 +44,16 @@ If you want to contribute on our module, you have to use a branch based on the c
 | 6.4 | [develop-6-4](https://github.com/hipay/hipay-enterprise-shopware-6/tree/develop-6-4) | [main-6-4](https://github.com/hipay/hipay-enterprise-shopware-6/tree/main-6-4) |
 | 6.5 | [develop-6-5](https://github.com/hipay/hipay-enterprise-shopware-6/tree/develop-6-5) | [main-6-5](https://github.com/hipay/hipay-enterprise-shopware-6/tree/main-6-5) |
 
+### Setup
+
+You need to add an alias to your `etc/hosts` file :
+
+```bash
+127.0.0.1     hipay.shopware.com
+```
+
+Make sure you have `APP_URL=https://hipay.shopware.com` param in your .env file.
+
 ### Startup container
 
 Go in the project root folder and enter this command:
@@ -54,9 +64,15 @@ Go in the project root folder and enter this command:
 
 Your container is loading: wait for a few seconds while Docker installs Shopware and the HiPay module.
 
-You can now test the HiPay Enterprise module in a browser with this URL: <http://localhost>
+Once the init is complete :
 
-To connect to the back office, go to this URL: <http://localhost/admin>
+```bash
+./shopware.sh l
+```
+
+You can now test the HiPay Enterprise module in a browser with this URL: <https://hipay.shopware.com>
+
+To connect to the back office, go to this URL: <https://hipay.shopware.com/admin>
 
 The login and password are the default: admin / shopware.
 

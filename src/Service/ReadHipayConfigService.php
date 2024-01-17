@@ -50,11 +50,31 @@ class ReadHipayConfigService
     }
 
     /**
+     * Get the private Apple Pay login based on the environment.
+     */
+    public function getPrivateApplePayLogin(): string
+    {
+        $key = $this->isProdActivated() ? 'privateApplePayLoginProduction' : 'privateApplePayLoginStage';
+
+        return $this->configHipay->getString($this->getConfigPrefix().$key);
+    }
+
+    /**
      * Get the private password based on the environment.
      */
     public function getPrivatePassword(): string
     {
         $key = $this->isProdActivated() ? 'privatePasswordProduction' : 'privatePasswordStage';
+
+        return $this->configHipay->getString($this->getConfigPrefix().$key);
+    }
+
+    /**
+     * Get the private Apple Pay password based on the environment.
+     */
+    public function getPrivateApplepayPassword(): string
+    {
+        $key = $this->isProdActivated() ? 'privateApplePayPasswordProduction' : 'privateApplePayPasswordStage';
 
         return $this->configHipay->getString($this->getConfigPrefix().$key);
     }
@@ -70,11 +90,31 @@ class ReadHipayConfigService
     }
 
     /**
+     * Get the public Apple Pay login based on the environment.
+     */
+    public function getPublicApplePayLogin(): string
+    {
+        $key = $this->isProdActivated() ? 'publicApplePayLoginProduction' : 'publicApplePayLoginStage';
+
+        return $this->configHipay->getString($this->getConfigPrefix().$key);
+    }
+
+    /**
      * Get the public password based on the environment.
      */
     public function getPublicPassword(): string
     {
         $key = $this->isProdActivated() ? 'publicPasswordProduction' : 'publicPasswordStage';
+
+        return $this->configHipay->getString($this->getConfigPrefix().$key);
+    }
+
+    /**
+     * Get the public Apple Pay password based on the environment.
+     */
+    public function getPublicApplePayPassword(): string
+    {
+        $key = $this->isProdActivated() ? 'publicApplePayPasswordProduction' : 'publicApplePayPasswordStage';
 
         return $this->configHipay->getString($this->getConfigPrefix().$key);
     }
@@ -90,11 +130,31 @@ class ReadHipayConfigService
     }
 
     /**
+     * Get the hash based on the environment.
+     */
+    public function getHashApplePay(): string
+    {
+        $key = $this->isProdActivated() ? 'hashProductionApplePay' : 'hashStageApplePay';
+
+        return $this->configHipay->getString($this->getConfigPrefix().$key);
+    }
+
+    /**
      * Get the passphrase based on the environment.
      */
     public function getPassphrase(): string
     {
         $key = $this->isProdActivated() ? 'passphraseProduction' : 'passphraseStage';
+
+        return $this->configHipay->getString($this->getConfigPrefix().$key);
+    }
+
+    /**
+     * Get the Apple Pay passphrase based on the environment.
+     */
+    public function getApplePayPassphrase(): string
+    {
+        $key = $this->isProdActivated() ? 'applePayPassphraseProduction' : 'applePayPassphraseStage';
 
         return $this->configHipay->getString($this->getConfigPrefix().$key);
     }

@@ -20,3 +20,6 @@
 .idea/
 *.tmproj
 .vscode/
+
+# Ignore specifically
+*.yaml.dist

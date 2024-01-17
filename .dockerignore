@@ -7,10 +7,19 @@
 
 bin/
 !bin/docker/images/shopware/entrypoint.sh
+!bin/docker/conf/nginx/proxy_helm.conf
+tests/
 web/
+reports/
 log/
+node_modules/
+/yarn.lock
+package-ready-for-shopware/
+.github/
 .gitlab-ci.yml
 .gitignore
+.prettierrc
 .dockerignore
+sonar-project.properties
 docker-compose.yaml
 shopware.sh

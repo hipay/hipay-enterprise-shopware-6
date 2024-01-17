@@ -94,7 +94,7 @@ build-test:
     name: gcr.io/kaniko-project/executor:v1.6.0-debug
   variables:
     TZ: Europe/Paris
-    NODE_VERSION: 16
+    NODE_VERSION: 18
     COMPOSER_HOME: /var/www/html/var/cache/composer
     APP_URL: http://web
   script:
@@ -168,7 +168,7 @@ smoke-test:
     - build-test
   variables:
     TZ: Europe/Paris
-    NODE_VERSION: 16
+    NODE_VERSION: 18
     COMPOSER_HOME: /var/www/html/var/cache/composer
     APP_URL: http://web
   services:
@@ -278,6 +278,7 @@ sonarqube:
     GIT_DEPTH: '0' # Tells git to fetch all the branches of the project, required by the analysis task
   cache:
     policy: pull
+  allow_failure: true
   except:
     variables:
       - $ONLY_DEPLOY
@@ -320,6 +321,7 @@ build:
   stage: build
   image:
     name: gcr.io/kaniko-project/executor:v1.6.0-debug
+  needs: []
   rules:
     - if: $ONLY_DEPLOY
       when: on_success
@@ -327,6 +329,13 @@ build:
       when: manual
   extends: .login_to_registry
   script:
+    - sed -i "s|RELEASE_NAME|$RELEASE_NAME|" ./bin/docker/conf/nginx/proxy_helm.conf
+    - sed -i "s|URL_DOMAIN|${DOCKER_STACK}-${DOCKER_SERVICE}-${CI_COMMIT_REF_SLUG}.${URL_CD}|" ./bin/docker/conf/nginx/proxy_helm.conf
+    - /kaniko/executor
+      --cache=true
+      --context "dir://${CI_PROJECT_DIR}"
+      --dockerfile "./bin/docker/images/proxy/Dockerfile_helm"
+      --destination "${REGISTRY_CD}/${DOCKER_STACK}-${DOCKER_SERVICE}-proxy:${CI_COMMIT_REF_SLUG}"
     - /kaniko/executor
       --cache=true
       --context "dir://${CI_PROJECT_DIR}"
@@ -341,8 +350,7 @@ build:
 deploy2recette:
   stage: deploy
   image: $REGISTRY_CI/gitlab-ci-base:deployment
-  needs:
-    - build
+  needs: []
   rules:
     - if: $ONLY_DEPLOY
       when: on_success
@@ -356,6 +364,8 @@ deploy2recette:
     - >
       helm install $RELEASE_NAME ./bin/docker/kubernetes/helm/
       --namespace default
+      --set proxy_image="${REGISTRY_CD}/${DOCKER_STACK}-${DOCKER_SERVICE}-proxy"
+      --set proxy_tag="${CI_COMMIT_REF_SLUG}"
       --set shopware_image="${REGISTRY_CD}/${DOCKER_STACK}-${DOCKER_SERVICE}-web"
       --set shopware_tag="${CI_COMMIT_REF_SLUG}"
       --set shopware_url="${DOCKER_STACK}-${DOCKER_SERVICE}-${CI_COMMIT_REF_SLUG}.${URL_CD}"
@@ -364,6 +374,11 @@ deploy2recette:
       --set public_login_stage="$HIPAY_TOKENJS_USERNAME_RE7"
       --set public_password_stage="$HIPAY_TOKENJS_PUBLICKEY_RE7"
       --set passphrase_stage="$HIPAY_SECRET_PASSPHRASE_RE7"
+      --set private_applepay_login_stage="$HIPAY_APPLEPAY_USERNAME_RE7"
+      --set private_applepay_password_stage="$HIPAY_APPLEPAY_PASSWORD_RE7"
+      --set public_applepay_login_stage="$HIPAY_APPLEPAY_TOKENJS_USERNAME_RE7"
+      --set public_applepay_password_stage="$HIPAY_APPLEPAY_TOKENJS_PUBLICKEY_RE7"
+      --set applepay_passphrase_stage="$HIPAY_APPLEPAY_SECRET_PASSPHRASE_RE7"
       --set branch="$CI_COMMIT_REF_NAME"
   allow_failure: true
   environment:

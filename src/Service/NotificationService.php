@@ -175,13 +175,24 @@ class NotificationService
      */
     private function validateRequest(Request $request): bool
     {
+        $isApplePay = false;
+        if (isset($request->request->get('custom_data')['isApplePay'])) {
+            $isApplePay = true;
+        }
+
         $algos = [
             'sha256' => HashAlgorithm::SHA256,
             'sha512' => HashAlgorithm::SHA512,
         ];
 
-        if (!isset($algos[$this->config->getHash()])) {
-            throw new ApiErrorException('Bad configuration unknown algorythm "'.$this->config->getHash().'"');
+        if ($isApplePay) {
+            if (!isset($algos[$this->config->getHashApplePay()])) {
+                throw new ApiErrorException('Bad configuration unknown algorythm "'.$this->config->getHashApplePay().'"');
+            }
+        } else {
+            if (!isset($algos[$this->config->getHash()])) {
+                throw new ApiErrorException('Bad configuration unknown algorythm "'.$this->config->getHash().'"');
+            }
         }
 
         if (!$signature = $request->headers->get('x-allopass-signature', null)) {
@@ -189,8 +200,8 @@ class NotificationService
         }
 
         return Signature::isValidHttpSignature(
-            $this->config->getPassphrase(),
-            $algos[$this->config->getHash()],
+            $isApplePay ? $this->config->getApplePayPassphrase() : $this->config->getPassphrase(),
+            $algos[$isApplePay ? $this->config->getHashApplePay() : $this->config->getHash()],
             $signature,
             (string) $request->getContent()
         );
@@ -565,7 +576,7 @@ class NotificationService
     /**
      * Add order Transaction capture.
      */
-    private function saveCapture(string $status, ?OrderCaptureEntity $capture, ?float $amount = null, ?string $operationId = null, ?HipayOrderEntity $hipayOrder = null): void
+    private function saveCapture(string $status, ?OrderCaptureEntity $capture, float $amount = null, string $operationId = null, HipayOrderEntity $hipayOrder = null): void
     {
         $context = Context::createDefaultContext();
         if (!$capture) {
@@ -580,7 +591,7 @@ class NotificationService
     /**
      * Add order Transaction refund.
      */
-    private function saveRefund(string $status, ?OrderRefundEntity $refund, ?float $amount = null, ?string $operationId = null, ?HipayOrderEntity $hipayOrder = null): void
+    private function saveRefund(string $status, ?OrderRefundEntity $refund, float $amount = null, string $operationId = null, HipayOrderEntity $hipayOrder = null): void
     {
         $context = Context::createDefaultContext();
         if (!$refund) {

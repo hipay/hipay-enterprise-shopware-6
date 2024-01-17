@@ -72,6 +72,28 @@
       "title": "HiPay transaction lifecycle"
     },
     "settings": {
+      "applepay": {
+        "title": "Configuration",
+        "merchantName": "Merchant name",
+        "merchantId": "Merchant ID",
+        "buttonType": {
+          "title": "Button type",
+          "default": "Default",
+          "buy": "Buy",
+          "setup": "Set-up",
+          "donate": "Donate",
+          "checkout": "Check-out",
+          "processing": "Processing",
+          "book": "Book",
+          "subscribe": "Subscribe"
+        },
+        "buttonStyle": {
+          "title": "Button style",
+          "black": "Black",
+          "white": "White",
+          "whiteOutline": "White outline"
+        }
+      },
       "multibanco": {
         "title": "Payment expiration limit"
       },

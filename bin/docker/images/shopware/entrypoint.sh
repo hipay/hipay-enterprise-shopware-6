@@ -14,6 +14,7 @@ sudo chmod -R g+w /var/www/html/var
 
 if [ ! -z $APP_URL ]; then
     echo "SETTING ACTUAL URL"
+    sed -i "s|APP_URL=$BASE_URL|APP_URL=$APP_URL|" .env
     sudo mysql -u root --password=root -D shopware -e "update sales_channel_domain set url='$APP_URL' where url='$BASE_URL';"
     bin/console app:url-change:resolve reinstall-apps
     bin/console cache:clear --quiet
