@@ -144,7 +144,7 @@ export default class HandlerHipayApplePayPlugin extends Plugin {
       username: parameters.api_apple_pay_username,
       password: parameters.api_apple_pay_password,
       environment: parameters.environment,
-      lang: parameters.language_iso_code
+      lang: parameters.lang
     });
   }
 

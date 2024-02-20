@@ -46,4 +46,16 @@ class Paypal extends AbstractPaymentMethod
 
         return $descriptions[$lang] ?? null;
     }
+
+    public static function addDefaultCustomFields(): array
+    {
+        return [
+            'merchantPayPalId' => '',
+            'color' => 'gold',
+            'shape' => 'pill',
+            'label' => 'paypal',
+            'height' => '40',
+            'bnpl' => false,
+        ];
+    }
 }
