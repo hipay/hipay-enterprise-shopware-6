@@ -57,16 +57,12 @@ export default class HandlerHipayPaypalPlugin extends Plugin {
 
         this._paypalInstance.on('paymentAuthorized', function (data) {
             console.log('paymentAuthorized', data);
-            document.getElementById('hipay-result').classList.add('visible');
-            document.getElementById('hipay-result-token').innerHTML =
-            JSON.stringify(data, null, 2);
+            console.log(JSON.stringify(data, null, 2));
             // Pay with API order
         });
 
         this._paypalInstance.on('paymentUnauthorized', function (data) {
             console.log('paymentUnauthorized', data);
-            document.getElementById('hipay-result').classList.remove('visible');
-            document.getElementById('hipay-result-token').innerHTML = '';
         });
 
         this._paypalInstance.on('cancel', function (data) {
