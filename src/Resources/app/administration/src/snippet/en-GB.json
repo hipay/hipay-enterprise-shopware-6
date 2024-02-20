@@ -104,6 +104,35 @@
       "creditcard": {
         "title": "Credit cards available",
         "choice": "Select credit card"
+      },
+      "paypal": {
+        "title": "Configuration PayPal v2",
+        "merchantPayPalId": "Merchant PayPal ID",
+        "info": "To be able to configure the PayPal button, it is necessary to indicate a Merchant PayPal ID",
+        "color": {
+          "title": "Button color",
+          "gold": "Gold",
+          "blue": "Blue",
+          "black": "Black",
+          "silver": "Silver",
+          "white": "White"
+        },
+         "shape": {
+          "title": "Button shape",
+          "pill": "Rounded",
+          "rect": "Rectangle"
+        },
+         "label": {
+          "title": "Button label",
+          "paypal": "PayPal",
+          "pay": "Pay",
+          "subscribe": "Subscribe",
+          "checkout": "Checkout",
+          "buynow": "Buy Now"
+        },
+         "height": {
+          "title": "Button height"
+        }
       }
     }
   }
