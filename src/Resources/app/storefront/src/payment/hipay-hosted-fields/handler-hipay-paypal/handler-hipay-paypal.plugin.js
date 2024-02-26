@@ -12,11 +12,18 @@ export default class HandlerHipayPaypalPlugin extends Plugin {
         amount: null,
         currency: null,
         lang: null,
-        styles: null
+        styles: null,
+        idResponse: 'hipay-response',
     };
 
     init() {
         console.log("plugin options", this.options);
+
+        // Remove global payment button
+        let element = document.querySelector('#confirmFormSubmit');
+        if (element) {
+            element.remove();
+        }
 
         this._hipayInstance = new HiPay({
             username: this.options.username,
@@ -41,9 +48,11 @@ export default class HandlerHipayPaypalPlugin extends Plugin {
             request: {
                 amount: this.options.amount,
                 currency: this.options.currency,
-                locale: 'fr_FR' //TODO
+                locale: this.options.locale
             }
         };
+
+        this._form = document.querySelector('#' + this.options.idResponse).form;
 
         this._paypalInstance = this._hipayInstance.create('paypal', config);
 
@@ -55,11 +64,11 @@ export default class HandlerHipayPaypalPlugin extends Plugin {
             handleError(data.valid);
         });
 
-        this._paypalInstance.on('paymentAuthorized', function (data) {
-            console.log('paymentAuthorized', data);
-            console.log(JSON.stringify(data, null, 2));
-            // Pay with API order
-        });
+        this._paypalInstance.on('paymentAuthorized', (function (data) {
+            const inputResponse = document.querySelector('#' + this.options.idResponse);
+            inputResponse.setAttribute('value', JSON.stringify(data));
+            this._form.submit();
+        }).bind(this));
 
         this._paypalInstance.on('paymentUnauthorized', function (data) {
             console.log('paymentUnauthorized', data);

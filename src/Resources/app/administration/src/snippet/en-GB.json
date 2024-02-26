@@ -108,7 +108,9 @@
       "paypal": {
         "title": "Configuration PayPal v2",
         "merchantPayPalId": "Merchant PayPal ID",
-        "info": "To be able to configure the PayPal button, it is necessary to indicate a Merchant PayPal ID",
+        "info": "It is necessary to indicate a Merchant Paypal ID in order to be able to use PayPal v2 and to customize the button.",
+        "bnpl_label": "Activate 'Buy now, pay later' feature",
+        "info_bnpl": "The 'Buy now, Pay later' feature is only available if the store currency is euros and if the basket amount is between 30 and 2000.",
         "color": {
           "title": "Button color",
           "gold": "Gold",

@@ -18,6 +18,7 @@ Shopware.Component.register('hipay-settings-paypal', {
   },
   data() {
     return {
+      isPayPalV2: this.paymentMethod.customFields.merchantPayPalId !== "",
       colors: [
         {
           label: this.$tc('hipay.settings.paypal.color.gold'),
@@ -72,6 +73,10 @@ Shopware.Component.register('hipay-settings-paypal', {
     };
   },
   methods: {
+    updatePayPalStatus(newValue) {
+      this.isPayPalV2 = newValue !== "" ? true : false;
+      this.updateMerchantPayPalId(newValue);
+    },
     updateMerchantPayPalId(newValue) {
       if (this.paymentMethod.customFields === null) {
         this.paymentMethod.customFields = { ...this.paymentMethod.customFields, merchantPayPalId: newValue };
@@ -102,10 +107,17 @@ Shopware.Component.register('hipay-settings-paypal', {
     },
     updateHeight(newValue) {
       if (this.paymentMethod.customFields === null) {
-        this.paymentMethod.customFields = { ...this.paymentMethod.customFields, height: newValue }; // TODO MIN AND MAX HEIGHT
+        this.paymentMethod.customFields = { ...this.paymentMethod.customFields, height: newValue };
       } else {
         this.paymentMethod.customFields.height = newValue;
       }
     },
+    updateBnpl(newValue) {
+      if (this.paymentMethod.customFields === null) {
+        this.paymentMethod.customFields = { ...this.paymentMethod.customFields, bnpl: newValue };
+      } else {
+        this.paymentMethod.customFields.bnpl = newValue;
+      }
+    }
   }
 });

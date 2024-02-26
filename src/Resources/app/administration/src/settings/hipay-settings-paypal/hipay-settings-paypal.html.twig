@@ -2,18 +2,20 @@
   :title="$tc('hipay.settings.paypal.title')"
   :is-loading="isLoading">
 
+    <sw-alert>
+        <div>{{ $tc('hipay.settings.paypal.info')}}</div>
+    </sw-alert>
+
     <sw-text-field :label="$tc('hipay.settings.paypal.merchantPayPalId')"
             :value="paymentMethod.customFields?.merchantPayPalId"
             :disabled="false"
-            @change="updateMerchantPayPalId">
+            @change="updateMerchantPayPalId"
+            @input="updatePayPalStatus">
     </sw-text-field>
-
-    <sw-label variant="info" size="default" appearance="default" :ghost="true" :caps="false" :dismissable="true">
-       {{ $tc('hipay.settings.paypal.info')}}
-    </sw-label>
 
     <sw-select-field :label="$tc('hipay.settings.paypal.color.title')"
         :value="paymentMethod.customFields?.color || 'gold'"
+        :disabled="!isPayPalV2"
         @change="updateColor">
             <option
                 v-for="color in colors"
@@ -26,6 +28,7 @@
 
     <sw-select-field :label="$tc('hipay.settings.paypal.shape.title')"
         :value="paymentMethod.customFields?.shape || 'pill'"
+        :disabled="!isPayPalV2"
         @change="updateShape">
             <option
                 v-for="shape in shapes"
@@ -38,6 +41,7 @@
 
     <sw-select-field :label="$tc('hipay.settings.paypal.label.title')"
         :value="paymentMethod.customFields?.label || 'paypal'"
+        :disabled="!isPayPalV2"
         @change="updateLabel">
             <option
                 v-for="label in labels"
@@ -49,6 +53,7 @@
     </sw-select-field>
 
     <sw-number-field numberType="int"
+        :disabled="!isPayPalV2"
         :label="$tc('hipay.settings.paypal.height.title')"
         :step="1"
         :min="25"
@@ -58,4 +63,15 @@
         :fillDigits="false"
         :allowEmpty="true">
     </sw-number-field>
+
+    <sw-alert>
+        <div>{{ $tc('hipay.settings.paypal.info_bnpl')}}</div>
+    </sw-alert>
+
+    <sw-switch-field
+        :value="paymentMethod.customFields?.bnpl"
+        :disabled="!isPayPalV2"
+        :label="$tc('hipay.settings.paypal.bnpl_label')"
+        @change="updateBnpl"
+    ></sw-switch-field>
 </sw-card>
