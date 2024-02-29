@@ -45,7 +45,7 @@ class OrderRefundCollection extends EntityCollection
         return $refundedAmount;
     }
 
-    public function getRefundByOperationId(string $operationId, string $status = null): ?OrderRefundEntity
+    public function getRefundByOperationId(string $operationId, ?string $status = null): ?OrderRefundEntity
     {
         $result = array_filter($this->getElements(), function (OrderRefundEntity $refund) use ($operationId, $status) {
             if ($status) {

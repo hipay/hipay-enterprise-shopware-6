@@ -783,7 +783,7 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
      *
      * @param int $format libphonenumber\PhoneNumberFormat\PhoneNumberFormat const
      */
-    protected function formatPhoneNumber(?string $phoneNumber, string $isoCountry = null, int $format = PhoneNumberFormat::E164): ?string
+    protected function formatPhoneNumber(?string $phoneNumber, ?string $isoCountry = null, int $format = PhoneNumberFormat::E164): ?string
     {
         try {
             $phoneUtil = PhoneNumberUtil::getInstance();
