@@ -45,7 +45,7 @@ class OrderCaptureCollection extends EntityCollection
         return $capturedAmount;
     }
 
-    public function getCaptureByOperationId(string $operationId, string $status = null): ?OrderCaptureEntity
+    public function getCaptureByOperationId(string $operationId, ?string $status = null): ?OrderCaptureEntity
     {
         $result = array_filter($this->getElements(), function (OrderCaptureEntity $capture) use ($operationId, $status) {
             if ($status) {
