@@ -9,6 +9,7 @@ export default class HandlerHipayPaypalPlugin extends Plugin {
         password: null,
         environment: null,
         merchantPayPalId: null,
+        canPayLater: null,
         amount: null,
         currency: null,
         lang: null,
@@ -41,6 +42,7 @@ export default class HandlerHipayPaypalPlugin extends Plugin {
                 }
             },
             merchantPaypalId: this.options.merchantPayPalId,
+            canPayLater: this.options.canPayLater,
             paypalButtonStyle: {
                 shape: this.options.styles.shape,
                 height: Number(this.options.styles.height)
