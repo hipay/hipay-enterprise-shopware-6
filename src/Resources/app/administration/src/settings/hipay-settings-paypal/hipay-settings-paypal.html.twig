@@ -58,10 +58,11 @@
         :step="1"
         :min="25"
         :max="55"
-        :value="40"
+        :value="paymentMethod.customFields?.height || '40'"
         :digits="2"
         :fillDigits="false"
-        :allowEmpty="true">
+        :allowEmpty="true"
+        @change="updateHeight">
     </sw-number-field>
 
     <sw-alert>
