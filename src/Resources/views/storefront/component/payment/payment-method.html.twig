@@ -17,14 +17,14 @@
 
 {% block component_payment_method_description %}
   {{ parent() }}
-  {% set environment = config('HiPayPaymentPlugin.config.environment') %}
-  {% set isPayPalV2 = payment.customFields.merchantPayPalId != "" %}
-  {% set componentName = payment.formattedHandlerIdentifier|replace({'_':'-'}) %}
 
   {% if payment.id is same as(selectedPaymentMethodId)
       and 'handler_hipay_' in payment.formattedHandlerIdentifier
       and activeRoute in ['frontend.account.edit-order.page', 'frontend.checkout.confirm.page']
   %}
+    {% set environment = config('HiPayPaymentPlugin.config.environment') %}
+    {% set isPayPalV2 = payment.customFields.merchantPayPalId != "" %}
+    {% set componentName = payment.formattedHandlerIdentifier|replace({'_':'-'}) %}
 
     {% if config('HiPayPaymentPlugin.config.operationMode') == 'hostedFields'
         and payment.extensions.hipayConfig.haveHostedFields
