@@ -18,8 +18,6 @@ export default class HandlerHipayPaypalPlugin extends Plugin {
     };
 
     init() {
-        console.log("plugin options", this.options);
-
         // Remove global payment button
         let element = document.querySelector('#confirmFormSubmit');
         if (element) {
@@ -36,16 +34,13 @@ export default class HandlerHipayPaypalPlugin extends Plugin {
         const config = {
             template: 'auto',
             selector: 'paypal-field',
-            styles: {
-                base: {
-                    color: this.options.styles.color
-                }
-            },
             merchantPaypalId: this.options.merchantPayPalId,
             canPayLater: this.options.canPayLater,
             paypalButtonStyle: {
                 shape: this.options.styles.shape,
-                height: Number(this.options.styles.height)
+                height: Number(this.options.styles.height),
+                color: this.options.styles.color,
+                label: this.options.styles.label
             },
             request: {
                 amount: this.options.amount,
@@ -58,32 +53,10 @@ export default class HandlerHipayPaypalPlugin extends Plugin {
 
         this._paypalInstance = this._hipayInstance.create('paypal', config);
 
-        this._registerEvents();
-    }
-
-    _registerEvents() {
-        this._paypalInstance.on('change', function (data) {
-            handleError(data.valid);
-        });
-
         this._paypalInstance.on('paymentAuthorized', (function (data) {
             const inputResponse = document.querySelector('#' + this.options.idResponse);
             inputResponse.setAttribute('value', JSON.stringify(data));
             this._form.submit();
         }).bind(this));
-
-        this._paypalInstance.on('paymentUnauthorized', function (data) {
-            console.log('paymentUnauthorized', data);
-        });
-
-        this._paypalInstance.on('cancel', function (data) {
-            console.log('cancel', data);
-        });
-
-        function handleError(valid) {
-            if (!valid) {
-                console.log("error");
-            }
-        }
     }
 }

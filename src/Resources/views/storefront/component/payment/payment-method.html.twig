@@ -20,7 +20,6 @@
   {% set environment = config('HiPayPaymentPlugin.config.environment') %}
   {% set isPayPalV2 = payment.customFields.merchantPayPalId != "" %}
   {% set componentName = payment.formattedHandlerIdentifier|replace({'_':'-'}) %}
-  <script src="https://libs.hipay.com/js/sdkjs.js"></script>
 
   {% if payment.id is same as(selectedPaymentMethodId)
       and 'handler_hipay_' in payment.formattedHandlerIdentifier
@@ -31,6 +30,7 @@
         and payment.extensions.hipayConfig.haveHostedFields
         or isPayPalV2
     %}
+      <script src="https://stage-libs.hipay.com/js/sdkjs.js"></script>
       {% if componentName == 'handler-hipay-applepay'%}
         {% set hipayConfig = {
             username: config('HiPayPaymentPlugin.config.publicApplePayLogin' ~ environment),
