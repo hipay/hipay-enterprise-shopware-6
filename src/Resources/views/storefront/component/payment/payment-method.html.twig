@@ -30,7 +30,7 @@
         and payment.extensions.hipayConfig.haveHostedFields
         or isPayPalV2
     %}
-      <script src="https://stage-libs.hipay.com/js/sdkjs.js"></script>
+      <script src={{config('HiPayPaymentPlugin.config.sdkjsUrl')}}></script>
       {% if componentName == 'handler-hipay-applepay'%}
         {% set hipayConfig = {
             username: config('HiPayPaymentPlugin.config.publicApplePayLogin' ~ environment),
