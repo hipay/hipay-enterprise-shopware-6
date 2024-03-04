@@ -22,15 +22,15 @@
       and 'handler_hipay_' in payment.formattedHandlerIdentifier
       and activeRoute in ['frontend.account.edit-order.page', 'frontend.checkout.confirm.page']
   %}
+    {% set environment = config('HiPayPaymentPlugin.config.environment') %}
+    {% set isPayPalV2 = payment.customFields.merchantPayPalId != "" %}
+    {% set componentName = payment.formattedHandlerIdentifier|replace({'_':'-'}) %}
 
     {% if config('HiPayPaymentPlugin.config.operationMode') == 'hostedFields'
         and payment.extensions.hipayConfig.haveHostedFields
+        or isPayPalV2
     %}
-      <script src="https://libs.hipay.com/js/sdkjs.js"></script>
-
-      {% set componentName = payment.formattedHandlerIdentifier|replace({'_':'-'}) %}
-      {% set environment = config('HiPayPaymentPlugin.config.environment') %}
-
+      <script src={{config('HiPayPaymentPlugin.config.sdkjsUrl')}}></script>
       {% if componentName == 'handler-hipay-applepay'%}
         {% set hipayConfig = {
             username: config('HiPayPaymentPlugin.config.publicApplePayLogin' ~ environment),
@@ -58,6 +58,24 @@
             }
           }
         %}
+      {% elseif componentName == 'handler-hipay-paypal' %}
+        {% set hipayConfig = {
+          username: config('HiPayPaymentPlugin.config.publicLogin' ~ environment),
+          password: config('HiPayPaymentPlugin.config.publicPassword' ~ environment),
+          environment: environment|lower,
+          merchantPayPalId: payment.customFields.merchantPayPalId,
+          canPayLater: payment.customFields.bnpl,
+          amount: summary.price.rawTotal,
+          currency: page.header.activeCurrency.isoCode,
+          lang: page.header.activeLanguage.translationCode.code|slice(0, 2),
+          locale: page.header.activeLanguage.translationCode.code|replace({'-':'_'}),
+          styles: {
+            color: payment.customFields.color,
+            shape: payment.customFields.shape,
+            label: payment.customFields.label,
+            height: payment.customFields.height
+          }
+        }%}
       {% else %}
         {% set hipayConfig = {
             username: config('HiPayPaymentPlugin.config.publicLogin' ~ environment),
@@ -90,7 +108,7 @@
       {% endblock %}
       {% sw_include '@HiPayPaymentPlugin/storefront/component/payment/hosted-fields/' ~ componentName ~ '.html.twig' %}
 
-    {% elseif payment.formattedHandlerIdentifier != 'handler_hipay_multibanco' || config('HiPayPaymentPlugin.config.operationMode') != 'hostedFields'
+    {% elseif payment.formattedHandlerIdentifier != 'handler_hipay_multibanco' && not isPayPalV2 || config('HiPayPaymentPlugin.config.operationMode') != 'hostedFields'
     %}
       <p>{{ 'hipay.hosted-page.redirect-message'|trans }}</p>
     {% endif %}
