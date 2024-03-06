@@ -10,7 +10,7 @@ Contributions to the HiPay Enterprise module for Shopware 6 should be made via G
 
 If you would like to make a significant change, please open an issue to discuss it, in order to minimize duplication of effort.
 
-## Development
+### Install
 
 Installation with Docker for testing
 
@@ -77,6 +77,34 @@ To connect to the back office, go to this URL: <https://hipay.shopware.com/admin
 The login and password are the default: admin / shopware.
 
 You can test the module with your HiPay account configuration.
+
+### Debug
+
+If you want to debug locally our CMS module, here are the steps :
+
+- Verify the value of `XDEBUG_REMOTE_HOST` in your `.env` file you have copied in last step.
+  - For Linux users, it should be `172.17.0.1` (value by default)
+  - For MacOS users, replace it by `host.docker.internal`
+- Then, create a Xdebug launch according to your IDE (here is for VSCode) :
+
+  ```json
+  {
+    "name": "Shopware",
+    "type": "php",
+    "request": "launch",
+    "hostname": "172.17.0.1", // Only for Linux users
+    "port": 9000,
+    "pathMappings": {
+        "/var/www/html/custom/plugins/HiPayPaymentPlugin/src": "${workspaceFolder}/src",
+        "/var/www/html/custom/plugins/HiPayPaymentPlugin/composer.json": "${workspaceFolder}/composer.json",
+        "/var/www/html/custom/plugins/HiPayPaymentPlugin/tests": "${workspaceFolder}/tests",
+        "/var/www/html": "${workspaceFolder}/web"
+    },
+    "runtimeArgs": [
+        "-dxdebug.idekey=VSCODE"
+    ]
+  }
+  ```
 
 ## Quality & Testing
 
