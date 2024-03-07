@@ -20,12 +20,8 @@ class Paypal extends AbstractPaymentMethod
     /** {@inheritDoc} */
     protected const PAYMENT_IMAGE = 'paypal.svg';
 
-    /** {@inheritDoc} */
     protected static PaymentProduct $paymentConfig;
 
-    /**
-     * {@inheritDoc}
-     */
     public static function getName(string $lang): ?string
     {
         $names = [
@@ -36,9 +32,6 @@ class Paypal extends AbstractPaymentMethod
         return $names[$lang] ?? null;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public static function getDescription(string $lang): ?string
     {
         $descriptions = [
@@ -64,7 +57,7 @@ class Paypal extends AbstractPaymentMethod
     protected function hydrateHostedFields(OrderRequest $orderRequest, array $payload, AsyncPaymentTransactionStruct $transaction): OrderRequest
     {
         if ('paypal' === $orderRequest->payment_product && isset($payload['orderID'])) {
-            $providerData = ['paypal_id' => $payload['orderID']];
+            $providerData = ['paypal_id' => is_string($payload['orderID']) ? $payload['orderID'] : ''];
             $orderRequest->provider_data = json_encode($providerData);
         }
 
