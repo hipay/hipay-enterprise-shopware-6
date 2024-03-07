@@ -57,8 +57,8 @@ class Paypal extends AbstractPaymentMethod
     protected function hydrateHostedFields(OrderRequest $orderRequest, array $payload, AsyncPaymentTransactionStruct $transaction): OrderRequest
     {
         if ('paypal' === $orderRequest->payment_product && isset($payload['orderID'])) {
-            $providerData = ['paypal_id' => is_string($payload['orderID']) ? $payload['orderID'] : ''];
-            $orderRequest->provider_data = json_encode($providerData);
+            $providerData = ['paypal_id' => $payload['orderID']];
+            $orderRequest->provider_data = (string) json_encode($providerData);
         }
 
         return $orderRequest;
