@@ -100,6 +100,37 @@
       "creditcard": {
         "title": "Kreditkarten verfügbar",
         "choice": "Kreditkarte auswählen"
+      },
+      "paypal": {
+        "title": "PayPal v2 Konfiguration",
+        "merchantPayPalId": "Händler PayPal ID",
+        "info": "Es ist notwendig, eine Händler PayPal ID anzugeben, um PayPal v2 nutzen zu können und den Button anzupassen.",
+        "bnpl_label": "'Jetzt kaufen, später bezahlen' Funktion aktivieren",
+        "info_bnpl": "Die Funktion 'Jetzt kaufen, später bezahlen' ist nur verfügbar, wenn die Währung des Geschäfts Euro ist und wenn der Warenkorbwert zwischen 30 und 2000 liegt.",
+        "color": {
+          "title": "Buttonfarbe",
+          "gold": "Gold",
+          "blue": "Blau",
+          "black": "Schwarz",
+          "silver": "Silber",
+          "white": "Weiß"
+        },
+         "shape": {
+          "title": "Buttonform",
+          "pill": "Abgerundet",
+          "rect": "Rechteck"
+        },
+         "label": {
+          "title": "Buttonbeschriftung",
+          "paypal": "PayPal",
+          "pay": "Bezahlen",
+          "subscribe": "Abonnieren",
+          "checkout": "Kasse",
+          "buynow": "Jetzt kaufen"
+        },
+         "height": {
+          "title": "Buttonhöhe"
+        }
       }
     }
   }

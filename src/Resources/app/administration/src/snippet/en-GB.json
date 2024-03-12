@@ -100,6 +100,37 @@
       "creditcard": {
         "title": "Credit cards available",
         "choice": "Select credit card"
+      },
+      "paypal": {
+        "title": "Configuration PayPal v2",
+        "merchantPayPalId": "Merchant PayPal ID",
+        "info": "It is necessary to indicate a Merchant Paypal ID in order to be able to use PayPal v2 and to customize the button.",
+        "bnpl_label": "Activate 'Buy now, pay later' feature",
+        "info_bnpl": "The 'Buy now, Pay later' feature is only available if the store currency is euros and if the basket amount is between 30 and 2000.",
+        "color": {
+          "title": "Button color",
+          "gold": "Gold",
+          "blue": "Blue",
+          "black": "Black",
+          "silver": "Silver",
+          "white": "White"
+        },
+         "shape": {
+          "title": "Button shape",
+          "pill": "Rounded",
+          "rect": "Rectangle"
+        },
+         "label": {
+          "title": "Button label",
+          "paypal": "PayPal",
+          "pay": "Pay",
+          "subscribe": "Subscribe",
+          "checkout": "Checkout",
+          "buynow": "Buy Now"
+        },
+         "height": {
+          "title": "Button height"
+        }
       }
     }
   }
