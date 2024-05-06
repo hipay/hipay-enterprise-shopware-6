@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## Unreleased (Version 3.0.0)
+
+- **BREAKING CHANGE** : Added support for Shopware version **6.6**
+
 ## Version 2.1.0
 
 - **Add** : Added new payment means
