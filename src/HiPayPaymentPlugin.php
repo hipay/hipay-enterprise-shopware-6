@@ -135,8 +135,7 @@ class HiPayPaymentPlugin extends Plugin
      */
     public static function getShopwareVersion(): ?string
     {
-        return InstalledVersions::getVersion('shopware/core')
-            ?? InstalledVersions::getVersion('shopware/recovery');
+        return InstalledVersions::getVersion('shopware/core');
     }
 
     public function install(InstallContext $context): void
