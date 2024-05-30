@@ -232,6 +232,7 @@ class HiPayPaymentPlugin extends Plugin
             'pluginId' => $this->pluginId,
             'salesChannels' => $this->getSalesChannelIds(),
             'position' => $classname::getPosition(),
+            'technicalName' => $classname::getTechnicalName(),
         ];
 
         /** @var EntityRepository $paymentRepository */

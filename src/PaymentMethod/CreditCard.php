@@ -14,6 +14,9 @@ use Shopware\Core\Checkout\Payment\Cart\AsyncPaymentTransactionStruct;
 class CreditCard extends AbstractPaymentMethod
 {
     /** {@inheritDoc} */
+    protected const TECHNICAL_NAME = 'credit-card';
+
+    /** {@inheritDoc} */
     protected const PAYMENT_POSITION = 10;
 
     /** {@inheritDoc} */
