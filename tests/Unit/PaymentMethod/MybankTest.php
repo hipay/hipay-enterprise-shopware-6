@@ -40,6 +40,11 @@ class MybankTest extends TestCase
         );
 
         $this->assertEquals(
+            'hipay-mybank',
+            Mybank::getTechnicalName()
+        );
+
+        $this->assertEquals(
             [],
             Mybank::addDefaultCustomFields()
         );

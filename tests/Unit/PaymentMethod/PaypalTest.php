@@ -56,6 +56,11 @@ class PaypalTest extends TestCase
             Paypal::getPosition()
         );
 
+        $this->assertEquals(
+            'hipay-paypal',
+            Paypal::getTechnicalName()
+        );
+
         $this->assertSame(
             [
                 'en-GB' => 'PayPal is an American company offering an online payment service system worldwide',

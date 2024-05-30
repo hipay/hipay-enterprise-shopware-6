@@ -38,6 +38,11 @@ class BancontactTest extends TestCase
         );
 
         $this->assertEquals(
+            'hipay-bancontact',
+            Bancontact::getTechnicalName()
+        );
+
+        $this->assertEquals(
             ['haveHostedFields' => false, 'allowPartialCapture' => false, 'allowPartialRefund' => true],
             Bancontact::getConfig()
         );
@@ -47,18 +52,18 @@ class BancontactTest extends TestCase
             Bancontact::addDefaultCustomFields()
         );
 
-        // $this->assertSame(
-        //     [
-        //         'en-GB' => 'Pay your order with your Credit card or by QR code with the application Bancontact.',
-        //         'de-DE' => 'Bezahlen Sie Ihre Bestellung mit Ihrer Kreditkarte oder per QR-Code mit der Anwendung Bancontact.',
-        //         'fo-FO' => null,
-        //     ],
-        //     [
-        //         'en-GB' => Bancontact::getDescription('en-GB'),
-        //         'de-DE' => Bancontact::getDescription('de-DE'),
-        //         'fo-FO' => Bancontact::getDescription('fo-FO'),
-        //     ]
-        // );
+        $this->assertSame(
+            [
+                'en-GB' => 'Pay your order with your Credit card or by QR code with the application Bancontact.',
+                'de-DE' => 'Bezahlen Sie Ihre Bestellung mit Ihrer Kreditkarte oder per QR-Code mit der Anwendung Bancontact.',
+                'fo-FO' => null,
+            ],
+            [
+                'en-GB' => Bancontact::getDescription('en-GB'),
+                'de-DE' => Bancontact::getDescription('de-DE'),
+                'fo-FO' => Bancontact::getDescription('fo-FO'),
+            ]
+        );
 
         $this->assertSame(
             [

@@ -49,6 +49,11 @@ class Przelewy24Test extends TestCase
             Przelewy24::getPosition()
         );
 
+        $this->assertEquals(
+            'hipay-przelewy24',
+            Przelewy24::getTechnicalName()
+        );
+
         $this->assertSame(
             [
                 'en-GB' => 'Pay your order by bank transfert with Przelewy24.',

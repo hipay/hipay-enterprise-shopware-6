@@ -49,6 +49,11 @@ class Alma3XTest extends TestCase
             Alma3X::getPosition()
         );
 
+        $this->assertEquals(
+            'hipay-alma-3x',
+            Alma3X::getTechnicalName()
+        );
+
         $this->assertSame(
             [
                 'en-GB' => 'Pay your order in 3 free instalments with Alma.',
