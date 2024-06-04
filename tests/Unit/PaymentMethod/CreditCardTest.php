@@ -90,6 +90,11 @@ class CreditCardTest extends TestCase
         );
 
         $this->assertEquals(
+            'hipay-credit-card',
+            CreditCard::getTechnicalName()
+        );
+
+        $this->assertEquals(
             [
                 'haveHostedFields' => true,
                 'allowPartialCapture' => true,

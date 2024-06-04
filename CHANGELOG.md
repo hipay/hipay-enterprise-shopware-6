@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## Unreleased
+
+- **Fix** : Fixed getter method to recover Shopware version
+- **Fix** : Fixed technical name for payment methods to prepare Shopware version **6.7**
+
 ## Version 2.1.0
 
 - **Add** : Added new payment means

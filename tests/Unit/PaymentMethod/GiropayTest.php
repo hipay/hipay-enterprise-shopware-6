@@ -52,6 +52,11 @@ class GyropayTest extends TestCase
         );
 
         $this->assertEquals(
+            'hipay-giropay',
+            Giropay::getTechnicalName()
+        );
+
+        $this->assertEquals(
             ['haveHostedFields' => true, 'allowPartialCapture' => false, 'allowPartialRefund' => false],
             Giropay::getConfig()
         );

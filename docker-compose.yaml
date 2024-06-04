@@ -5,7 +5,7 @@ services:
     container_name: hipay-enterprise-shopware-6
     build:
       args:
-        - DOCKWARE_VERSION=latest
+        - DOCKWARE_VERSION=6.5.8.10
       context: .
       dockerfile: bin/docker/images/shopware/Dockerfile
     ports:

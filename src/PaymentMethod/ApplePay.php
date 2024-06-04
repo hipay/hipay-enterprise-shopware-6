@@ -13,6 +13,9 @@ use Shopware\Core\Checkout\Payment\Cart\AsyncPaymentTransactionStruct;
 class ApplePay extends AbstractPaymentMethod
 {
     /** {@inheritDoc} */
+    protected const TECHNICAL_NAME = 'applepay';
+
+    /** {@inheritDoc} */
     protected const PAYMENT_POSITION = 5;
 
     /** {@inheritDoc} */
