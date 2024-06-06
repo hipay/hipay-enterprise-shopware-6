@@ -1,7 +1,8 @@
 # CHANGELOG
 
-## Unreleased
+## Version 2.2.0
 
+- **Add** : Add PayPal v2
 - **Fix** : Fixed getter method to recover Shopware version
 - **Fix** : Fixed technical name for payment methods to prepare Shopware version **6.7**
 
