@@ -13,13 +13,13 @@ use Symfony\Component\Console\Output\OutputInterface;
 class NotificationCommand extends Command
 {
     // Command name
-    protected static $defaultName = 'hipay:notification';
+    private const NAME = 'hipay:notification';
 
     protected NotificationService $notifService;
 
     public function __construct(NotificationService $notificationService)
     {
-        parent::__construct();
+        parent::__construct(self::NAME);
         $this->notifService = $notificationService;
     }
 

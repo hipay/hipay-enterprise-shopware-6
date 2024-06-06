@@ -35,7 +35,14 @@ class PaypalTest extends TestCase
     public function testStatic()
     {
         $this->assertEquals(
-            [],
+            [
+                'merchantPayPalId' => '',
+                'color' => 'gold',
+                'shape' => 'pill',
+                'label' => 'paypal',
+                'height' => '40',
+                'bnpl' => true,
+            ],
             Paypal::addDefaultCustomFields()
         );
 
@@ -47,6 +54,11 @@ class PaypalTest extends TestCase
         $this->assertEquals(
             20,
             Paypal::getPosition()
+        );
+
+        $this->assertEquals(
+            'hipay-paypal',
+            Paypal::getTechnicalName()
         );
 
         $this->assertSame(

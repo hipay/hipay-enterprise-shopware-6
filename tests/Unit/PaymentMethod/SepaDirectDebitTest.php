@@ -85,6 +85,11 @@ class SepaDirectDebitTest extends TestCase
             SepaDirectDebit::getPosition()
         );
 
+        $this->assertEquals(
+            'hipay-sdd',
+            SepaDirectDebit::getTechnicalName()
+        );
+
         $this->assertSame(
             [
                 'en-GB' => 'We\'ll automatically debit the amount from your bank account.',

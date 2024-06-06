@@ -567,4 +567,17 @@
             <label lang="de-DE">Symbol Farbe</label>
         </input-field>
     </card>
+
+    <card>
+        <title>SDK Configuration</title>
+        <title lang="de-DE">SDK-Konfiguration</title>
+
+        <input-field type="text">
+            <name>sdkjsUrl</name>
+            <label>Url of HiPay's libs for Hosted Fields</label>
+            <label lang="de-DE">URL der HiPay-Bibliotheken für Hosted Fields</label>
+            <required>true</required>
+            <defaultValue>https://libs.hipay.com/js/sdkjs.js</defaultValue>
+        </input-field>
+    </card>
 </config>

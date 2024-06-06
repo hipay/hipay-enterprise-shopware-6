@@ -61,6 +61,11 @@ class MbwayTest extends TestCase
             Mbway::getPosition()
         );
 
+        $this->assertEquals(
+            'hipay-mbway',
+            Mbway::getTechnicalName()
+        );
+
         $this->assertSame(
             [
                 'en-GB' => 'Pay your order with the MB Way application',

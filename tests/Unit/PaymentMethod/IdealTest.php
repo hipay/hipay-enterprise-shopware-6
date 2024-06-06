@@ -52,6 +52,11 @@ class IdealTest extends TestCase
         );
 
         $this->assertEquals(
+            'hipay-ideal',
+            Ideal::getTechnicalName()
+        );
+
+        $this->assertEquals(
             [],
             Ideal::addDefaultCustomFields()
         );

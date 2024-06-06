@@ -83,6 +83,9 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
     /** @var string Payment code and json file */
     protected const PAYMENT_CODE = '';
 
+    /** @var string Technical name of payment method */
+    protected const TECHNICAL_NAME = null;
+
     /** @var ?string Payment image to load */
     protected const PAYMENT_IMAGE = null;
 
@@ -163,6 +166,11 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
         }
 
         return static::$paymentConfig->getProductCode();
+    }
+
+    public static function getTechnicalName(): string
+    {
+        return 'hipay-'.(static::TECHNICAL_NAME ?? static::getProductCode());
     }
 
     /**
@@ -782,7 +790,7 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
      *
      * @param int $format libphonenumber\PhoneNumberFormat\PhoneNumberFormat const
      */
-    protected function formatPhoneNumber(?string $phoneNumber, string $isoCountry = null, int $format = PhoneNumberFormat::E164): ?string
+    protected function formatPhoneNumber(?string $phoneNumber, ?string $isoCountry = null, int $format = PhoneNumberFormat::E164): ?string
     {
         try {
             $phoneUtil = PhoneNumberUtil::getInstance();

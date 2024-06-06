@@ -49,6 +49,11 @@ class SofortTest extends TestCase
             Sofort::getPosition()
         );
 
+        $this->assertEquals(
+            'hipay-sofort-uberweisung',
+            Sofort::getTechnicalName()
+        );
+
         $this->assertSame(
             [
                 'en-GB' => 'Pay your order by bank transfert with Sofort.',

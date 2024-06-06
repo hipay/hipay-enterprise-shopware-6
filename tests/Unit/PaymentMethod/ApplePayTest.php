@@ -77,6 +77,11 @@ class ApplePayTest extends TestCase
         );
 
         $this->assertEquals(
+            'hipay-applepay',
+            ApplePay::getTechnicalName()
+        );
+
+        $this->assertEquals(
             [
                 'haveHostedFields' => true,
                 'allowPartialCapture' => true,

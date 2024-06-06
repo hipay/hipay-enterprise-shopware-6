@@ -67,6 +67,11 @@ class MultibancoTest extends TestCase
             Multibanco::getPosition()
         );
 
+        $this->assertEquals(
+            'hipay-multibanco',
+            Multibanco::getTechnicalName()
+        );
+
         $this->assertSame(
             [
                 'en-GB' => 'Pay your order with the Multibanco',

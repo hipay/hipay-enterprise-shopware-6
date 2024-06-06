@@ -51,4 +51,9 @@ interface PaymentMethodInterface
      * Return the initial position of the payment method.
      */
     public static function getPosition(): int;
+
+    /**
+     * Return the technical name of the payment method.
+     */
+    public static function getTechnicalName(): string;
 }

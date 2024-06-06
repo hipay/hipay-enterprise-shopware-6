@@ -4,6 +4,7 @@ import HandlerHipaySepadirectdebitPlugin from './payment/hipay-hosted-fields/han
 import HandlerHipayIdealPlugin from './payment/hipay-hosted-fields/handler-hipay-ideal/handler-hipay-ideal.plugin';
 import HandlerHipayMbwayPlugin from './payment/hipay-hosted-fields/handler-hipay-mbay/handler-hipay-mbway.plugin';
 import HandlerHipayApplePayPlugin from './payment/hipay-hosted-fields/handler-hipay-applepay/handler-hipay-applepay.plugin';
+import HandlerHipayPaypalPlugin from './payment/hipay-hosted-fields/handler-hipay-paypal/handler-hipay-paypal.plugin';
 import HipayManageCreditCardPlugin from './account/payment/hipay-manage-creditcard/hipay-manage-creditcard.plugin';
 
 // Register them via the existing PluginManager
@@ -13,6 +14,12 @@ PluginManager.register(
   'HandlerHipayApplePayPlugin',
   HandlerHipayApplePayPlugin,
   '[handler-hipay-apple-pay-plugin]'
+);
+
+PluginManager.register(
+  'HandlerHipayPaypalPlugin',
+  HandlerHipayPaypalPlugin,
+  '[handler-hipay-paypal-plugin]'
 );
 
 PluginManager.register(
