@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## Version 1.3.0
+
+- **Add** : Add PayPal v2
+
 ## Version 1.2.0
 
 - **Add** : Added new payment means
