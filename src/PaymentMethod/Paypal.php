@@ -3,6 +3,8 @@
 namespace HiPay\Payment\PaymentMethod;
 
 use HiPay\Fullservice\Data\PaymentProduct;
+use HiPay\Fullservice\Gateway\Request\Order\OrderRequest;
+use Shopware\Core\Checkout\Payment\Cart\AsyncPaymentTransactionStruct;
 
 /**
  * Paypal payment Methods.
@@ -18,12 +20,8 @@ class Paypal extends AbstractPaymentMethod
     /** {@inheritDoc} */
     protected const PAYMENT_IMAGE = 'paypal.svg';
 
-    /** {@inheritDoc} */
     protected static PaymentProduct $paymentConfig;
 
-    /**
-     * {@inheritDoc}
-     */
     public static function getName(string $lang): ?string
     {
         $names = [
@@ -34,9 +32,6 @@ class Paypal extends AbstractPaymentMethod
         return $names[$lang] ?? null;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public static function getDescription(string $lang): ?string
     {
         $descriptions = [
@@ -45,5 +40,27 @@ class Paypal extends AbstractPaymentMethod
         ];
 
         return $descriptions[$lang] ?? null;
+    }
+
+    public static function addDefaultCustomFields(): array
+    {
+        return [
+            'merchantPayPalId' => '',
+            'color' => 'gold',
+            'shape' => 'pill',
+            'label' => 'paypal',
+            'height' => '40',
+            'bnpl' => true,
+        ];
+    }
+
+    protected function hydrateHostedFields(OrderRequest $orderRequest, array $payload, AsyncPaymentTransactionStruct $transaction): OrderRequest
+    {
+        if ('paypal' === $orderRequest->payment_product && isset($payload['orderID'])) {
+            $providerData = ['paypal_id' => $payload['orderID']];
+            $orderRequest->provider_data = (string) json_encode($providerData);
+        }
+
+        return $orderRequest;
     }
 }

@@ -13,4 +13,8 @@
     <hipay-settings-multibanco :is-loading="isLoading"
       :paymentMethod="paymentMethod"></hipay-settings-multibanco>
   </template>
+  <template v-if="paymentMethod.formattedHandlerIdentifier == 'handler_hipay_paypal'">
+    <hipay-settings-paypal :is-loading="isLoading"
+      :paymentMethod="paymentMethod"></hipay-settings-paypal>
+  </template>
 {% endblock %}
