@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## Unreleased
+
+- **Fix** : Fixed Sepa Direct Debit logo
+
 ## Version 2.2.0
 
 - **Add** : Add PayPal v2
