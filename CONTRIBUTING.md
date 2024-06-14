@@ -143,3 +143,49 @@ Development takes place against the `develop` branch of this repository and pull
 
 [pull-requests]: https://github.com/hipay/hipay-enterprise-shopware-6/pulls
 [issues]: https://github.com/hipay/hipay-enterprise-shopware-6/issues
+
+### Watcher
+
+Using `dockware/dev` image as developers, we can edit the front code of the admin side and the storefront side by using watchers.
+
+There is 2 distinct watchers for each side of the website.
+
+#### Admin watcher
+
+The admin watcher will use the same domain than the current application domain.
+
+You can launch it by entering the following command : `bash shopware.sh watch admin`
+
+With our custom APP URL, which is <https://hipay.shopware.com>, the watcher will be reachable on <https://hipay.shopware.com:8888>
+
+When this watcher is activated, the hot reload feature is enabled. That means when you edit a file from the `Resources > app > administration` folder, the openned pages based on this domain <https://hipay.shopware.com:8888> will be reloaded.
+
+#### Storefront watcher
+
+The storefront watcher will **NOT** use the same domain than the current application domain.
+
+Its protocol is forced to be *http* and it's currently not possible to use this watcher with a *https* domain.
+
+You can launch it by entering the following command : `bash shopware.sh watch front`
+
+The watcher will be reachable on <http://localhost:9998>
+
+When this watcher is activated, the hot reload feature is enabled. That means when you edit a file from the `Resources > app > storefront` folder, the openned pages based on this domain <http://localhost:9998> will be reloaded.
+
+If you want to turn back to a storefront without watcher, you have to enter this command : `bash shopware.sh stop-watch`
+
+### Ngrok
+
+You can use ngrok to mount a public address with *HTTPS* protocol linked to your local Shopware application if necessary.
+
+To do that, enter the following command : `ngrok http 443`
+
+Once you have your generated URL from ngrok, you have to replace several occurrences before initiating your application :
+
+- `proxy.conf` file : replace the `server_name` of the servers on ports `80` and `443`.
+- `.env` file : replace the `APP_URL` environment variable.
+- `shopware.sh` file (if you want to use this file) : replace the `defaultUrl` variable on the top of the file.
+
+The link to the admin watcher with Ngrok is not configured but it could be. However, it's not very useful for us to mount the admin watcher with a Ngrok address.
+
+On the other hand, the link to the storefront watcher with Ngrok is unfortunately impossible. It could be useful but we are forced to use a `localhost` address in *HTTP* when using the storefront watcher.

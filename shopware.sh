@@ -1,10 +1,9 @@
 #!/bin/bash
 
 container=hipay-enterprise-shopware-6
+watcherUrl=http://localhost
 defaultUrl=https://hipay.shopware.com
-# defaultUrl=https://1b89-77-135-172-28.ngrok-free.app
-frontUrl=http://hipay.shopware.com
-# frontUrl=https://097c-77-135-172-28.ngrok-free.app
+# defaultUrl=https://ca33-77-135-172-28.ngrok-free.app
 
 if [ "$1" = '' ] || [ "$1" = '--help' ]; then
     printf "\n                                                      "
@@ -19,6 +18,7 @@ if [ "$1" = '' ] || [ "$1" = '--help' ]; then
     printf "\n      - command                   : Run custom command in container                       "
     printf "\n      - test                      : Run the configured tests                              "
     printf "\n      - l                         : Show container logs                                   "
+    printf "\n      - cache                     : Clear cache                                           "
     printf "\n      - build admin               : Build admin front                                     "
     printf "\n      - build front               : Build store front                                     "
     printf "\n      - watch admin               : Watch admin front                                     "
@@ -46,6 +46,8 @@ elif [ "$1" = 'command' ]; then
     docker exec $container $2
 elif [ "$1" = 'l' ]; then
     docker compose logs -f
+elif [ "$1" = 'cache' ]; then
+    docker exec $container bash -c "./bin/console cache:clear --quiet"
 elif [ "$1" = 'build' ] && [ "$2" = 'admin' ]; then
     docker exec $container bash -c "cd ../ && make build-admin"
 elif [ "$1" = 'build' ] && [ "$2" = 'front' ]; then
@@ -53,11 +55,15 @@ elif [ "$1" = 'build' ] && [ "$2" = 'front' ]; then
 elif [ "$1" = 'watch' ] && [ "$2" = 'admin' ]; then
     docker exec $container bash -c "cd ../ && make watch-admin"
 elif [ "$1" = 'watch' ] && [ "$2" = 'front' ]; then
-    docker exec $container bash -c "sudo mysql -u root --password=root -D shopware -e \"update sales_channel_domain set url='$defaultUrl' where url = '$frontUrl';\""
+    docker exec $container bash -c "sudo mysql -u root --password=root -D shopware -e \"update sales_channel_domain set url='$watcherUrl' where url = '$defaultUrl';\""
+    docker exec $container bash -c "./bin/console cache:clear --quiet"
+    docker exec $container bash -c "sed -i \"s|APP_URL=.*|APP_URL=$watcherUrl|\" .env"
     docker exec $container bash -c "cd ../ && make watch-storefront"
 elif [ "$1" = 'stop-watch' ]; then
-    docker exec $container bash -c "sudo mysql -u root --password=root -D shopware -e \"update sales_channel_domain set url='$frontUrl' where url = '$defaultUrl';\""
     docker exec $container bash -c "cd ../ && make stop-watch-storefront && fuser -k 9998/tcp"
+    docker exec $container bash -c "sed -i \"s|APP_URL=.*|APP_URL=$defaultUrl|\" .env"
+    docker exec $container bash -c "sudo mysql -u root --password=root -D shopware -e \"update sales_channel_domain set url='$defaultUrl' where url = '$watcherUrl';\""
+    docker exec $container bash -c "./bin/console cache:clear --quiet"
 elif [ "$1" = 'twig-format' ]; then
     for f in $(find ./src -name '*.html.twig'); do
         tmpFile="${f/html.twig/"bck.html.twig"}"
