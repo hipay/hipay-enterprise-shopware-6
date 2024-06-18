@@ -162,15 +162,13 @@ When this watcher is activated, the hot reload feature is enabled. That means wh
 
 #### Storefront watcher
 
-The storefront watcher will **NOT** use the same domain than the current application domain.
-
-Its protocol is forced to be *http* and it's currently not possible to use this watcher with a *https* domain.
+With Shopware version 6.5 and later, now the storefront watcher can use the same domain than the current application domain.
 
 You can launch it by entering the following command : `bash shopware.sh watch front`
 
-The watcher will be reachable on <http://localhost:9998>
+The watcher will be reachable on <https://hipay.shopware.com:9998>
 
-When this watcher is activated, the hot reload feature is enabled. That means when you edit a file from the `Resources > app > storefront` folder, the openned pages based on this domain <http://localhost:9998> will be reloaded.
+When this watcher is activated, the hot reload feature is enabled. That means when you edit a file from the `Resources > app > storefront` folder, the openned pages based on this domain <https://hipay.shopware.com:9998> will be reloaded.
 
 If you want to turn back to a storefront without watcher, you have to enter this command : `bash shopware.sh stop-watch`
 

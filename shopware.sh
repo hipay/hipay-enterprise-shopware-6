@@ -1,7 +1,7 @@
 #!/bin/bash
 
 container=hipay-enterprise-shopware-6
-watcherUrl=http://localhost
+watcherUrl=http://hipay.shopware.com
 defaultUrl=https://hipay.shopware.com
 # defaultUrl=https://ca33-77-135-172-28.ngrok-free.app
 
@@ -57,11 +57,13 @@ elif [ "$1" = 'watch' ] && [ "$2" = 'admin' ]; then
 elif [ "$1" = 'watch' ] && [ "$2" = 'front' ]; then
     docker exec $container bash -c "sudo mysql -u root --password=root -D shopware -e \"update sales_channel_domain set url='$watcherUrl' where url = '$defaultUrl';\""
     docker exec $container bash -c "./bin/console cache:clear --quiet"
-    docker exec $container bash -c "sed -i \"s|APP_URL=.*|APP_URL=$watcherUrl|\" .env"
-    docker exec $container bash -c "cd ../ && make watch-storefront"
+    if [[ "$defaultUrl" = *"ngrok"* ]]; then
+        docker exec $container bash -c "export APP_URL=https://hipay.shopware.com && cd ../ && make watch-storefront"
+    else
+        docker exec $container bash -c "cd ../ && make watch-storefront"
+    fi
 elif [ "$1" = 'stop-watch' ]; then
     docker exec $container bash -c "cd ../ && make stop-watch-storefront && fuser -k 9998/tcp"
-    docker exec $container bash -c "sed -i \"s|APP_URL=.*|APP_URL=$defaultUrl|\" .env"
     docker exec $container bash -c "sudo mysql -u root --password=root -D shopware -e \"update sales_channel_domain set url='$defaultUrl' where url = '$watcherUrl';\""
     docker exec $container bash -c "./bin/console cache:clear --quiet"
 elif [ "$1" = 'twig-format' ]; then
