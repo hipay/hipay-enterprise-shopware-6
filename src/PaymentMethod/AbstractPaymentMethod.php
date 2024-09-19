@@ -236,6 +236,14 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
     }
 
     /**
+     * {@inheritDoc}
+     */
+    public static function requiresBasket(): bool
+    {
+        return true;
+    }
+
+    /**
      * Generate the config for the payment method.
      */
     protected static function loadPaymentConfig(): PaymentProduct
@@ -404,7 +412,10 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
         $orderRequest->orderid = $order->getOrderNumber().'-'.dechex(crc32($transaction->getOrderTransaction()->getId()));
         $orderRequest->operation = $isCaptureAuto ? 'Sale' : 'Authorization';
         $orderRequest->description = $this->generateDescription($order->getLineItems(), 255, '...');
-        // $orderRequest->basket = $this->generateBasket($transaction->getOrder());
+        if( static::requiresBasket()) {
+            $orderRequest->basket = $this->generateBasket($transaction->getOrder());
+        }
+
 
         // Amounts data
         if ($order->getCurrency()) {
@@ -465,7 +476,6 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
         return strlen($description) <= $maxLength ? $description : substr($description, 0, $maxLength).$trailing;
     }
 
-    /*
     private function generateBasket(OrderEntity $order): array
     {
         $listType = [
@@ -488,7 +498,6 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
 
         return $basket;
     }
-    */
 
     /**
      * Retreive billing informations.
