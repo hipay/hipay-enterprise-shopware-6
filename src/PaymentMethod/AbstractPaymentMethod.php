@@ -407,15 +407,14 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
     ): OrderRequest {
         $isCaptureAuto = $this->config->isCaptureAuto();
         $order = $transaction->getOrder();
-
         $operationId = Uuid::randomHex();
         $orderRequest->orderid = $order->getOrderNumber().'-'.dechex(crc32($transaction->getOrderTransaction()->getId()));
         $orderRequest->operation = $isCaptureAuto ? 'Sale' : 'Authorization';
         $orderRequest->description = $this->generateDescription($order->getLineItems(), 255, '...');
-        if( static::requiresBasket()) {
-            $orderRequest->basket = $this->generateBasket($transaction->getOrder());
-        }
 
+        if( static::requiresBasket()) {
+            $orderRequest->basket = $this->generateBasket($order);
+        }
 
         // Amounts data
         if ($order->getCurrency()) {
@@ -484,6 +483,7 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
 
         $basket = [];
         foreach ($order->getLineItems() as $lineItem) {
+            $tax_rate = $lineItem->getPrice()->getTaxRules()->first() ? $lineItem->getPrice()->getTaxRules()->first()->getTaxRate() : null;
             $basket[] = [
                 'product_reference' => $lineItem->getPayload()['productNumber'],
                 'name' => $lineItem->getLabel(),
@@ -491,7 +491,7 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
                 'quantity' => $lineItem->getQuantity(),
                 'unit_price' => $lineItem->getUnitPrice(),
                 'discount' => 0,
-                // 'tax_rate' => $lineItem->getPrice()->getCalculatedTaxes(),
+                'tax_rate' => $tax_rate,
                 'total_amount' => $lineItem->getTotalPrice(),
             ];
         }
