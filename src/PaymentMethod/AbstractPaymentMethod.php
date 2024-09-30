@@ -240,7 +240,7 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
      */
     public static function requiresBasket(): bool
     {
-        return true;
+        return false;
     }
 
     /**

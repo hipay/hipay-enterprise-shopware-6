@@ -55,7 +55,7 @@ class Klarna extends AbstractPaymentMethod
     public static function getDescription(string $lang): ?string
     {
         $descriptions = [
-            'en-GB' => 'Pay your order by Klarna',
+            'en-GB' => 'Pay your order with Klarna',
             'de-DE' => 'Bezahlen Sie Ihre Bestellung mit Klarna.',
         ];
 
