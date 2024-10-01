@@ -6,13 +6,6 @@
         <div>{{ $tc('hipay.settings.paypal.info')}}</div>
     </sw-alert>
 
-    <sw-text-field :label="$tc('hipay.settings.paypal.merchantPayPalId')"
-            :value="paymentMethod.customFields?.merchantPayPalId"
-            :disabled="false"
-            @change="updateMerchantPayPalId"
-            @input="updatePayPalStatus">
-    </sw-text-field>
-
     <sw-select-field :label="$tc('hipay.settings.paypal.color.title')"
         :value="paymentMethod.customFields?.color || 'gold'"
         :disabled="!isPayPalV2"
