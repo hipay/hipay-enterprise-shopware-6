@@ -122,9 +122,9 @@ class NotificationService
         $context = Context::createDefaultContext();
         $parameters = $request->request->all();
 
-//        if (!$this->validateRequest($request, $parameters)) {
-//            throw new AccessDeniedException('Signature does not match');
-//        }
+        if (!$this->validateRequest($request, $parameters)) {
+            throw new AccessDeniedException('Signature does not match');
+        }
 
         if (!$request->get('date_updated') || !$notificationDate = \DateTimeImmutable::createFromFormat('Y-m-d\TH:i:sO', $request->get('date_updated'))) {
             throw new MissingMandatoryParametersException('date_updated is mandatory');
