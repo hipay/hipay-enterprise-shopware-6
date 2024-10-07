@@ -2,6 +2,8 @@
 
 namespace HiPay\Payment\Service;
 
+use HiPay\Payment\Exception\HipayApiException;
+
 class HipayAvailablePaymentProducts
 {
     private static $instance;
@@ -84,7 +86,7 @@ class HipayAvailablePaymentProducts
         $response = curl_exec($ch);
 
         if (curl_errno($ch)) {
-            throw new \Exception('Curl error: '.curl_error($ch));
+            throw new HipayApiException('Curl error: '.curl_error($ch), curl_errno($ch));
         }
 
         curl_close($ch);
