@@ -16,8 +16,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
 
 class PaymentMethodSubscriber implements EventSubscriberInterface
 {
-    private $paymentMethod;
-    private $requestStack;
+    private RequestStack $requestStack;
     private ReadHipayConfigService $config;
     public function __construct(
         RequestStack $requestStack,

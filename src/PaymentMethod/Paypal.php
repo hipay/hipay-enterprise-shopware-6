@@ -4,6 +4,7 @@ namespace HiPay\Payment\PaymentMethod;
 
 use HiPay\Fullservice\Data\PaymentProduct;
 use HiPay\Fullservice\Gateway\Request\Order\OrderRequest;
+use HiPay\Fullservice\Gateway\Request\Order\HostedPaymentPageRequest;
 use Shopware\Core\Checkout\Payment\Cart\AsyncPaymentTransactionStruct;
 
 /**
@@ -59,6 +60,26 @@ class Paypal extends AbstractPaymentMethod
             $providerData = ['paypal_id' => $payload['orderID']];
             $orderRequest->provider_data = json_encode($providerData);
         }
+
+        return $orderRequest;
+    }
+
+    protected function hydrateHostedPage(
+        HostedPaymentPageRequest $orderRequest,
+        AsyncPaymentTransactionStruct $transaction
+    ): HostedPaymentPageRequest
+    {
+        $customFields = $transaction->getOrderTransaction()->getPaymentMethod()->getCustomFields();
+
+        $paymentMethod = new ExpirationLimitPaymentMethod();
+        $paymentMethod->expiration_limit = intval($customFields['expiration_limit'] ?? 3);
+        $orderRequest->paymentMethod = $paymentMethod;
+
+        $orderRequest->paypal_v2_label = $customFields['label'] ?? null;
+        $orderRequest->paypal_v2_shape = $customFields['shape'] ?? null;
+        $orderRequest->paypal_v2_color = $customFields['color'] ?? null;
+        $orderRequest->paypal_v2_height = (int) $customFields['height'] ?? null;
+        $orderRequest->paypal_v2_bnpl = (int) $customFields['bnpl'] ?? null;
 
         return $orderRequest;
     }
