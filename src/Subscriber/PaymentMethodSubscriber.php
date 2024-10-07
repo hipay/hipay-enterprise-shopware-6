@@ -18,6 +18,7 @@ class PaymentMethodSubscriber implements EventSubscriberInterface
 {
     private RequestStack $requestStack;
     private ReadHipayConfigService $config;
+
     public function __construct(
         RequestStack $requestStack,
         ReadHipayConfigService $config
@@ -25,6 +26,7 @@ class PaymentMethodSubscriber implements EventSubscriberInterface
         $this->requestStack = $requestStack;
         $this->config = $config;
     }
+
     public static function getSubscribedEvents(): array
     {
         return [
@@ -60,7 +62,7 @@ class PaymentMethodSubscriber implements EventSubscriberInterface
                 $paymentsProducts = HipayAvailablePaymentProducts::getInstance($this->config)
                     ->getAvailablePaymentProducts()[0];
                 $isPayPalV2Enabled = isset($paymentsProducts['options']['provider_architecture_version'])
-                    && $paymentsProducts['options']['provider_architecture_version'] === 'v1'
+                    && 'v1' === $paymentsProducts['options']['provider_architecture_version']
                     && !empty($paymentsProducts['options']['payer_id']);
                 $event->setParameter('isPayPalV2Enabled', $isPayPalV2Enabled);
             }
@@ -68,10 +70,10 @@ class PaymentMethodSubscriber implements EventSubscriberInterface
     }
 
     /**
-     * Check if the active payment method is PayPal
+     * Check if the active payment method is PayPal.
      */
     private function isPayPalPayment(PaymentMethodEntity $paymentMethod): bool
     {
-        return $paymentMethod->getHandlerIdentifier() === 'HiPay\\Payment\\PaymentMethod\\Paypal';
+        return 'HiPay\\Payment\\PaymentMethod\\Paypal' === $paymentMethod->getHandlerIdentifier();
     }
 }

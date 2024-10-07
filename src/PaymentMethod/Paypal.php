@@ -3,8 +3,8 @@
 namespace HiPay\Payment\PaymentMethod;
 
 use HiPay\Fullservice\Data\PaymentProduct;
-use HiPay\Fullservice\Gateway\Request\Order\OrderRequest;
 use HiPay\Fullservice\Gateway\Request\Order\HostedPaymentPageRequest;
+use HiPay\Fullservice\Gateway\Request\Order\OrderRequest;
 use HiPay\Payment\Logger\HipayLogger;
 use HiPay\Payment\Service\HiPayHttpClientService;
 use HiPay\Payment\Service\ReadHipayConfigService;
@@ -54,6 +54,7 @@ class Paypal extends AbstractPaymentMethod
 
         $this->transactionRepo = $orderTransactionRepository;
     }
+
     public static function getName(string $lang): ?string
     {
         $names = [

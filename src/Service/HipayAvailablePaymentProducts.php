@@ -2,31 +2,20 @@
 
 namespace HiPay\Payment\Service;
 
-use Exception;
-
 class HipayAvailablePaymentProducts
 {
-    /** @var self|null */
-    private static $instance = null;
+    private static $instance;
 
-    /** @var mixed */
     private $hipayConfigTool;
 
-    /** @var string */
     private $apiUsername;
 
-    /** @var string */
     private $apiPassword;
 
-    /** @var string */
     private $authorizationHeader;
 
-    /** @var string */
     private $baseUrl;
 
-    /**
-     * @param mixed $hipayConfigTool
-     */
     public function __construct($hipayConfigTool)
     {
         $this->hipayConfigTool = $hipayConfigTool;
@@ -35,12 +24,11 @@ class HipayAvailablePaymentProducts
     }
 
     /**
-     * @param mixed $hipayConfigTool
      * @return self
      */
     public static function getInstance($hipayConfigTool)
     {
-        if (self::$instance === null) {
+        if (null === self::$instance) {
             self::$instance = new self($hipayConfigTool);
         }
 
@@ -58,9 +46,9 @@ class HipayAvailablePaymentProducts
 
     private function generateAuthorizationHeader(): void
     {
-        $credentials = $this->apiUsername . ':' . $this->apiPassword;
+        $credentials = $this->apiUsername.':'.$this->apiPassword;
         $encodedCredentials = base64_encode($credentials);
-        $this->authorizationHeader = 'Basic ' . $encodedCredentials;
+        $this->authorizationHeader = 'Basic '.$encodedCredentials;
     }
 
     /**
@@ -68,8 +56,10 @@ class HipayAvailablePaymentProducts
      * @param string $eci
      * @param string $operation
      * @param string $withOptions
+     *
      * @return array
-     * @throws Exception
+     *
+     * @throws \Exception
      */
     public function getAvailablePaymentProducts(
         $paymentProduct = 'paypal',
@@ -77,24 +67,24 @@ class HipayAvailablePaymentProducts
         $operation = '4',
         $withOptions = 'true'
     ) {
-        $url = $this->baseUrl . 'available-payment-products.json';
-        $url .= '?eci=' . urlencode($eci);
-        $url .= '&operation=' . urlencode($operation);
-        $url .= '&payment_product=' . urlencode($paymentProduct);
-        $url .= '&with_options=' . urlencode($withOptions);
+        $url = $this->baseUrl.'available-payment-products.json';
+        $url .= '?eci='.urlencode($eci);
+        $url .= '&operation='.urlencode($operation);
+        $url .= '&payment_product='.urlencode($paymentProduct);
+        $url .= '&with_options='.urlencode($withOptions);
 
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Authorization: ' . $this->authorizationHeader,
+            'Authorization: '.$this->authorizationHeader,
             'Accept: application/json',
         ]);
 
         $response = curl_exec($ch);
 
         if (curl_errno($ch)) {
-            throw new Exception('Curl error: ' . curl_error($ch));
+            throw new \Exception('Curl error: '.curl_error($ch));
         }
 
         curl_close($ch);
