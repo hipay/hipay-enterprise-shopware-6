@@ -235,9 +235,6 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
         return null;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public static function requiresBasket(): bool
     {
         return false;
@@ -412,7 +409,7 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
         $orderRequest->operation = $isCaptureAuto ? 'Sale' : 'Authorization';
         $orderRequest->description = $this->generateDescription($order->getLineItems(), 255, '...');
 
-        if( static::requiresBasket()) {
+        if (static::requiresBasket()) {
             $orderRequest->basket = $this->generateBasket($order);
         }
 

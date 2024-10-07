@@ -13,6 +13,7 @@ use HiPay\Payment\PaymentMethod\Bancontact;
 use HiPay\Payment\PaymentMethod\CreditCard;
 use HiPay\Payment\PaymentMethod\Giropay;
 use HiPay\Payment\PaymentMethod\Ideal;
+use HiPay\Payment\PaymentMethod\Klarna;
 use HiPay\Payment\PaymentMethod\Mbway;
 use HiPay\Payment\PaymentMethod\Multibanco;
 use HiPay\Payment\PaymentMethod\Mybank;
@@ -21,7 +22,6 @@ use HiPay\Payment\PaymentMethod\Paypal;
 use HiPay\Payment\PaymentMethod\Przelewy24;
 use HiPay\Payment\PaymentMethod\SepaDirectDebit;
 use HiPay\Payment\PaymentMethod\Sofort;
-use HiPay\Payment\PaymentMethod\Klarna;
 use HiPay\Payment\Service\ImageImportService;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
@@ -95,6 +95,7 @@ class HiPayPaymentPlugin extends Plugin
         CreditCard::class,
         Giropay::class,
         Ideal::class,
+        Klarna::class,
         Paypal::class,
         Mbway::class,
         Multibanco::class,
@@ -102,7 +103,6 @@ class HiPayPaymentPlugin extends Plugin
         Przelewy24::class,
         SepaDirectDebit::class,
         Sofort::class,
-        Klarna::class
     ];
 
     private string $paymentMethodRepoName = 'payment_method.repository';
