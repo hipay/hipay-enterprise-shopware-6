@@ -475,7 +475,7 @@ class NotificationService
     private function handleSepaAuthorizedNotification(HipayNotificationEntity $notification, HipayOrderEntity $hipayOrder): bool
     {
         $data = $notification->getData();
-        if ($data['payment_product'] === 'sdd' ) {
+        if (!empty($data['payment_product']) && 'sdd' === $data['payment_product']) {
             $hipayStatus = intval($data['status']);
             $operationId = $this->getOperationId($data);
 
