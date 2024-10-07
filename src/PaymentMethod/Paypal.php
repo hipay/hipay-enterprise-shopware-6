@@ -5,7 +5,14 @@ namespace HiPay\Payment\PaymentMethod;
 use HiPay\Fullservice\Data\PaymentProduct;
 use HiPay\Fullservice\Gateway\Request\Order\OrderRequest;
 use HiPay\Fullservice\Gateway\Request\Order\HostedPaymentPageRequest;
+use HiPay\Payment\Logger\HipayLogger;
+use HiPay\Payment\Service\HiPayHttpClientService;
+use HiPay\Payment\Service\ReadHipayConfigService;
+use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStateHandler;
 use Shopware\Core\Checkout\Payment\Cart\AsyncPaymentTransactionStruct;
+use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
+use Shopware\Core\Framework\Store\Authentication\LocaleProvider;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Paypal payment Methods.
@@ -23,6 +30,30 @@ class Paypal extends AbstractPaymentMethod
 
     protected static PaymentProduct $paymentConfig;
 
+    protected EntityRepository $transactionRepo;
+
+    public function __construct(
+        OrderTransactionStateHandler $transactionStateHandler,
+        ReadHipayConfigService $config,
+        HiPayHttpClientService $clientService,
+        RequestStack $requestStack,
+        LocaleProvider $localeProvider,
+        EntityRepository $orderCustomerRepository,
+        HipayLogger $hipayLogger,
+        EntityRepository $orderTransactionRepository
+    ) {
+        parent::__construct(
+            $transactionStateHandler,
+            $config,
+            $clientService,
+            $requestStack,
+            $localeProvider,
+            $orderCustomerRepository,
+            $hipayLogger,
+        );
+
+        $this->transactionRepo = $orderTransactionRepository;
+    }
     public static function getName(string $lang): ?string
     {
         $names = [
@@ -74,8 +105,8 @@ class Paypal extends AbstractPaymentMethod
         $orderRequest->paypal_v2_label = $customFields['label'] ?? null;
         $orderRequest->paypal_v2_shape = $customFields['shape'] ?? null;
         $orderRequest->paypal_v2_color = $customFields['color'] ?? null;
-        $orderRequest->paypal_v2_height = (int) $customFields['height'] ?? null;
-        $orderRequest->paypal_v2_bnpl = (int) $customFields['bnpl'] ?? null;
+        $orderRequest->paypal_v2_height = $customFields['height'] ?? null;
+        $orderRequest->paypal_v2_bnpl = $customFields['bnpl'] ?? null;
 
         return $orderRequest;
     }

@@ -42,7 +42,7 @@ use Shopware\Core\Checkout\Order\OrderEntity;
 use Shopware\Core\Checkout\Payment\Cart\AsyncPaymentTransactionStruct;
 use Shopware\Core\Checkout\Payment\Cart\PaymentHandler\AsynchronousPaymentHandlerInterface;
 use Shopware\Core\Checkout\Payment\Exception\AsyncPaymentFinalizeException;
-use Shopware\Core\Checkout\Payment\Exception\AsyncPaymentProcessException;
+use Shopware\Core\Checkout\Payment\PaymentException;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
@@ -130,7 +130,7 @@ abstract class AbstractPaymentMethod implements AsynchronousPaymentHandlerInterf
         } catch (\Throwable $e) {
             $message = 'An error occurred during the communication with external payment gateway : '.$e->getMessage();
             $this->logger->error($message);
-            throw new AsyncPaymentProcessException($transaction->getOrderTransaction()->getId(), $message);
+            throw PaymentException::asyncProcessInterrupted($transaction->getOrderTransaction()->getId(), $message);
         }
 
         // Redirect to external gateway
