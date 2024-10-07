@@ -18,6 +18,31 @@ class PaypalTest extends TestCase
             'paypal',
             $hostedPaymentPageRequest->payment_product_list
         );
+
+        $this->assertEquals(
+            'paypal',
+            $hostedPaymentPageRequest->paypal_v2_label
+        );
+
+        $this->assertEquals(
+            'pill',
+            $hostedPaymentPageRequest->paypal_v2_shape
+        );
+
+        $this->assertEquals(
+            'gold',
+            $hostedPaymentPageRequest->paypal_v2_color
+        );
+
+        $this->assertEquals(
+            40,
+            $hostedPaymentPageRequest->paypal_v2_height
+        );
+
+        $this->assertEquals(
+            true,
+            $hostedPaymentPageRequest->paypal_v2_bnpl
+        );
     }
 
     public function testhydrateFields()
@@ -36,7 +61,6 @@ class PaypalTest extends TestCase
     {
         $this->assertEquals(
             [
-                'merchantPayPalId' => '',
                 'color' => 'gold',
                 'shape' => 'pill',
                 'label' => 'paypal',

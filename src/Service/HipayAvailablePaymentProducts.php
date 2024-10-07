@@ -2,6 +2,8 @@
 
 namespace HiPay\Payment\Service;
 
+use Exception;
+
 class HipayAvailablePaymentProducts
 {
     private static $instance = null;
@@ -44,6 +46,9 @@ class HipayAvailablePaymentProducts
         $this->authorizationHeader = 'Basic ' . $encodedCredentials;
     }
 
+    /**
+     * @throws Exception
+     */
     public function getAvailablePaymentProducts(
         $paymentProduct = 'paypal',
         $eci = '7',

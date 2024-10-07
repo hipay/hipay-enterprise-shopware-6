@@ -71,10 +71,6 @@ class Paypal extends AbstractPaymentMethod
     {
         $customFields = $transaction->getOrderTransaction()->getPaymentMethod()->getCustomFields();
 
-        $paymentMethod = new ExpirationLimitPaymentMethod();
-        $paymentMethod->expiration_limit = intval($customFields['expiration_limit'] ?? 3);
-        $orderRequest->paymentMethod = $paymentMethod;
-
         $orderRequest->paypal_v2_label = $customFields['label'] ?? null;
         $orderRequest->paypal_v2_shape = $customFields['shape'] ?? null;
         $orderRequest->paypal_v2_color = $customFields['color'] ?? null;
