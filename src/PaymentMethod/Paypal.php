@@ -98,8 +98,7 @@ class Paypal extends AbstractPaymentMethod
     protected function hydrateHostedPage(
         HostedPaymentPageRequest $orderRequest,
         AsyncPaymentTransactionStruct $transaction
-    ): HostedPaymentPageRequest
-    {
+    ): HostedPaymentPageRequest {
         $customFields = $transaction->getOrderTransaction()->getPaymentMethod()->getCustomFields();
 
         $orderRequest->paypal_v2_label = $customFields['label'] ?? null;

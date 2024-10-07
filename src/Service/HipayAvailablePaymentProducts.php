@@ -6,13 +6,27 @@ use Exception;
 
 class HipayAvailablePaymentProducts
 {
+    /** @var self|null */
     private static $instance = null;
+
+    /** @var mixed */
     private $hipayConfigTool;
+
+    /** @var string */
     private $apiUsername;
+
+    /** @var string */
     private $apiPassword;
+
+    /** @var string */
     private $authorizationHeader;
+
+    /** @var string */
     private $baseUrl;
 
+    /**
+     * @param mixed $hipayConfigTool
+     */
     public function __construct($hipayConfigTool)
     {
         $this->hipayConfigTool = $hipayConfigTool;
@@ -20,26 +34,29 @@ class HipayAvailablePaymentProducts
         $this->generateAuthorizationHeader();
     }
 
+    /**
+     * @param mixed $hipayConfigTool
+     * @return self
+     */
     public static function getInstance($hipayConfigTool)
     {
         if (self::$instance === null) {
             self::$instance = new self($hipayConfigTool);
         }
+
         return self::$instance;
     }
 
-    private function setCredentialsAndUrl()
+    private function setCredentialsAndUrl(): void
     {
         $this->apiUsername = $this->hipayConfigTool->getPublicLogin();
         $this->apiPassword = $this->hipayConfigTool->getPublicPassword();
-        if ($this->hipayConfigTool->isTestActivated()) {
-            $this->baseUrl = 'https://stage-secure-gateway.hipay-tpp.com/rest/v2/';
-        } else {
-            $this->baseUrl = 'https://secure-gateway.hipay-tpp.com/rest/v2/';
-        }
+        $this->baseUrl = $this->hipayConfigTool->isTestActivated()
+            ? 'https://stage-secure-gateway.hipay-tpp.com/rest/v2/'
+            : 'https://secure-gateway.hipay-tpp.com/rest/v2/';
     }
 
-    private function generateAuthorizationHeader()
+    private function generateAuthorizationHeader(): void
     {
         $credentials = $this->apiUsername . ':' . $this->apiPassword;
         $encodedCredentials = base64_encode($credentials);
@@ -47,6 +64,11 @@ class HipayAvailablePaymentProducts
     }
 
     /**
+     * @param string $paymentProduct
+     * @param string $eci
+     * @param string $operation
+     * @param string $withOptions
+     * @return array
      * @throws Exception
      */
     public function getAvailablePaymentProducts(
@@ -66,7 +88,7 @@ class HipayAvailablePaymentProducts
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
             'Authorization: ' . $this->authorizationHeader,
-            'Accept: application/json'
+            'Accept: application/json',
         ]);
 
         $response = curl_exec($ch);
