@@ -23,7 +23,7 @@
       and activeRoute in ['frontend.account.edit-order.page', 'frontend.checkout.confirm.page']
   %}
     {% set environment = config('HiPayPaymentPlugin.config.environment') %}
-    {% set isPayPalV2 = payment.customFields.merchantPayPalId != "" %}
+    {% set isPayPalV2 = isPayPalV2Enabled %}
     {% set componentName = payment.formattedHandlerIdentifier|replace({'_':'-'}) %}
 
     {% if config('HiPayPaymentPlugin.config.operationMode') == 'hostedFields'
@@ -63,7 +63,6 @@
           username: config('HiPayPaymentPlugin.config.publicLogin' ~ environment),
           password: config('HiPayPaymentPlugin.config.publicPassword' ~ environment),
           environment: environment|lower,
-          merchantPayPalId: payment.customFields.merchantPayPalId,
           canPayLater: payment.customFields.bnpl,
           amount: summary.price.rawTotal,
           currency: page.header.activeCurrency.isoCode,
