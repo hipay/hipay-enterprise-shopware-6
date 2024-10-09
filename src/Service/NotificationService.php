@@ -224,12 +224,12 @@ class NotificationService
             case 134: // Dispute lost
             case 178: // Soft decline
                 return static::FAILED;
-                // Cancelled
+            // Cancelled
             case TransactionStatus::CANCELLED:
             case 143: // Authorization cancelled
             case TransactionStatus::AUTHORIZATION_CANCELLATION_REQUESTED:
                 return static::CANCELLED;
-                // In progress
+            // In progress
             case TransactionStatus::AUTHORIZED_AND_PENDING:
             case TransactionStatus::AUTHORIZATION_REQUESTED:
             case 144: // Reference rendered
@@ -239,24 +239,24 @@ class NotificationService
             case 177: // Challenge requested
             case 200: // Pending Payment
                 return static::PROCESS;
-                // chargedback
+            // chargedback
             case TransactionStatus::CHARGED_BACK:
                 return static::CHARGEDBACK;
-                // Authorized
+            // Authorized
             case TransactionStatus::AUTHORIZED:
                 return static::AUTHORIZE;
-                // Capture requested
+            // Capture requested
             case TransactionStatus::CAPTURE_REQUESTED:
             case TransactionStatus::CAPTURE_REFUSED:
                 return static::PROCESS_AFTER_AUTHORIZE;
-                // Refund requested
+            // Refund requested
             case TransactionStatus::REFUND_REQUESTED:
             case TransactionStatus::REFUND_REFUSED:
                 return static::PROCESS_AFTER_CAPTURE;
-                // Paid partially
+            // Paid partially
             case TransactionStatus::PARTIALLY_CAPTURED:
                 return static::PAY_PARTIALLY;
-                // Paid
+            // Paid
             case TransactionStatus::CAPTURED:
                 if (floatval($request->get('captured_amount')) < floatval($request->get('authorized_amount'))) {
                     return static::PAY_PARTIALLY;
@@ -266,10 +266,10 @@ class NotificationService
             case 166: // Debited (cardholder credit)
             case 168: // Debited (cardholder credit)
                 return static::PAID;
-                // Refunded (Partially)
+            // Refunded (Partially)
             case TransactionStatus::PARTIALLY_REFUNDED:
                 return static::REFUNDED_PARTIALLY;
-                // Refunded
+            // Refunded
             case TransactionStatus::REFUNDED:
                 if (floatval($request->get('refunded_amount')) < floatval($request->get('captured_amount'))) {
                     return static::REFUNDED_PARTIALLY;
@@ -381,6 +381,7 @@ class NotificationService
                 }
 
                 $this->orderTransactionStateHandler->authorize($hipayOrder->getTransactionId(), $context);
+                $this->handleSepaAuthorizedNotification($notification, $hipayOrder);
                 $statusChange = true;
                 break;
 
@@ -462,6 +463,38 @@ class NotificationService
 
             $this->saveCapture(CaptureStatus::FAILED, $capture);
         }
+    }
+
+    /**
+     * Handle notifications that create or fail capture on an AUTHORIZED order For SEPA SDD.
+     */
+    private function handleSepaAuthorizedNotification(HipayNotificationEntity $notification, HipayOrderEntity $hipayOrder): bool
+    {
+        $data = $notification->getData();
+        if (!empty($data['payment_product']) && 'sdd' === $data['payment_product']) {
+            $hipayStatus = intval($data['status']);
+            $operationId = $this->getOperationId($data);
+
+            $capture = $hipayOrder->getCaptures()->getCaptureByOperationId($operationId);
+            if (TransactionStatus::AUTHORIZED === $hipayStatus) {
+                $this->checkAllPreviousStatus($hipayStatus, [TransactionStatus::AUTHORIZATION_REQUESTED], $hipayOrder);
+
+                if ($capture && CaptureStatus::IN_PROGRESS === $capture->getStatus()) {
+                    $this->logger->info('Ignore notification '.$notification->getId().'. Capture '.$capture->getOperationId().' already in progress');
+                } else {
+                    if (!$capture) {
+                        $this->logger->info('Notification '.$notification->getId().' create IN_PROGRESS capture for the transaction '.$hipayOrder->getTransactionId());
+                    } else {
+                        $this->logger->info('Notification '.$notification->getId().' update capture '.$capture->getOperationId().' to IN_PROGRESS status for the transaction '.$hipayOrder->getTransactionId());
+                    }
+
+                    $capturedAmount = $data['operation']['amount'] ?? $data['captured_amount'];
+                    $this->saveCapture(CaptureStatus::IN_PROGRESS, $capture, $capturedAmount, $operationId, $hipayOrder);
+                }
+            }
+        }
+
+        return true;
     }
 
     /**
