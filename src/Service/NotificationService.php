@@ -385,6 +385,7 @@ class NotificationService
                 }
 
                 $this->orderTransactionStateHandler->authorize($hipayOrder->getTransactionId(), $context);
+                $this->handleSepaAuthorizedNotification($notification, $hipayOrder);
                 $statusChange = true;
                 break;
 
@@ -466,6 +467,38 @@ class NotificationService
 
             $this->saveCapture(CaptureStatus::FAILED, $capture);
         }
+    }
+
+    /**
+     * Handle notifications that create or fail capture on an AUTHORIZED order For SEPA SDD.
+     */
+    private function handleSepaAuthorizedNotification(HipayNotificationEntity $notification, HipayOrderEntity $hipayOrder): bool
+    {
+        $data = $notification->getData();
+        if (!empty($data['payment_product']) && 'sdd' === $data['payment_product']) {
+            $hipayStatus = intval($data['status']);
+            $operationId = $this->getOperationId($data);
+
+            $capture = $hipayOrder->getCaptures()->getCaptureByOperationId($operationId);
+            if (TransactionStatus::AUTHORIZED === $hipayStatus) {
+                $this->checkAllPreviousStatus($hipayStatus, [TransactionStatus::AUTHORIZATION_REQUESTED], $hipayOrder);
+
+                if ($capture && CaptureStatus::IN_PROGRESS === $capture->getStatus()) {
+                    $this->logger->info('Ignore notification '.$notification->getId().'. Capture '.$capture->getOperationId().' already in progress');
+                } else {
+                    if (!$capture) {
+                        $this->logger->info('Notification '.$notification->getId().' create IN_PROGRESS capture for the transaction '.$hipayOrder->getTransactionId());
+                    } else {
+                        $this->logger->info('Notification '.$notification->getId().' update capture '.$capture->getOperationId().' to IN_PROGRESS status for the transaction '.$hipayOrder->getTransactionId());
+                    }
+
+                    $capturedAmount = $data['operation']['amount'] ?? $data['captured_amount'];
+                    $this->saveCapture(CaptureStatus::IN_PROGRESS, $capture, $capturedAmount, $operationId, $hipayOrder);
+                }
+            }
+        }
+
+        return true;
     }
 
     /**
