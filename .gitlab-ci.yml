@@ -131,20 +131,6 @@ install-test:
   tags:
     - small
 
-#### TEST ####
-
-nodejs-scan-sast:
-  rules:
-    - if: $ONLY_DEPLOY || $CI_PIPELINE_SOURCE == "merge_request_event"
-      when: never
-    - when: on_success
-
-phpcs-security-audit-sast:
-  rules:
-    - if: $ONLY_DEPLOY || $CI_PIPELINE_SOURCE == "merge_request_event"
-      when: never
-    - when: on_success
-
 # Code style
 code-style:
   stage: test
@@ -321,8 +307,6 @@ get-jira-tickets:
   stage: release
   image: node:latest
   needs:
-    - nodejs-scan-sast
-    - phpcs-security-audit-sast
     - code-style
     - phpstan
     - phpunit
@@ -350,10 +334,14 @@ get-jira-tickets:
           let tickets = [];
 
           mergeRequests.forEach((mr) => {
-            const matches = mr.source_branch.match(/EC-\d+/);
+            const matches = mr.source_branch.match(/EC-\d+/i);
+            const matchesTitle = mr.title.match(/(EC-\d+)/ig);
             if(matches?.length) {
               tickets.push(matches[0].toUpperCase());
             }
+            matchesTitle?.forEach((match) => {
+                tickets.push(match.toUpperCase());
+            });
           });
 
           tickets = [...new Set(tickets)];
