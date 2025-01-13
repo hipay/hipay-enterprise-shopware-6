@@ -1,5 +1,3 @@
-version: '3'
-
 services:
   shopware:
     container_name: hipay-enterprise-shopware-6
