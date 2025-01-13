@@ -15,12 +15,10 @@ class NotificationCommand extends Command
     // Command name
     private const NAME = 'hipay:notification';
 
-    protected NotificationService $notifService;
-
-    public function __construct(NotificationService $notificationService)
-    {
+    public function __construct(
+        protected NotificationService $notificationService
+    ) {
         parent::__construct(self::NAME);
-        $this->notifService = $notificationService;
     }
 
     protected function configure(): void
@@ -31,7 +29,7 @@ class NotificationCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         try {
-            $this->notifService->dispatchNotifications();
+            $this->notificationService->dispatchNotifications();
         } catch (\Throwable $e) {
             return Command::FAILURE;
         }

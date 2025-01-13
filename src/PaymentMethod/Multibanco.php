@@ -8,9 +8,10 @@ use HiPay\Fullservice\Gateway\Model\Transaction;
 use HiPay\Fullservice\Gateway\Request\Order\HostedPaymentPageRequest;
 use HiPay\Fullservice\Gateway\Request\Order\OrderRequest;
 use HiPay\Fullservice\Gateway\Request\PaymentMethod\ExpirationLimitPaymentMethod;
-use HiPay\Payment\Logger\HipayLogger;
 use HiPay\Payment\Service\HiPayHttpClientService;
 use HiPay\Payment\Service\ReadHipayConfigService;
+use Psr\Log\LoggerInterface;
+use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionCollection;
 use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStateHandler;
 use Shopware\Core\Checkout\Payment\Cart\AsyncPaymentTransactionStruct;
 use Shopware\Core\Framework\Context;
@@ -34,18 +35,21 @@ class Multibanco extends AbstractPaymentMethod
 
     protected static PaymentProduct $paymentConfig;
 
-    protected EntityRepository $transactionRepo;
-
+    /**
+     * @param EntityRepository<OrderCustomerCollection> $orderCustomerRepository
+     * @param EntityRepository<OrderTransactionCollection> $orderTransactionRepository
+     */
     public function __construct(
         OrderTransactionStateHandler $transactionStateHandler,
-        ReadHipayConfigService $config,
-        HiPayHttpClientService $clientService,
-        RequestStack $requestStack,
-        LocaleProvider $localeProvider,
-        EntityRepository $orderCustomerRepository,
-        HipayLogger $hipayLogger,
-        EntityRepository $orderTransactionRepository
-    ) {
+        ReadHipayConfigService       $config,
+        HiPayHttpClientService       $clientService,
+        RequestStack                 $requestStack,
+        LocaleProvider               $localeProvider,
+        EntityRepository             $orderCustomerRepository,
+        LoggerInterface              $logger,
+        protected EntityRepository   $orderTransactionRepository
+    )
+    {
         parent::__construct(
             $transactionStateHandler,
             $config,
@@ -53,10 +57,8 @@ class Multibanco extends AbstractPaymentMethod
             $requestStack,
             $localeProvider,
             $orderCustomerRepository,
-            $hipayLogger
+            $logger
         );
-
-        $this->transactionRepo = $orderTransactionRepository;
     }
 
     public static function getName(string $lang): ?string
@@ -105,10 +107,10 @@ class Multibanco extends AbstractPaymentMethod
         return $orderRequest;
     }
 
-    protected function handleHostedFieldResponse(AsyncPaymentTransactionStruct $transaction, Transaction $response): string
+    protected function handleHostedFieldResponse(AsyncPaymentTransactionStruct $transaction, Transaction $response, Context $context): string
     {
         // error as main return
-        $redirect = $transaction->getReturnUrl().'&return='.TransactionState::ERROR;
+        $redirect = $transaction->getReturnUrl() . '&return=' . TransactionState::ERROR;
 
         switch ($response->getState()) {
             case TransactionState::FORWARDING:
@@ -118,20 +120,20 @@ class Multibanco extends AbstractPaymentMethod
                 break;
 
             case TransactionState::DECLINED:
-                $redirect = $transaction->getReturnUrl().'&return='.TransactionState::DECLINED;
+                $redirect = $transaction->getReturnUrl() . '&return=' . TransactionState::DECLINED;
                 break;
         }
 
         // save the reference to pay
-        $this->transactionRepo->update(
+        $this->orderTransactionRepository->update(
             [[
                 'id' => $transaction->getOrderTransaction()->getId(),
                 'customFields' => array_merge(
                     $transaction->getOrderTransaction()->getCustomFields() ?? [],
-                    ['reference_to_pay' => json_decode($response->getReferenceToPay())]
+                    ['reference_to_pay' => $response->getReferenceToPay ? json_decode($response->getReferenceToPay()) : []]
                 ),
             ]],
-            Context::createDefaultContext()
+            $context
         );
 
         return $redirect;

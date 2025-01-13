@@ -4,50 +4,45 @@ namespace HiPay\Payment\Controller;
 
 use HiPay\Fullservice\Enum\Transaction\Operation;
 use HiPay\Fullservice\HTTP\Configuration\Configuration;
+use HiPay\Payment\Core\Checkout\Payment\Capture\OrderCaptureCollection;
 use HiPay\Payment\Core\Checkout\Payment\Capture\OrderCaptureEntity;
+use HiPay\Payment\Core\Checkout\Payment\HipayOrder\HipayOrderCollection;
 use HiPay\Payment\Core\Checkout\Payment\HipayOrder\HipayOrderEntity;
+use HiPay\Payment\Core\Checkout\Payment\Refund\OrderRefundCollection;
 use HiPay\Payment\Core\Checkout\Payment\Refund\OrderRefundEntity;
+use HiPay\Payment\Enum\HipayLoggerChannel;
 use HiPay\Payment\Formatter\Request\MaintenanceRequestFormatter;
 use HiPay\Payment\HiPayPaymentPlugin;
-use HiPay\Payment\Logger\HipayLogger;
 use HiPay\Payment\Service\HiPayHttpClientService;
+use Monolog\Attribute\WithMonologChannel;
 use Psr\Log\LoggerInterface;
-use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\Framework\Validation\DataBag\RequestDataBag;
+use Shopware\Core\System\SalesChannel\SalesChannelContext;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\Exception\JsonException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Routing\Exception\InvalidParameterException;
 
+
+#[WithMonologChannel(HipayLoggerChannel::API)]
 #[Route(defaults: ['_routeScope' => ['administration']])]
 class AdminController extends AbstractController
 {
-    protected LoggerInterface $logger;
-
-    private EntityRepository $hipayOrderRepo;
-
-    private EntityRepository $hipayOrderCaptureRepo;
-
-    private EntityRepository $hipayOrderRefundRepo;
 
     /**
-     * Constructor.
+     * @param EntityRepository<HipayOrderCollection> $hipayOrderRepository
+     * @param EntityRepository<OrderCaptureCollection> $hipayOrderCaptureRepository
+     * @param EntityRepository<OrderRefundCollection> $hipayOrderRefundRepository
      */
     public function __construct(
-        EntityRepository $hipayOrderRepository,
-        EntityRepository $hipayOrderCaptureRepository,
-        EntityRepository $hipayOrderRefundRepository,
-        HipayLogger      $hipayLogger
+        private EntityRepository  $hipayOrderRepository,
+        private EntityRepository  $hipayOrderCaptureRepository,
+        private EntityRepository  $hipayOrderRefundRepository,
+        protected LoggerInterface $logger
     )
     {
-        $this->hipayOrderRepo = $hipayOrderRepository;
-        $this->hipayOrderCaptureRepo = $hipayOrderCaptureRepository;
-        $this->hipayOrderRefundRepo = $hipayOrderRefundRepository;
-        $this->logger = $hipayLogger->setChannel(HipayLogger::API);
     }
 
 
@@ -67,11 +62,7 @@ class AdminController extends AbstractController
 
                 /* @infection-ignore-all */
                 $this->logger->error($message);
-
-                return new JsonResponse([
-                    'success' => false,
-                    'message' => $message,
-                ]);
+                return new JsonResponse(['success' => false, 'message' => $message], Response::HTTP_BAD_REQUEST);
             }
         }
 
@@ -83,29 +74,31 @@ class AdminController extends AbstractController
 
 
     #[Route(path: "/api/_action/hipay/capture")]
-    public function capture(RequestDataBag $params, HiPayHttpClientService $clientService): JsonResponse
+    public function capture(RequestDataBag $params, HiPayHttpClientService $clientService, SalesChannelContext $salesChannelContext): JsonResponse
     {
-        try {
-            if (!is_string($params->get('hipayOrder'))) {
-                throw new JsonException('HiPay Order parameter is mandatory');
-            }
+        if (!is_string($params->get('hipayOrder'))) {
+            return new JsonResponse(['success' => false, 'message' => 'HiPay Order parameter is mandatory'], Response::HTTP_BAD_REQUEST);
+        }
 
+        try {
             $hipayOrderData = json_decode($params->get('hipayOrder'));
             $captureAmount = floatval($params->get('amount'));
 
-            $context = Context::createDefaultContext();
+            $context = $salesChannelContext->getContext();
 
             // Search HiPay order entity by ID
-            $hipayOrderCriteria = new Criteria([$hipayOrderData->id]);
-            $hipayOrderCriteria->addAssociations(['captures', 'transaction.paymentMethod']);
+            $hipayOrderCriteria = (new Criteria([$hipayOrderData->id]))
+                ->addAssociations(['captures', 'transaction.paymentMethod'])
+                ->setLimit(1);
+
             /** @var HipayOrderEntity */
-            $hipayOrder = $this->hipayOrderRepo->search($hipayOrderCriteria, $context)->first();
+            $hipayOrder = $this->hipayOrderRepository->search($hipayOrderCriteria, $context)->getEntities()->first();
 
             $config = $hipayOrder->getTransaction()->getPaymentMethod()->getExtension('hipayConfig');
             $totalTransaction = $hipayOrder->getTransaction()->getAmount()->getTotalPrice();
 
             if (!boolval($config['allowPartialCapture']) && $captureAmount !== $totalTransaction) {
-                throw new InvalidParameterException('Only the full capture is allowed');
+                return new JsonResponse(['success' => false, 'message' => 'Only the full capture is allowed'], Response::HTTP_BAD_REQUEST);
             }
 
             $isApplePay = 'apple_pay' === $hipayOrder->getTransaction()->getPaymentMethod()->getShortName();
@@ -147,25 +140,24 @@ class AdminController extends AbstractController
             );
 
             // Save HiPay capture to database
-            $this->hipayOrderCaptureRepo->create([$capture->toArray()], $context);
+            $this->hipayOrderCaptureRepository->create([$capture->toArray()], $context);
 
             return new JsonResponse(['success' => true]);
         } catch (\Exception $e) {
             /* @infection-ignore-all */
             $this->logger->error($e->getCode() . ' : ' . $e->getMessage());
-
-            return new JsonResponse(['success' => false]);
+            return new JsonResponse(['success' => false, 'message' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
     #[Route(path: "/api/_action/hipay/refund")]
-    public function refund(RequestDataBag $params, HiPayHttpClientService $clientService): JsonResponse
+    public function refund(RequestDataBag $params, HiPayHttpClientService $clientService, SalesChannelContext $salesChannelContext): JsonResponse
     {
-        try {
-            if (!is_string($params->get('hipayOrder'))) {
-                throw new JsonException('HiPay Order parameter is mandatory');
-            }
+        if (!is_string($params->get('hipayOrder'))) {
+            return new JsonResponse(['success' => false, 'message' => 'HiPay Order parameter is mandatory'], Response::HTTP_BAD_REQUEST);
+        }
 
+        try {
             $hipayOrderData = json_decode($params->get('hipayOrder'));
 
             $maintenanceRequestFormatter = new MaintenanceRequestFormatter();
@@ -174,13 +166,15 @@ class AdminController extends AbstractController
                 'operation' => Operation::REFUND,
             ]);
 
-            $context = Context::createDefaultContext();
+            $context = $salesChannelContext->getContext();
 
             // Search HiPay order entity by ID
-            $hipayOrderCriteria = new Criteria([$hipayOrderData->id]);
-            $hipayOrderCriteria->addAssociations(['refunds', 'transaction.paymentMethod']);
+            $hipayOrderCriteria = (new Criteria([$hipayOrderData->id]))
+                ->addAssociations(['refunds', 'transaction.paymentMethod'])
+                ->setLimit(1);
+
             /** @var HipayOrderEntity */
-            $hipayOrder = $this->hipayOrderRepo->search($hipayOrderCriteria, $context)->first();
+            $hipayOrder = $this->hipayOrderRepository->search($hipayOrderCriteria, $context)->getEntities()->first();
 
             $isApplePay = 'apple_pay' === $hipayOrder->getTransaction()->getPaymentMethod()->getShortName();
 
@@ -191,11 +185,7 @@ class AdminController extends AbstractController
                 $hipayOrder
             );
 
-            /* @infection-ignore-all */
-            $this->logger->info(
-                'Payload for Maintenance refund request',
-                (array)$maintenanceRequest
-            );
+            $this->logger->info('Payload for Maintenance refund request', (array)$maintenanceRequest);
 
             // Make HiPay Maintenance request to refund transaction
             $maintenanceResponse = $clientService
@@ -208,32 +198,27 @@ class AdminController extends AbstractController
                     $maintenanceRequest
                 );
 
-            /* @infection-ignore-all */
-            $this->logger->info(
-                'Response of Maintenance refund request',
-                (array)$maintenanceResponse
-            );
+            $this->logger->info('Response of Maintenance refund request', (array)$maintenanceResponse);
 
             // Save HiPay refund to database
-            $this->hipayOrderRefundRepo->create([$refund->toArray()], $context);
+            $this->hipayOrderRefundRepository->create([$refund->toArray()], $context);
 
             return new JsonResponse(['success' => true]);
         } catch (\Exception $e) {
             /* @infection-ignore-all */
             $this->logger->error($e->getCode() . ' : ' . $e->getMessage());
-
-            return new JsonResponse(['success' => false]);
+            return new JsonResponse(['success' => false, 'message' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
     #[Route(path: "/api/_action/hipay/cancel")]
-    public function cancel(RequestDataBag $params, HiPayHttpClientService $clientService): JsonResponse
+    public function cancel(RequestDataBag $params, HiPayHttpClientService $clientService, SalesChannelContext $salesChannelContext): JsonResponse
     {
-        try {
-            if (!is_string($params->get('hipayOrder'))) {
-                throw new JsonException('HiPay Order parameter is mandatory');
-            }
+        if (!is_string($params->get('hipayOrder'))) {
+            return new JsonResponse(['success' => false, 'message' => 'HiPay Order parameter is mandatory'], Response::HTTP_BAD_REQUEST);
+        }
 
+        try {
             $hipayOrderData = json_decode($params->get('hipayOrder'));
 
             $maintenanceRequestFormatter = new MaintenanceRequestFormatter();
@@ -241,13 +226,15 @@ class AdminController extends AbstractController
                 'operation' => Operation::CANCEL,
             ]);
 
-            $context = Context::createDefaultContext();
+            $context = $salesChannelContext->getContext();
 
             // Search HiPay order entity by ID
-            $hipayOrderCriteria = new Criteria([$hipayOrderData->id]);
-            $hipayOrderCriteria->addAssociation('transaction.paymentMethod');
+            $hipayOrderCriteria = (new Criteria([$hipayOrderData->id]))
+                ->addAssociation('transaction.paymentMethod')
+                ->setLimit(1);
+
             /** @var HipayOrderEntity */
-            $hipayOrder = $this->hipayOrderRepo->search($hipayOrderCriteria, $context)->first();
+            $hipayOrder = $this->hipayOrderRepository->search($hipayOrderCriteria, $context)->getEntities()->first();
 
             $isApplePay = 'apple_pay' === $hipayOrder->getTransaction()->getPaymentMethod()->getShortName();
 
@@ -275,8 +262,7 @@ class AdminController extends AbstractController
         } catch (\Exception $e) {
             /* @infection-ignore-all */
             $this->logger->error($e->getCode() . ' : ' . $e->getMessage());
-
-            return new JsonResponse(['success' => false]);
+            return new JsonResponse(['success' => false, 'message' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -341,7 +327,7 @@ class AdminController extends AbstractController
 
             $response = new Response(
                 file_get_contents($zipName) ?: null,
-                200,
+                Response::HTTP_OK,
                 [
                     'Content-Type' => 'application/zip',
                     'Content-Disposition' => 'attachment;filename="' . $zipName . '"',
@@ -353,7 +339,7 @@ class AdminController extends AbstractController
 
             return $response;
         } catch (\Throwable $e) {
-            return new JsonResponse(['success' => false, 'message' => $e->getMessage()]);
+            return new JsonResponse(['success' => false, 'message' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 }

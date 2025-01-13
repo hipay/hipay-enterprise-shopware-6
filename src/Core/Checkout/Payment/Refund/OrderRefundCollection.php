@@ -22,7 +22,7 @@ class OrderRefundCollection extends EntityCollection
     {
         $refundedAmount = 0;
         foreach ($this->getElements() as $refund) {
-            if (RefundStatus::COMPLETED === $refund->getStatus()) {
+            if ( $refund->getStatus() === RefundStatus::COMPLETED) {
                 $refundedAmount += $refund->getAmount();
             }
         }

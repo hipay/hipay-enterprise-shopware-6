@@ -4,6 +4,7 @@ namespace HiPay\Payment\Tests\Unit\Service;
 
 use HiPay\Payment\HiPayPaymentPlugin;
 use HiPay\Payment\Service\ReadHipayConfigService;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Shopware\Core\System\SystemConfig\SystemConfigService;
@@ -71,7 +72,7 @@ class ReadHipayConfigServiceTest extends TestCase
         );
     }
 
-    public function provideCredentials()
+    public static function provideCredentials()
     {
         return [
             [
@@ -93,9 +94,7 @@ class ReadHipayConfigServiceTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider provideCredentials
-     */
+    #[DataProvider('provideCredentials')]
     public function testGetStageCredentials($config)
     {
         $mock = $this->generateService($config + ['environment' => 'stage']);
@@ -131,9 +130,7 @@ class ReadHipayConfigServiceTest extends TestCase
         );
     }
 
-    /**
-     * @dataProvider provideCredentials
-     */
+    #[DataProvider('provideCredentials')]
     public function testGetProductionCredentials($config)
     {
         $mock = $this->generateService($config + ['environment' => 'production']);
@@ -289,7 +286,7 @@ class ReadHipayConfigServiceTest extends TestCase
         );
     }
 
-    public function provideTestGet3DSAuthenticator()
+    public static function provideTestGet3DSAuthenticator()
     {
         return [
             [null, 0],
@@ -298,9 +295,7 @@ class ReadHipayConfigServiceTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider provideTestGet3DSAuthenticator
-     */
+    #[DataProvider('provideTestGet3DSAuthenticator')]
     public function testGet3DSAuthenticator($auth3DS, $expected)
     {
         $mock = $this->generateService(['authFlag3DS' => $auth3DS]);

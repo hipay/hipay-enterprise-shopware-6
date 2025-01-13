@@ -7,9 +7,9 @@ use HiPay\Fullservice\Gateway\Mapper\TransactionMapper;
 use HiPay\Fullservice\Gateway\Model\Request\ThreeDSTwo\AccountInfo\Customer;
 use HiPay\Fullservice\Gateway\Request\Order\HostedPaymentPageRequest;
 use HiPay\Fullservice\Gateway\Request\Order\OrderRequest;
-use HiPay\Payment\Logger\HipayLogger;
 use HiPay\Payment\PaymentMethod\AbstractPaymentMethod;
 use PHPUnit\Framework\MockObject\MockObject;
+use Psr\Log\LoggerInterface;
 use Shopware\Core\Checkout\Customer\CustomerEntity;
 use Shopware\Core\Checkout\Order\Aggregate\OrderAddress\OrderAddressEntity;
 use Shopware\Core\Checkout\Order\Aggregate\OrderCustomer\OrderCustomerCollection;
@@ -56,7 +56,7 @@ trait PaymentMethodMockTrait
             $this->getRequestStack($request),
             $this->getLocaleProvider(),
             $this->generateOrderCustomerRepo($orderCustomerConfig),
-            $this->createMock(HipayLogger::class),
+            $this->createMock(LoggerInterface::class),
             ...$construct
         );
     }

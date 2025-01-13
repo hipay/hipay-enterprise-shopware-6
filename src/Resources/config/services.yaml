@@ -1,0 +1,117 @@
+imports:
+    - { resource: packages/* }
+
+parameters:
+    hipayMediaDirectory: /Resources/public/
+
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+        public: false
+
+    HiPay\Payment\:
+        resource: '../../*'
+        exclude: '../../{DependencyInjection,Entity,Migrations,spec,Exception}'
+
+    HiPay\Payment\Service\ReadHipayConfigService:
+        $systemConfigService: '@Shopware\Core\System\SystemConfig\SystemConfigService'
+
+    HiPay\Payment\Service\NotificationService:
+        $transactionRepository: '@order_transaction.repository'
+        $hipayNotificationRepository: '@hipay_notification.repository'
+        $hipayOrderRepository: '@hipay_order.repository'
+        $hipayOrderCaptureRepository: '@hipay_order_capture.repository'
+        $hipayOrderRefundRepository: '@hipay_order_refund.repository'
+        $hipayCardTokenRepository: '@hipay_card_token.repository'
+
+    HiPay\Payment\Service\ImageImportService:
+        public: true
+        arguments:
+            $mediaRepository: '@media.repository'
+            $mediaFolderRepository: '@media_folder.repository'
+            $mediaService: '@Shopware\Core\Content\Media\MediaService'
+            $fileSaver: '@Shopware\Core\Content\Media\File\FileSaver'
+            $mediaRootDirectory: '%hipayMediaDirectory%'
+
+    HiPay\Payment\Extension\:
+        resource: '../../Extension/**/*Extension.php'
+        tags: ['shopware.entity.extension']
+
+    HiPay\Payment\Core\Checkout\Payment\HipayOrder\HipayOrderDefinition:
+        tags:
+            - { name: 'shopware.entity.definition', entity: 'hipay_order' }
+
+    HiPay\Payment\Core\Checkout\Payment\HipayNotification\HipayNotificationDefinition:
+        tags:
+            - { name: 'shopware.entity.definition', entity: 'hipay_notification' }
+
+    HiPay\Payment\Core\Checkout\Payment\Capture\OrderCaptureDefinition:
+        tags:
+            - { name: 'shopware.entity.definition', entity: 'hipay_order_capture' }
+
+    HiPay\Payment\Core\Checkout\Payment\Refund\OrderRefundDefinition:
+        tags:
+            - { name: 'shopware.entity.definition', entity: 'hipay_order_refund' }
+
+    HiPay\Payment\Core\Checkout\Payment\HipayStatusFlow\HipayStatusFlowDefinition:
+        tags:
+            - { name: 'shopware.entity.definition', entity: 'hipay_status_flow' }
+
+    HiPay\Payment\Core\Checkout\Payment\HipayCardToken\HipayCardTokenDefinition:
+        tags:
+            - { name: 'shopware.entity.definition', entity: 'hipay_card_token' }
+
+    HiPay\Payment\Controller\:
+        resource: '../../Controller/*Controller.php'
+        tags: ['controller.service_arguments']
+
+    HiPay\Payment\Controller\AdminController:
+        arguments:
+            $hipayOrderRepository: '@hipay_order.repository'
+            $hipayOrderCaptureRepository: '@hipay_order_capture.repository'
+            $hipayOrderRefundRepository: '@hipay_order_refund.repository'
+        tags: ['controller.service_arguments']
+
+    HiPay\Payment\Controller\HipayStorefrontController:
+        $hipayCardTokenRepository: '@hipay_card_token.repository'
+
+    HiPay\Payment\Route\HipayCardToken\HipayCardTokenRoute:
+        $tokenRepository: '@hipay_card_token.repository'
+
+    HiPay\Payment\PaymentMethod\:
+        resource: '../../PaymentMethod/*.php'
+        exclude: '../../PaymentMethod/*Interface.php'
+        arguments:
+            $orderCustomerRepository: '@order_customer.repository'
+        tags: ['shopware.payment.method.async']
+
+    HiPay\Payment\PaymentMethod\Multibanco:
+        arguments:
+            $orderCustomerRepository: '@order_customer.repository'
+            $orderTransactionRepository: '@order_transaction.repository'
+        tags: ['shopware.payment.method.async']
+
+    HiPay\Payment\PaymentMethod\Paypal:
+        arguments:
+            $orderCustomerRepository: '@order_customer.repository'
+            $orderTransactionRepository: '@order_transaction.repository'
+        tags: ['shopware.payment.method.async']
+
+    HiPay\Payment\ScheduledTask\UpdatePaymentStatus\UpdatePaymentStatusTask:
+        tags: ['shopware.scheduled.task']
+
+    HiPay\Payment\ScheduledTask\UpdatePaymentStatus\UpdatePaymentStatusTaskHandler:
+        arguments:
+            $scheduledTaskRepository: '@scheduled_task.repository'
+            $notificationService: '@HiPay\Payment\Service\NotificationService'
+            $logger: '@logger'
+        tags: ['messenger.message_handler']
+
+    HiPay\Payment\Subscriber\:
+        resource: '../../Subscriber/*Subscriber.php'
+        tags: ['kernel.event_subscriber']
+
+    HiPay\Payment\Command\:
+        resource: '../../Command/*Command.php'
+        tags: ['console.command']

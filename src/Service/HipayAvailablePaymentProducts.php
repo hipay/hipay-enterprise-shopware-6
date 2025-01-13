@@ -8,8 +8,6 @@ class HipayAvailablePaymentProducts
 {
     private static $instance;
 
-    private $hipayConfigTool;
-
     private $apiUsername;
 
     private $apiPassword;
@@ -18,9 +16,9 @@ class HipayAvailablePaymentProducts
 
     private $baseUrl;
 
-    public function __construct($hipayConfigTool)
-    {
-        $this->hipayConfigTool = $hipayConfigTool;
+    public function __construct(
+        private $hipayConfigTool
+    ) {
         $this->setCredentialsAndUrl();
         $this->generateAuthorizationHeader();
     }
@@ -30,7 +28,7 @@ class HipayAvailablePaymentProducts
      */
     public static function getInstance($hipayConfigTool)
     {
-        if (null === self::$instance) {
+        if ( self::$instance === null ) {
             self::$instance = new self($hipayConfigTool);
         }
 
@@ -48,9 +46,9 @@ class HipayAvailablePaymentProducts
 
     private function generateAuthorizationHeader(): void
     {
-        $credentials = $this->apiUsername.':'.$this->apiPassword;
+        $credentials = $this->apiUsername . ':' . $this->apiPassword;
         $encodedCredentials = base64_encode($credentials);
-        $this->authorizationHeader = 'Basic '.$encodedCredentials;
+        $this->authorizationHeader = 'Basic ' . $encodedCredentials;
     }
 
     /**
@@ -69,24 +67,24 @@ class HipayAvailablePaymentProducts
         $operation = '4',
         $withOptions = 'true'
     ) {
-        $url = $this->baseUrl.'available-payment-products.json';
-        $url .= '?eci='.urlencode($eci);
-        $url .= '&operation='.urlencode($operation);
-        $url .= '&payment_product='.urlencode($paymentProduct);
-        $url .= '&with_options='.urlencode($withOptions);
+        $url = $this->baseUrl . 'available-payment-products.json';
+        $url .= '?eci=' . urlencode($eci);
+        $url .= '&operation=' . urlencode($operation);
+        $url .= '&payment_product=' . urlencode($paymentProduct);
+        $url .= '&with_options=' . urlencode($withOptions);
 
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Authorization: '.$this->authorizationHeader,
+            'Authorization: ' . $this->authorizationHeader,
             'Accept: application/json',
         ]);
 
         $response = curl_exec($ch);
 
         if (curl_errno($ch)) {
-            throw new HipayApiException('Curl error: '.curl_error($ch), curl_errno($ch));
+            throw new HipayApiException('Curl error: ' . curl_error($ch), curl_errno($ch));
         }
 
         curl_close($ch);

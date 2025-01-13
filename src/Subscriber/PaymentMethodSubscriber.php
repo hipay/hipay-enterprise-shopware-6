@@ -16,16 +16,10 @@ use Symfony\Component\HttpFoundation\RequestStack;
 
 class PaymentMethodSubscriber implements EventSubscriberInterface
 {
-    private RequestStack $requestStack;
-    private ReadHipayConfigService $config;
-
     public function __construct(
-        RequestStack $requestStack,
-        ReadHipayConfigService $config
-    ) {
-        $this->requestStack = $requestStack;
-        $this->config = $config;
-    }
+        private RequestStack $requestStack,
+        private ReadHipayConfigService $config
+    ) {}
 
     public static function getSubscribedEvents(): array
     {
@@ -49,7 +43,11 @@ class PaymentMethodSubscriber implements EventSubscriberInterface
 
     public function onStorefrontRender(StorefrontRenderEvent $event): void
     {
-        $currentRoute = $this->requestStack->getCurrentRequest()->attributes->get('_route');
+        if($this->requestStack->getCurrentRequest()) {
+            $currentRoute = $this->requestStack->getCurrentRequest()->attributes->get('_route');
+        } else {
+            $currentRoute = '';
+        }
 
         // Only proceed on checkout-related pages
         if (in_array($currentRoute, ['frontend.checkout.confirm.page', 'frontend.checkout.finish.page'])) {

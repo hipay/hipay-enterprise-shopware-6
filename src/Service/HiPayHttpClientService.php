@@ -14,12 +14,9 @@ class HiPayHttpClientService
     public const API_PASSWORD = 'apiPassword';
     public const API_ENV = 'apiEnv';
 
-    private ReadHipayConfigService $config;
-
-    public function __construct(ReadHipayConfigService $config)
-    {
-        $this->config = $config;
-    }
+    public function __construct(
+        private ReadHipayConfigService $config
+    ) {}
 
     /**
      * Create a SimpleHTTPClient with configuration.
