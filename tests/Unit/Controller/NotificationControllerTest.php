@@ -7,7 +7,7 @@ use HiPay\Payment\Service\NotificationService;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
-use Shopware\Core\System\SalesChannel\SalesChannelContext;
+use Shopware\Core\Framework\Context;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
@@ -23,7 +23,7 @@ class NotificationControllerTest extends TestCase
             $service
         );
 
-        $context = $this->createMock(SalesChannelContext::class);
+        $context = $this->createMock(Context::class);
         $response = $controller->receiveNotification(new Request(), $context);
 
         $this->assertSame(
@@ -43,7 +43,7 @@ class NotificationControllerTest extends TestCase
             $service
         );
 
-        $context = $this->createMock(SalesChannelContext::class);
+        $context = $this->createMock(Context::class);
         $response = $controller->receiveNotification(new Request(), $context);
 
         $this->assertEquals(
@@ -68,7 +68,7 @@ class NotificationControllerTest extends TestCase
             $service
         );
 
-        $context = $this->createMock(SalesChannelContext::class);
+        $context = $this->createMock(Context::class);
         $response = $controller->receiveNotification(new Request(), $context);
 
         $this->assertEquals(
@@ -93,7 +93,7 @@ class NotificationControllerTest extends TestCase
             $service
         );
 
-        $context = $this->createMock(SalesChannelContext::class);
+        $context = $this->createMock(Context::class);
         $response = $controller->receiveNotification(new Request(), $context);
 
         $this->assertEquals(

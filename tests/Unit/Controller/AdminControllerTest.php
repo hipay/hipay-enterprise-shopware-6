@@ -30,7 +30,6 @@ use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\EntitySearchResult;
 use Shopware\Core\Framework\Struct\ArrayEntity;
 use Shopware\Core\Framework\Validation\DataBag\RequestDataBag;
-use Shopware\Core\System\SalesChannel\SalesChannelContext;
 
 class AdminControllerTest extends TestCase
 {
@@ -324,7 +323,7 @@ class AdminControllerTest extends TestCase
             $this->createMock(LoggerInterface::class)
         );
 
-        $context = $this->createMock(SalesChannelContext::class);
+        $context = $this->createMock(Context::class);
         $jsonResponse = json_decode(
             $service->capture(
                 $this->generateCaptureDataBag(),
@@ -356,7 +355,7 @@ class AdminControllerTest extends TestCase
             $this->createMock(LoggerInterface::class)
         );
 
-        $context = $this->createMock(SalesChannelContext::class);
+        $context = $this->createMock(Context::class);
         $jsonResponse = json_decode(
             $service->capture(
                 $this->generateCaptureDataBag(['ok' => 'ok']),
@@ -438,7 +437,7 @@ class AdminControllerTest extends TestCase
             $this->createMock(LoggerInterface::class)
         );
 
-        $context = $this->createMock(SalesChannelContext::class);
+        $context = $this->createMock(Context::class);
         $jsonResponse = json_decode(
             $service->refund(
                 $this->generateRefundDataBag(),
@@ -470,7 +469,7 @@ class AdminControllerTest extends TestCase
             $this->createMock(LoggerInterface::class)
         );
 
-        $context = $this->createMock(SalesChannelContext::class);
+        $context = $this->createMock(Context::class);
         $jsonResponse = json_decode(
             $service->refund(
                 $this->generateRefundDataBag(['ok' => 'ok']),
@@ -485,9 +484,8 @@ class AdminControllerTest extends TestCase
 
     public function testValidCancel()
     {
-        /** @var SalesChannelContext&MockObject */
-        $context = $this->createMock(SalesChannelContext::class);
-        $context->method('getContext')->willReturn(Context::createDefaultContext());
+        /** @var Context&MockObject */
+        $context = $this->createMock(Context::class);
 
         /** @var PaymentMethodEntity&MockObject */
         $paymentMethod = $this->createMock(PaymentMethodEntity::class);
@@ -543,7 +541,7 @@ class AdminControllerTest extends TestCase
         $params = $this->createMock(RequestDataBag::class);
         $params->method('get')->willReturn(null);
 
-        $response = $service->cancel($params, $this->createMock(HiPayHttpClientService::class), $this->createMock(SalesChannelContext::class));
+        $response = $service->cancel($params, $this->createMock(HiPayHttpClientService::class), $this->createMock(Context::class));
 
         $this->assertSame(
             ['success' => false, 'message' => 'HiPay Order parameter is mandatory'],
