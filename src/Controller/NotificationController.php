@@ -6,7 +6,7 @@ use HiPay\Payment\Enum\HipayLoggerChannel;
 use HiPay\Payment\Service\NotificationService;
 use Monolog\Attribute\WithMonologChannel;
 use Psr\Log\LoggerInterface;
-use Shopware\Core\System\SalesChannel\SalesChannelContext;
+use Shopware\Core\Framework\Context;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
@@ -21,17 +21,17 @@ use Symfony\Component\HttpFoundation\Response;
 #[Route(defaults: ['_routeScope' => ['api'], 'auth_required' => false])]
 class NotificationController
 {
-
     public function __construct(
         private LoggerInterface $logger,
         private NotificationService $notificationService
-    ) {}
+    ) {
+    }
 
     #[Route('/api/hipay/notify', name: 'store-api.action.hipay.notification', methods: ['POST', 'GET'])]
-    public function receiveNotification(Request $request, SalesChannelContext $context): JsonResponse
+    public function receiveNotification(Request $request, Context $context): JsonResponse
     {
         try {
-            $this->notificationService->saveNotificationRequest($request, $context->getContext());
+            $this->notificationService->saveNotificationRequest($request, $context);
         } catch (\Throwable $e) {
             $message = 'Notification fail : ' . $e->getMessage();
             $this->logger->error($message);
