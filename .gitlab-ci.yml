@@ -105,9 +105,10 @@ build-test:
       --dockerfile "./bin/docker/images/shopware/Dockerfile"
       --build-arg DOCKWARE_VERSION=$DOCKWARE_VERSION
       --destination "$REGISTRY_CI/test-jobs-${DOCKER_STACK}-${DOCKER_SERVICE}_web:${CI_COMMIT_REF_SLUG}"
-  except:
-    variables:
-      - $ONLY_DEPLOY
+  rules:
+    - if: $ONLY_DEPLOY
+      when: never
+    - when: on_success
   tags:
     - small
 
@@ -125,9 +126,10 @@ install-test:
     policy: push
   script:
     - composer install
-  except:
-    variables:
-      - $ONLY_DEPLOY
+  rules:
+    - if: $ONLY_DEPLOY
+      when: never
+    - when: on_success
   tags:
     - small
 
@@ -144,9 +146,10 @@ code-style:
   script:
     - $PATH_VENDOR/bin/php-cs-fixer fix src --dry-run --rules=@Symfony
   allow_failure: true
-  except:
-    variables:
-      - $ONLY_DEPLOY
+  rules:
+    - if: $ONLY_DEPLOY
+      when: never
+    - when: on_success
 
 # Smoke test
 smoke-test:
@@ -164,9 +167,10 @@ smoke-test:
   script:
     - curl --retry 20 --retry-delay 10 --retry-connrefused --output /dev/null http://web
   allow_failure: true
-  except:
-    variables:
-      - $ONLY_DEPLOY
+  rules:
+    - if: $ONLY_DEPLOY
+      when: never
+    - when: on_success
   tags:
     - small
 
@@ -186,9 +190,10 @@ phpunit:
     - php -d xdebug.mode=coverage $PATH_VENDOR/bin/phpunit
       --coverage-clover $PATH_REPORTS_PHPUNIT/coverage-clover.xml
       --log-junit $PATH_REPORTS_PHPUNIT/phpunit-junit.xml
-  except:
-    variables:
-      - $ONLY_DEPLOY
+  rules:
+    - if: $ONLY_DEPLOY
+      when: never
+    - when: on_success
   artifacts:
     paths:
       - $PATH_REPORTS_PHPUNIT
@@ -215,9 +220,10 @@ phpstan:
       -vvv
       --error-format=json > $PATH_REPORTS_PHPSTAN/phpstan-junit.xml
   allow_failure: true
-  except:
-    variables:
-      - $ONLY_DEPLOY
+  rules:
+    - if: $ONLY_DEPLOY
+      when: never
+    - when: on_success
   artifacts:
     paths:
       - $PATH_REPORTS_PHPSTAN
@@ -244,9 +250,10 @@ infection:
       - $PATH_REPORTS/infection.html
   cache:
     policy: pull
-  except:
-    variables:
-      - $ONLY_DEPLOY
+  rules:
+    - if: $ONLY_DEPLOY
+      when: never
+    - when: on_success
 
 # Sonar
 sonarqube:
@@ -266,9 +273,10 @@ sonarqube:
   cache:
     policy: pull
   allow_failure: true
-  except:
-    variables:
-      - $ONLY_DEPLOY
+  rules:
+    - if: $ONLY_DEPLOY
+      when: never
+    - when: on_success
   script:
     - sonar-scanner
       -Dsonar.host.url=$SONAR_URL
@@ -297,10 +305,10 @@ package:
       - ./package-ready-for-shopware
   tags:
     - small
-  when: manual
-  except:
-    variables:
-      - $ONLY_DEPLOY
+  rules:
+    - if: $ONLY_DEPLOY
+      when: never
+    - when: manual
 
 # Job to get JIRA tickets of the release
 get-jira-tickets:
@@ -312,6 +320,8 @@ get-jira-tickets:
     - phpunit
     - smoke-test
   rules:
+    - if: $ONLY_DEPLOY
+      when: never
     - if: $CI_COMMIT_TAG
   script:
     - |
@@ -386,6 +396,8 @@ release-job:
   variables:
     TEMP_CHANGELOG_FILE: 'release_changelog.txt'
   rules:
+    - if: $ONLY_DEPLOY
+      when: on_success
     - if: $CI_COMMIT_TAG
   script:
     - |
