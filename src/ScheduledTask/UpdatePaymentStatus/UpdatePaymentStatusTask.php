@@ -13,7 +13,7 @@ class UpdatePaymentStatusTask extends ScheduledTask
 
     public static function getDefaultInterval(): int
     {
-        if ('dev' === getenv('APP_ENV')) {
+        if ( getenv('APP_ENV') === 'dev' ) {
             return 30;
         }
 

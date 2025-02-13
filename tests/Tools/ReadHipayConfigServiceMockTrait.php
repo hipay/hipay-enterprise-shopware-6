@@ -33,6 +33,9 @@ trait ReadHipayConfigServiceMockTrait
         foreach (['get', 'getString', 'getBool', 'getInt'] as $method) {
             $systemConfigService->method($method)->willReturnCallback(
                 function ($key) use ($fullPathParams) {
+                    if(!isset($fullPathParams[$key])) {
+                        return null;
+                    }
                     return $fullPathParams[$key];
                 }
             );

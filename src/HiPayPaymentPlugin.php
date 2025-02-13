@@ -122,7 +122,7 @@ class HiPayPaymentPlugin extends Plugin
      */
     public static function getModuleVersion(): string
     {
-        $content = file_get_contents(__DIR__.'/../composer.json');
+        $content = file_get_contents(__DIR__ . '/../composer.json');
         if (!$content) {
             return '';
         }
@@ -205,11 +205,11 @@ class HiPayPaymentPlugin extends Plugin
     ): void {
         // Check implementation
         if (!is_subclass_of($classname, PaymentMethodInterface::class)) {
-            throw new UnexpectedValueException('The payment method "'.$classname.'" must implement interface "'.PaymentMethodInterface::class.'"');
+            throw new UnexpectedValueException('The payment method "' . $classname . '" must implement interface "' . PaymentMethodInterface::class . '"');
         }
 
         // Payment method exists already
-        if ($this->getPaymentMethodId($classname)) {
+        if ($this->getPaymentMethodId($classname, $context)) {
             return;
         }
 
@@ -223,7 +223,7 @@ class HiPayPaymentPlugin extends Plugin
         }
 
         $translations = [];
-        foreach ($this->getLanguages() as $lang) {
+        foreach ($this->getLanguages($context) as $lang) {
             $translations[] = [
                 'languageId' => $lang['id'],
                 'name' => $classname::getName($lang['code']),
@@ -237,7 +237,7 @@ class HiPayPaymentPlugin extends Plugin
             'translations' => $translations,
             'afterOrderEnabled' => true,
             'pluginId' => $this->pluginId,
-            'salesChannels' => $this->getSalesChannelIds(),
+            'salesChannels' => $this->getSalesChannelIds($context),
             'position' => $classname::getPosition(),
             'technicalName' => $classname::getTechnicalName(),
         ];
@@ -262,7 +262,7 @@ class HiPayPaymentPlugin extends Plugin
         /** @var EntityRepository $paymentRepository */
         $paymentRepository = $this->container->get($this->paymentMethodRepoName);
 
-        $paymentMethodId = $this->getPaymentMethodId($classname);
+        $paymentMethodId = $this->getPaymentMethodId($classname, $context);
 
         // Payment does not even exist, so nothing to (de-)activate here
         if (!$paymentMethodId) {
@@ -280,7 +280,7 @@ class HiPayPaymentPlugin extends Plugin
                 $paymentMethod['mediaId'] = $mediaId;
             }
 
-            if ($rule = $this->getRule($classname)) {
+            if ($rule = $this->getRule($classname, $context)) {
                 $paymentMethod['availabilityRule'] = $rule;
             }
         }
@@ -294,18 +294,18 @@ class HiPayPaymentPlugin extends Plugin
      * @throws ServiceCircularReferenceException
      * @throws ServiceNotFoundException
      */
-    private function getPaymentMethodId(string $classname): ?string
+    private function getPaymentMethodId(string $classname, Context $context): ?string
     {
         /** @var EntityRepository $paymentRepository */
         $paymentRepository = $this->container->get($this->paymentMethodRepoName);
 
         // Fetch ID for update
-        $paymentCriteria = (new Criteria())->addFilter(
-            new EqualsFilter('handlerIdentifier', $classname)
-        );
+        $paymentCriteria = (new Criteria())
+            ->addFilter(new EqualsFilter('handlerIdentifier', $classname))
+            ->setLimit(1);
 
         return $paymentRepository
-            ->searchIds($paymentCriteria, Context::createDefaultContext())
+            ->searchIds($paymentCriteria, $context)
             ->firstId();
     }
 
@@ -314,13 +314,13 @@ class HiPayPaymentPlugin extends Plugin
      *
      * @return array<string,array<string,string>>
      */
-    private function getSalesChannelIds(): array
+    private function getSalesChannelIds(Context $context): array
     {
         /** @var EntityRepository $paymentRepository */
         $paymentRepository = $this->container->get('sales_channel.repository');
 
         return $paymentRepository
-            ->searchIds(new Criteria(), Context::createDefaultContext())
+            ->searchIds(new Criteria(), $context)
             ->getData();
     }
 
@@ -329,7 +329,7 @@ class HiPayPaymentPlugin extends Plugin
      *
      * @return array<string,array<string,mixed>>
      */
-    private function getLanguages(): array
+    private function getLanguages(Context $context): array
     {
         $langMap = [];
         /** @var EntityRepository $languageRepository */
@@ -337,7 +337,7 @@ class HiPayPaymentPlugin extends Plugin
 
         $criteria = (new Criteria())->addAssociation('locale');
         $languages = $languageRepository
-            ->search($criteria, Context::createDefaultContext())
+            ->search($criteria, $context)
             ->getEntities();
 
         /** @var LanguageEntity $language */
@@ -403,13 +403,13 @@ class HiPayPaymentPlugin extends Plugin
      *
      * @return array<string,mixed>|null
      */
-    private function getRule(string $classname): ?array
+    private function getRule(string $classname, Context $context): ?array
     {
-        $context = Context::createDefaultContext();
-
         /** @var EntityRepository */
         $ruleRepo = $this->container->get('rule.repository');
-        $ruleCriteria = (new Criteria())->addFilter(new ContainsFilter('customFields', $classname::getProductCode()));
+        $ruleCriteria = (new Criteria())
+            ->addFilter(new ContainsFilter('customFields', $classname::getProductCode()))
+            ->setLimit(1);
 
         // Existing rule
         if ($ruleId = $ruleRepo->searchIds($ruleCriteria, $context)->firstId()) {
@@ -487,7 +487,7 @@ class HiPayPaymentPlugin extends Plugin
         }
 
         return [
-            'name' => $classname::getName('en-GB').' rule',
+            'name' => $classname::getName('en-GB') . ' rule',
             'priority' => 1,
             'customFields' => ['hipay-payment' => $classname::getProductCode()],
             'conditions' => $conditions,
@@ -495,6 +495,6 @@ class HiPayPaymentPlugin extends Plugin
     }
 }
 
-if (file_exists(dirname(__DIR__).'/vendor/autoload.php')) {
-    require_once dirname(__DIR__).'/vendor/autoload.php';
+if (file_exists(dirname(__DIR__) . '/vendor/autoload.php')) {
+    require_once dirname(__DIR__) . '/vendor/autoload.php';
 }

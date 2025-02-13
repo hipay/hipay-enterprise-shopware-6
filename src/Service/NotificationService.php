@@ -7,17 +7,26 @@ use HiPay\Fullservice\Enum\Transaction\TransactionStatus;
 use HiPay\Fullservice\Exception\ApiErrorException;
 use HiPay\Fullservice\Exception\UnexpectedValueException;
 use HiPay\Fullservice\Helper\Signature;
+use HiPay\Payment\Core\Checkout\Payment\Capture\OrderCaptureCollection;
 use HiPay\Payment\Core\Checkout\Payment\Capture\OrderCaptureEntity;
+use HiPay\Payment\Core\Checkout\Payment\HipayCardToken\HipayCardTokenCollection;
+use HiPay\Payment\Core\Checkout\Payment\HipayNotification\HipayNotificationCollection;
 use HiPay\Payment\Core\Checkout\Payment\HipayNotification\HipayNotificationEntity;
+use HiPay\Payment\Core\Checkout\Payment\HipayOrder\HipayOrderCollection;
 use HiPay\Payment\Core\Checkout\Payment\HipayOrder\HipayOrderEntity;
 use HiPay\Payment\Core\Checkout\Payment\HipayStatusFlow\HipayStatusFlowEntity;
+use HiPay\Payment\Core\Checkout\Payment\Refund\OrderRefundCollection;
 use HiPay\Payment\Core\Checkout\Payment\Refund\OrderRefundEntity;
 use HiPay\Payment\Enum\CaptureStatus;
+use HiPay\Payment\Enum\HipayLoggerChannel;
 use HiPay\Payment\Enum\RefundStatus;
 use HiPay\Payment\Exception\ExpiredNotificationException;
 use HiPay\Payment\Exception\SkipNotificationException;
-use HiPay\Payment\Logger\HipayLogger;
+use Monolog\Attribute\WithMonologChannel;
+use Psr\Log\LoggerInterface;
 use Ramsey\Uuid\Uuid;
+use Shopware\Core\Checkout\Cart\Transaction\Struct\TransactionCollection;
+use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionCollection;
 use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionEntity;
 use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStateHandler;
 use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStates;
@@ -37,26 +46,9 @@ use Symfony\Component\Routing\Exception\MissingMandatoryParametersException;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Translation\Exception\NotFoundResourceException;
 
+#[WithMonologChannel(HipayLoggerChannel::NOTIFICATION)]
 class NotificationService
 {
-    private ReadHipayConfigService $config;
-
-    private EntityRepository $transactionRepo;
-
-    private EntityRepository $notificationRepo;
-
-    private EntityRepository $hipayOrderRepo;
-
-    private EntityRepository $hipayOrderCaptureRepo;
-
-    private EntityRepository $hipayOrderRefundRepo;
-
-    private EntityRepository $tokenRepo;
-
-    private OrderTransactionStateHandler $orderTransactionStateHandler;
-
-    private HipayLogger $logger;
-
     /**
      * Hipay notification Status
      * Order is important.
@@ -92,34 +84,32 @@ class NotificationService
         self::CANCELLED => OrderTransactionStates::STATE_CANCELLED,
     ];
 
+    /**
+     * @param EntityRepository<OrderTransactionCollection> $transactionRepository
+     * @param EntityRepository<HipayNotificationCollection> $hipayNotificationRepository
+     * @param EntityRepository<HipayOrderCollection> $hipayOrderRepository
+     * @param EntityRepository<OrderCaptureCollection> $hipayOrderCaptureRepository
+     * @param EntityRepository<OrderRefundCollection> $hipayOrderRefundRepository
+     * @param EntityRepository<HipayCardTokenCollection> $hipayCardTokenRepository
+     */
     public function __construct(
-        EntityRepository $transactionRepository,
-        EntityRepository $hipayNotificationRepository,
-        EntityRepository $hipayOrderRepository,
-        EntityRepository $hipayOrderCaptureRepository,
-        EntityRepository $hipayOrderRefundRepository,
-        EntityRepository $hipayCardTokenRepository,
-        ReadHipayConfigService $config,
-        OrderTransactionStateHandler $orderTransactionStateHandler,
-        HipayLogger $hipayLogger
+        private EntityRepository $transactionRepository,
+        private EntityRepository $hipayNotificationRepository,
+        private EntityRepository $hipayOrderRepository,
+        private EntityRepository $hipayOrderCaptureRepository,
+        private EntityRepository $hipayOrderRefundRepository,
+        private EntityRepository $hipayCardTokenRepository,
+        private ReadHipayConfigService $config,
+        private OrderTransactionStateHandler $orderTransactionStateHandler,
+        private LoggerInterface $logger
     ) {
-        $this->transactionRepo = $transactionRepository;
-        $this->notificationRepo = $hipayNotificationRepository;
-        $this->hipayOrderRepo = $hipayOrderRepository;
-        $this->hipayOrderCaptureRepo = $hipayOrderCaptureRepository;
-        $this->hipayOrderRefundRepo = $hipayOrderRefundRepository;
-        $this->tokenRepo = $hipayCardTokenRepository;
-        $this->config = $config;
-        $this->orderTransactionStateHandler = $orderTransactionStateHandler;
-        $this->logger = $hipayLogger->setChannel(HipayLogger::NOTIFICATION);
     }
 
     /**
      * Save the received notification request.
      */
-    public function saveNotificationRequest(Request $request): void
+    public function saveNotificationRequest(Request $request, Context $context): void
     {
-        $context = Context::createDefaultContext();
         $parameters = $request->request->all();
 
         if (!$this->validateRequest($request, $parameters)) {
@@ -138,27 +128,32 @@ class NotificationService
             throw new MissingMandatoryParametersException('transaction_reference is mandatory');
         }
 
-        $transactionCriteria = (new Criteria([$orderTransactionId]))->addAssociation('order');
-        if (!$transaction = $this->transactionRepo->search($transactionCriteria, $context)->first()) {
-            throw new NotFoundResourceException('Transaction '.$orderTransactionId.' is not found');
+        $transactionCriteria = (new Criteria([$orderTransactionId]))
+            ->addAssociation('order')
+            ->setLimit(1);
+
+        if (!$transaction = $this->transactionRepository->search($transactionCriteria, $context)->getEntities()->first()) {
+            throw new NotFoundResourceException('Transaction ' . $orderTransactionId . ' is not found');
         }
         /** @var OrderTransactionEntity $transaction */
 
         // Create or update if exists a HiPay order related to this transaction to database
-        $orderCriteria = (new Criteria())->addFilter(new EqualsFilter('orderId', $transaction->getOrderId()));
+        $orderCriteria = (new Criteria())
+            ->addFilter(new EqualsFilter('orderId', $transaction->getOrderId()))
+            ->setLimit(1);
 
         /** @var ?HipayOrderEntity $hipayOrder */
-        $hipayOrder = $this->getAssociatedHiPayOrder($orderCriteria);
+        $hipayOrder = $this->getAssociatedHiPayOrder($orderCriteria, $context);
         if (!$hipayOrder) {
             $hipayOrder = HipayOrderEntity::create($transactionReference, $transaction->getOrder(), $transaction);
-            $this->hipayOrderRepo->create([$hipayOrder->toArray()], $context);
+            $this->hipayOrderRepository->create([$hipayOrder->toArray()], $context);
             /** @var HipayOrderEntity $hipayOrder after Creation */
-            $hipayOrder = $this->getAssociatedHiPayOrder($orderCriteria);
+            $hipayOrder = $this->getAssociatedHiPayOrder($orderCriteria, $context);
         } else {
             $hipayOrder->setTransactionReference($transactionReference);
             $hipayOrder->setOrder($transaction->getOrder());
             $hipayOrder->setTransaction($transaction);
-            $this->hipayOrderRepo->update([$hipayOrder->toArray()], $context);
+            $this->hipayOrderRepository->update([$hipayOrder->toArray()], $context);
         }
 
         // Create notification to database
@@ -168,7 +163,7 @@ class NotificationService
             new \DateTime($notificationDate->format(Defaults::STORAGE_DATE_TIME_FORMAT)),
             $hipayOrder
         );
-        $this->notificationRepo->create([$notification->toArray()], $context);
+        $this->hipayNotificationRepository->create([$notification->toArray()], $context);
     }
 
     /**
@@ -191,11 +186,11 @@ class NotificationService
 
         if ($isApplePay) {
             if (!isset($algos[$this->config->getHashApplePay()])) {
-                throw new ApiErrorException('Bad configuration unknown algorythm "'.$this->config->getHashApplePay().'"');
+                throw new ApiErrorException('Bad configuration unknown algorythm "' . $this->config->getHashApplePay() . '"');
             }
         } else {
             if (!isset($algos[$this->config->getHash()])) {
-                throw new ApiErrorException('Bad configuration unknown algorythm "'.$this->config->getHash().'"');
+                throw new ApiErrorException('Bad configuration unknown algorythm "' . $this->config->getHash() . '"');
             }
         }
 
@@ -219,7 +214,7 @@ class NotificationService
     private function getStatus(int $codeStatus, InputBag $request): int
     {
         switch ($codeStatus) {
-            // Failed
+                // Failed
             case TransactionStatus::AUTHENTICATION_FAILED:
             case TransactionStatus::BLOCKED:
             case TransactionStatus::DENIED:
@@ -281,7 +276,7 @@ class NotificationService
 
                 return static::REFUNDED;
             default:
-                throw new UnexpectedValueException('Status code "'.$codeStatus.'" invalid');
+                throw new UnexpectedValueException('Status code "' . $codeStatus . '" invalid');
         }
     }
 
@@ -291,9 +286,11 @@ class NotificationService
     public function dispatchNotifications(): void
     {
         try {
-            $notifications = $this->getActiveHipayNotifications();
+            $context = Context::createDefaultContext();
 
-            $this->logger->notice('Start dispatching '.$notifications->count().' hipay notifications');
+            $notifications = $this->getActiveHipayNotifications($context);
+
+            $this->logger->notice('Start dispatching ' . $notifications->count() . ' hipay notifications');
 
             $notificationIds = [];
 
@@ -301,59 +298,60 @@ class NotificationService
             foreach ($notifications as $notification) {
                 $notificationId = $notification->getId();
                 try {
-                    $this->handleNotification($notification);
+                    $this->handleNotification($notification, $context);
                     $notificationIds[] = ['id' => $notificationId];
                 } catch (SkipNotificationException $e) {
-                    $this->logger->info('Skipped notification : '.$e->getMessage());
+                    $this->logger->info('Skipped notification : ' . $e->getMessage());
                 } catch (ExpiredNotificationException $e) {
                     $this->logger->warning($e->getMessage());
                     $notificationIds[] = ['id' => $notificationId];
                 } catch (\Throwable $e) {
-                    $this->logger->error('Error during an Hipay notification '.$notificationId.' dispatching : '.$e->getMessage());
+                    $this->logger->error('Error during an Hipay notification ' . $notificationId . ' dispatching : ' . $e->getMessage());
                 }
             }
 
-            $this->notificationRepo->delete($notificationIds, Context::createDefaultContext());
+            $this->hipayNotificationRepository->delete($notificationIds, $context);
 
-            $this->logger->notice('End dispatching Hipay notifications : '.count($notificationIds).' done');
+            $this->logger->notice('End dispatching Hipay notifications : ' . count($notificationIds) . ' done');
         } catch (\Throwable $e) {
-            $this->logger->error('Error during Hipay notifications dispatching : '.$e->getMessage());
+            $this->logger->error('Error during Hipay notifications dispatching : ' . $e->getMessage());
         }
     }
 
     /**
      * handle a notification and return the id when valid.
      */
-    private function handleNotification(HipayNotificationEntity $notification): void
+    private function handleNotification(HipayNotificationEntity $notification, Context $context): void
     {
         // Do not process expired notifications
         if ($notification->getCreatedAt()->diff(new \DateTime())->days >= 1) {
-            throw new ExpiredNotificationException('Notification '.$notification->getId().' expired after 1 day');
+            throw new ExpiredNotificationException('Notification ' . $notification->getId() . ' expired after 1 day');
         }
 
         /** @var HipayOrderEntity */
         $hipayOrder = $this->getAssociatedHiPayOrder(
             (new Criteria([$notification->getHipayOrderId()]))
                 ->addAssociations(['transaction', 'transaction.stateMachineState', 'captures', 'refunds', 'statusFlows', 'order.orderCustomer'])
+                ->setLimit(1),
+            $context
         );
 
-        $this->logger->debug('Dispatching notification '.$notification->getId().' for the transaction '.$hipayOrder->getTransactionId());
+        $this->logger->debug('Dispatching notification ' . $notification->getId() . ' for the transaction ' . $hipayOrder->getTransactionId());
 
         $data = $notification->getData();
 
         // Validation
         $hash = dechex(crc32((string) json_encode($data)));
-        if (count($hipayOrder->getStatusFlows()->filter(fn ($f) => $f->getHash() === $hash))) {
-            $this->logger->info('Notification '.$notification->getId().' skipped, status already treated');
+        if (count($hipayOrder->getStatusFlows()->filter(fn($f) => $f->getHash() === $hash))) {
+            $this->logger->info('Notification ' . $notification->getId() . ' skipped, status already treated');
 
             return;
         }
 
         if (!isset(static::CONVERT_STATE[$notification->getStatus()])) {
-            throw new UnexpectedValueException('Bad status code for Hipay notification '.$notification->getId());
+            throw new UnexpectedValueException('Bad status code for Hipay notification ' . $notification->getId());
         }
 
-        $context = Context::createDefaultContext();
         $hipayStatus = intval($data['status']);
         $stateMachine = $hipayOrder->getTransaction()->getStateMachineState()->getTechnicalName();
         $statusChange = false;
@@ -380,35 +378,36 @@ class NotificationService
                 if ($data['custom_data']['multiuse'] ?? false) {
                     $this->savePaymentToken(
                         ['brand' => $data['payment_product']] + $data['payment_method'],
-                        $hipayOrder->getOrder()->getOrderCustomer()->getCustomerId()
+                        $hipayOrder->getOrder()->getOrderCustomer()->getCustomerId(),
+                        $context
                     );
                 }
 
                 $this->orderTransactionStateHandler->authorize($hipayOrder->getTransactionId(), $context);
-                $this->handleSepaAuthorizedNotification($notification, $hipayOrder);
+                $this->handleSepaAuthorizedNotification($notification, $hipayOrder, $context);
                 $statusChange = true;
                 break;
 
             case static::PROCESS_AFTER_AUTHORIZE:
                 $amount = $data['operation']['amount'] ?? $data['captured_amount'];
-                $this->handleProcessAfterAuthorizeNotification($notification, $hipayOrder);
+                $this->handleProcessAfterAuthorizeNotification($notification, $hipayOrder, $context);
                 break;
 
             case static::PAY_PARTIALLY:
             case static::PAID:
                 $amount = $data['operation']['amount'] ?? $data['captured_amount'];
-                $statusChange = $this->handleAuthorizedNotification($notification, $hipayOrder);
+                $statusChange = $this->handleAuthorizedNotification($notification, $hipayOrder, $context);
                 break;
 
             case static::PROCESS_AFTER_CAPTURE:
                 $amount = $data['operation']['amount'] ?? $data['refunded_amount'];
-                $this->handleProcessAfterCaptureNotification($notification, $hipayOrder);
+                $this->handleProcessAfterCaptureNotification($notification, $hipayOrder, $context);
                 break;
 
             case static::REFUNDED_PARTIALLY:
             case static::REFUNDED:
                 $amount = $data['operation']['amount'] ?? $data['refunded_amount'];
-                $statusChange = $this->handleCapturedNotification($notification, $hipayOrder);
+                $statusChange = $this->handleCapturedNotification($notification, $hipayOrder, $context);
                 break;
 
             case static::CANCELLED:
@@ -417,12 +416,12 @@ class NotificationService
                 break;
         }
 
-        $this->addHipayStatusFlow($hipayOrder, $hipayStatus, $data['reason']['message'] ?? '', $amount, $hash);
+        $this->addHipayStatusFlow($hipayOrder, $hipayStatus, $data['reason']['message'] ?? '', $amount, $hash, $context);
 
         if ($statusChange) {
             $this->logger->info(
-                'Change order transaction '.$hipayOrder->getTransactionId()
-                .' to status '.static::CONVERT_STATE[$notification->getStatus()].' (previously '.$stateMachine.')'
+                'Change order transaction ' . $hipayOrder->getTransactionId()
+                    . ' to status ' . static::CONVERT_STATE[$notification->getStatus()] . ' (previously ' . $stateMachine . ')'
             );
         }
     }
@@ -430,7 +429,7 @@ class NotificationService
     /**
      * Handle notifications that create or fail capture on an AUTHORIZED order.
      */
-    private function handleProcessAfterAuthorizeNotification(HipayNotificationEntity $notification, HipayOrderEntity $hipayOrder): void
+    private function handleProcessAfterAuthorizeNotification(HipayNotificationEntity $notification, HipayOrderEntity $hipayOrder, Context $context): void
     {
         $data = $notification->getData();
 
@@ -439,61 +438,61 @@ class NotificationService
 
         $capture = $hipayOrder->getCaptures()->getCaptureByOperationId($operationId);
 
-        if (TransactionStatus::CAPTURE_REQUESTED === $hipayStatus) {
+        if ($hipayStatus === TransactionStatus::CAPTURE_REQUESTED) {
             $this->checkAllPreviousStatus($hipayStatus, [TransactionStatus::AUTHORIZED], $hipayOrder);
 
-            if ($capture && CaptureStatus::IN_PROGRESS === $capture->getStatus()) {
-                $this->logger->info('Ignore notification '.$notification->getId().'. Capture '.$capture->getOperationId().' already in progress');
+            if ($capture && $capture->getStatus() === CaptureStatus::IN_PROGRESS) {
+                $this->logger->info('Ignore notification ' . $notification->getId() . '. Capture ' . $capture->getOperationId() . ' already in progress');
             } else {
                 if (!$capture) {
-                    $this->logger->info('Notification '.$notification->getId().' create IN_PROGRESS capture for the transaction '.$hipayOrder->getTransactionId());
+                    $this->logger->info('Notification ' . $notification->getId() . ' create IN_PROGRESS capture for the transaction ' . $hipayOrder->getTransactionId());
                 } else {
-                    $this->logger->info('Notification '.$notification->getId().' update capture '.$capture->getOperationId().' to IN_PROGRESS status for the transaction '.$hipayOrder->getTransactionId());
+                    $this->logger->info('Notification ' . $notification->getId() . ' update capture ' . $capture->getOperationId() . ' to IN_PROGRESS status for the transaction ' . $hipayOrder->getTransactionId());
                 }
 
                 $capturedAmount = $data['operation']['amount'] ?? $data['captured_amount'];
-                $this->saveCapture(CaptureStatus::IN_PROGRESS, $capture, $capturedAmount, $operationId, $hipayOrder);
+                $this->saveCapture($context, CaptureStatus::IN_PROGRESS, $capture, $capturedAmount, $operationId, $hipayOrder);
             }
 
             return;
         }
 
-        if (TransactionStatus::CAPTURE_REFUSED === $hipayStatus) {
+        if ($hipayStatus === TransactionStatus::CAPTURE_REFUSED) {
             $this->checkAllPreviousStatus($hipayStatus, [TransactionStatus::AUTHORIZED, TransactionStatus::CAPTURE_REQUESTED], $hipayOrder);
 
-            if (!$capture || CaptureStatus::IN_PROGRESS !== $capture->getStatus()) {
-                throw new SkipNotificationException('No IN_PROGRESS capture found with operation ID '.$operationId.' for the transaction '.$hipayOrder->getTransactionId());
+            if (!$capture || $capture->getStatus() !== CaptureStatus::IN_PROGRESS) {
+                throw new SkipNotificationException('No IN_PROGRESS capture found with operation ID ' . $operationId . ' for the transaction ' . $hipayOrder->getTransactionId());
             }
 
-            $this->saveCapture(CaptureStatus::FAILED, $capture);
+            $this->saveCapture($context, CaptureStatus::FAILED, $capture);
         }
     }
 
     /**
      * Handle notifications that create or fail capture on an AUTHORIZED order For SEPA SDD.
      */
-    private function handleSepaAuthorizedNotification(HipayNotificationEntity $notification, HipayOrderEntity $hipayOrder): bool
+    private function handleSepaAuthorizedNotification(HipayNotificationEntity $notification, HipayOrderEntity $hipayOrder, Context $context): bool
     {
         $data = $notification->getData();
-        if (!empty($data['payment_product']) && 'sdd' === $data['payment_product']) {
+        if (!empty($data['payment_product']) && $data['payment_product'] === 'sdd') {
             $hipayStatus = intval($data['status']);
             $operationId = $this->getOperationId($data);
 
             $capture = $hipayOrder->getCaptures()->getCaptureByOperationId($operationId);
-            if (TransactionStatus::AUTHORIZED === $hipayStatus) {
+            if ($hipayStatus === TransactionStatus::AUTHORIZED) {
                 $this->checkAllPreviousStatus($hipayStatus, [TransactionStatus::AUTHORIZATION_REQUESTED], $hipayOrder);
 
-                if ($capture && CaptureStatus::IN_PROGRESS === $capture->getStatus()) {
-                    $this->logger->info('Ignore notification '.$notification->getId().'. Capture '.$capture->getOperationId().' already in progress');
+                if ($capture && $capture->getStatus() === CaptureStatus::IN_PROGRESS) {
+                    $this->logger->info('Ignore notification ' . $notification->getId() . '. Capture ' . $capture->getOperationId() . ' already in progress');
                 } else {
                     if (!$capture) {
-                        $this->logger->info('Notification '.$notification->getId().' create IN_PROGRESS capture for the transaction '.$hipayOrder->getTransactionId());
+                        $this->logger->info('Notification ' . $notification->getId() . ' create IN_PROGRESS capture for the transaction ' . $hipayOrder->getTransactionId());
                     } else {
-                        $this->logger->info('Notification '.$notification->getId().' update capture '.$capture->getOperationId().' to IN_PROGRESS status for the transaction '.$hipayOrder->getTransactionId());
+                        $this->logger->info('Notification ' . $notification->getId() . ' update capture ' . $capture->getOperationId() . ' to IN_PROGRESS status for the transaction ' . $hipayOrder->getTransactionId());
                     }
 
                     $capturedAmount = $data['operation']['amount'] ?? $data['captured_amount'];
-                    $this->saveCapture(CaptureStatus::IN_PROGRESS, $capture, $capturedAmount, $operationId, $hipayOrder);
+                    $this->saveCapture($context, CaptureStatus::IN_PROGRESS, $capture, $capturedAmount, $operationId, $hipayOrder);
                 }
             }
         }
@@ -504,9 +503,8 @@ class NotificationService
     /**
      * Handle notification who need AUTHORIZED notification.
      */
-    private function handleAuthorizedNotification(HipayNotificationEntity $notification, HipayOrderEntity $hipayOrder): bool
+    private function handleAuthorizedNotification(HipayNotificationEntity $notification, HipayOrderEntity $hipayOrder, Context $context): bool
     {
-        $context = Context::createDefaultContext();
         $data = $notification->getData();
 
         $hipayStatus = intval($data['status']);
@@ -515,10 +513,10 @@ class NotificationService
         $this->checkAllPreviousStatus($hipayStatus, [TransactionStatus::AUTHORIZED], $hipayOrder);
 
         if (!$capture = $hipayOrder->getCaptures()->getCaptureByOperationId($operationId)) {
-            throw new SkipNotificationException('No capture found with operation ID '.$operationId.' for the transaction '.$hipayOrder->getTransactionId());
+            throw new SkipNotificationException('No capture found with operation ID ' . $operationId . ' for the transaction ' . $hipayOrder->getTransactionId());
         }
 
-        $this->saveCapture(CaptureStatus::COMPLETED, $capture);
+        $this->saveCapture($context, CaptureStatus::COMPLETED, $capture);
 
         switch ($notification->getStatus()) {
             case static::PAY_PARTIALLY:
@@ -544,7 +542,7 @@ class NotificationService
     /**
      * Handle notification that create or fail refund on a CAPTURED order.
      */
-    private function handleProcessAfterCaptureNotification(HipayNotificationEntity $notification, HipayOrderEntity $hipayOrder): void
+    private function handleProcessAfterCaptureNotification(HipayNotificationEntity $notification, HipayOrderEntity $hipayOrder, Context $context): void
     {
         $data = $notification->getData();
 
@@ -553,40 +551,39 @@ class NotificationService
 
         $refund = $hipayOrder->getRefunds()->getRefundByOperationId($operationId);
 
-        if (TransactionStatus::REFUND_REQUESTED === $hipayStatus) {
+        if ($hipayStatus === TransactionStatus::REFUND_REQUESTED) {
             $refundedAmount = $data['operation']['amount'] ?? $data['refunded_amount'];
 
-            if ($refund && RefundStatus::IN_PROGRESS === $refund->getStatus()) {
-                $this->logger->info('Ignore notification '.$notification->getId().'. Refund '.$refund->getId().' already in progress');
+            if ($refund && $refund->getStatus() === RefundStatus::IN_PROGRESS) {
+                $this->logger->info('Ignore notification ' . $notification->getId() . '. Refund ' . $refund->getId() . ' already in progress');
             } else {
                 if (!$refund) {
-                    $this->logger->info('Notification '.$notification->getId().' create IN_PROGRESS refund for the transaction '.$hipayOrder->getTransactionId());
+                    $this->logger->info('Notification ' . $notification->getId() . ' create IN_PROGRESS refund for the transaction ' . $hipayOrder->getTransactionId());
                 } else {
-                    $this->logger->info('Notification '.$notification->getId().' update refund '.$refund->getId().' to IN_PROGRESS status for the transaction '.$hipayOrder->getTransactionId());
+                    $this->logger->info('Notification ' . $notification->getId() . ' update refund ' . $refund->getId() . ' to IN_PROGRESS status for the transaction ' . $hipayOrder->getTransactionId());
                 }
-                $this->saveRefund(RefundStatus::IN_PROGRESS, $refund, $refundedAmount, $operationId, $hipayOrder);
+                $this->saveRefund($context, RefundStatus::IN_PROGRESS, $refund, $refundedAmount, $operationId, $hipayOrder);
             }
 
             return;
         }
 
-        if (TransactionStatus::REFUND_REFUSED === $hipayStatus) {
+        if ($hipayStatus === TransactionStatus::REFUND_REFUSED) {
             $this->checkAllPreviousStatus($hipayStatus, [TransactionStatus::CAPTURED, TransactionStatus::REFUND_REQUESTED], $hipayOrder);
 
-            if (!$refund || RefundStatus::IN_PROGRESS !== $refund->getStatus()) {
-                throw new SkipNotificationException('No IN_PROGRESS refund found with operation ID '.$operationId.' for the transaction '.$hipayOrder->getTransactionId());
+            if (!$refund || $refund->getStatus() !== RefundStatus::IN_PROGRESS) {
+                throw new SkipNotificationException('No IN_PROGRESS refund found with operation ID ' . $operationId . ' for the transaction ' . $hipayOrder->getTransactionId());
             }
 
-            $this->saveRefund(RefundStatus::FAILED, $refund);
+            $this->saveRefund($context, RefundStatus::FAILED, $refund);
         }
     }
 
     /**
      * Handle notification who need CAPTURED notification.
      */
-    private function handleCapturedNotification(HipayNotificationEntity $notification, HipayOrderEntity $hipayOrder): bool
+    private function handleCapturedNotification(HipayNotificationEntity $notification, HipayOrderEntity $hipayOrder, Context $context): bool
     {
-        $context = Context::createDefaultContext();
         $data = $notification->getData();
 
         $hipayStatus = $data['status'];
@@ -595,10 +592,10 @@ class NotificationService
         $this->checkOnePreviousStatus($hipayStatus, [TransactionStatus::CAPTURED, TransactionStatus::PARTIALLY_CAPTURED], $hipayOrder);
 
         if (!$refund = $hipayOrder->getRefunds()->getRefundByOperationId($operationId)) {
-            throw new SkipNotificationException('No refund found with operation ID '.$operationId.' for the transaction '.$hipayOrder->getTransactionId());
+            throw new SkipNotificationException('No refund found with operation ID ' . $operationId . ' for the transaction ' . $hipayOrder->getTransactionId());
         }
 
-        $this->saveRefund(RefundStatus::COMPLETED, $refund);
+        $this->saveRefund($context, RefundStatus::COMPLETED, $refund);
 
         switch ($notification->getStatus()) {
             case static::REFUNDED_PARTIALLY:
@@ -616,37 +613,35 @@ class NotificationService
     /**
      * Add order Transaction capture.
      */
-    private function saveCapture(string $status, ?OrderCaptureEntity $capture, ?float $amount = null, ?string $operationId = null, ?HipayOrderEntity $hipayOrder = null): void
+    private function saveCapture(Context $context, string $status, ?OrderCaptureEntity $capture, ?float $amount = null, ?string $operationId = null, ?HipayOrderEntity $hipayOrder = null): void
     {
-        $context = Context::createDefaultContext();
         if (!$capture) {
             $capture = OrderCaptureEntity::create($operationId, $amount, $hipayOrder, $status);
-            $this->hipayOrderCaptureRepo->create([$capture->toArray()], $context);
+            $this->hipayOrderCaptureRepository->create([$capture->toArray()], $context);
         } else {
             $capture->setStatus($status);
-            $this->hipayOrderCaptureRepo->update([$capture->toArray()], $context);
+            $this->hipayOrderCaptureRepository->update([$capture->toArray()], $context);
         }
     }
 
     /**
      * Add order Transaction refund.
      */
-    private function saveRefund(string $status, ?OrderRefundEntity $refund, ?float $amount = null, ?string $operationId = null, ?HipayOrderEntity $hipayOrder = null): void
+    private function saveRefund(Context $context, string $status, ?OrderRefundEntity $refund, ?float $amount = null, ?string $operationId = null, ?HipayOrderEntity $hipayOrder = null): void
     {
-        $context = Context::createDefaultContext();
         if (!$refund) {
             $refund = OrderRefundEntity::create($operationId, $amount, $hipayOrder, $status);
-            $this->hipayOrderRefundRepo->create([$refund->toArray()], $context);
+            $this->hipayOrderRefundRepository->create([$refund->toArray()], $context);
         } else {
             $refund->setStatus($status);
-            $this->hipayOrderRefundRepo->update([$refund->toArray()], $context);
+            $this->hipayOrderRefundRepository->update([$refund->toArray()], $context);
         }
     }
 
     /**
      * Retreive hipay notification to handle.
      */
-    private function getActiveHipayNotifications(): EntitySearchResult
+    private function getActiveHipayNotifications(Context $context): EntitySearchResult
     {
         $criteria = new Criteria();
         $criteria
@@ -654,27 +649,27 @@ class NotificationService
             ->addAssociations(['orderTransaction'])
         ;
 
-        return $this->notificationRepo->search($criteria, Context::createDefaultContext());
+        return $this->hipayNotificationRepository->search($criteria, $context);
     }
 
-    private function getAssociatedHiPayOrder(Criteria $criteria): ?Entity
+    private function getAssociatedHiPayOrder(Criteria $criteria, Context $context): ?Entity
     {
-        return $this->hipayOrderRepo->search($criteria, Context::createDefaultContext())->first();
+        return $this->hipayOrderRepository->search($criteria, $context)->getEntities()->first();
     }
 
     /**
      * Add received hipay status to the order transaction.
      */
-    private function addHipayStatusFlow(HipayOrderEntity $order, int $code, string $message, float $amount, string $hash): void
+    private function addHipayStatusFlow(HipayOrderEntity $order, int $code, string $message, float $amount, string $hash, Context $context): void
     {
-        $this->hipayOrderRepo->update(
+        $this->hipayOrderRepository->update(
             [
                 [
                     'id' => $order->getId(),
                     'statusFlows' => [HipayStatusFlowEntity::create($order, $code, $message, $amount, $hash)->toArray()],
                 ],
             ],
-            Context::createDefaultContext()
+            $context
         );
     }
 
@@ -685,14 +680,14 @@ class NotificationService
      */
     private function checkAllPreviousStatus(int $currentStatus, array $statusRequired, HipayOrderEntity $hipayOrder): void
     {
-        $previousHipayStatus = $hipayOrder->getStatusFlows()->map(fn (HipayStatusFlowEntity $s) => $s->getCode());
+        $previousHipayStatus = $hipayOrder->getStatusFlows()->map(fn(HipayStatusFlowEntity $s) => $s->getCode());
 
         $reflectionClass = new \ReflectionClass(TransactionStatus::class);
         $constants = array_flip($reflectionClass->getConstants());
 
         foreach ($statusRequired as $status) {
             if (!in_array($status, $previousHipayStatus)) {
-                throw new SkipNotificationException('No '.$constants[$status].' notification received for the transaction '.$hipayOrder->getTransactionId().', skip status '.$currentStatus);
+                throw new SkipNotificationException('No ' . $constants[$status] . ' notification received for the transaction ' . $hipayOrder->getTransactionId() . ', skip status ' . $currentStatus);
             }
         }
     }
@@ -704,7 +699,7 @@ class NotificationService
      */
     private function checkOnePreviousStatus(int $currentStatus, array $statusRequired, HipayOrderEntity $hipayOrder): void
     {
-        $previousHipayStatus = $hipayOrder->getStatusFlows()->map(fn (HipayStatusFlowEntity $s) => $s->getCode());
+        $previousHipayStatus = $hipayOrder->getStatusFlows()->map(fn(HipayStatusFlowEntity $s) => $s->getCode());
 
         $reflectionClass = new \ReflectionClass(TransactionStatus::class);
         $constants = array_flip($reflectionClass->getConstants());
@@ -713,7 +708,7 @@ class NotificationService
             $statusRequiredName = array_map(function ($status) use ($constants) {
                 return $constants[$status];
             }, $statusRequired);
-            throw new SkipNotificationException('No '.implode(' | ', $statusRequiredName).' notification received for the transaction '.$hipayOrder->getTransactionId().', skip status '.$currentStatus);
+            throw new SkipNotificationException('No ' . implode(' | ', $statusRequiredName) . ' notification received for the transaction ' . $hipayOrder->getTransactionId() . ', skip status ' . $currentStatus);
         }
     }
 
@@ -732,9 +727,9 @@ class NotificationService
      *
      * @param array<mixed,string> $paymentMethod
      */
-    private function savePaymentToken(array $paymentMethod, string $customerId): void
+    private function savePaymentToken(array $paymentMethod, string $customerId, Context $context): void
     {
-        $this->tokenRepo->upsert([[
+        $this->hipayCardTokenRepository->upsert([[
             'token' => $paymentMethod['token'],
             'brand' => $paymentMethod['brand'],
             'pan' => $paymentMethod['pan'],
@@ -744,6 +739,6 @@ class NotificationService
             'issuer' => $paymentMethod['issuer'],
             'country' => $paymentMethod['country'],
             'customerId' => $customerId,
-        ]], Context::createDefaultContext());
+        ]], $context);
     }
 }

@@ -14,11 +14,11 @@ class MultibancoTest extends TestCase
     public function testhydrateFields()
     {
         $response = [
-            'reference_to_pay' => [
+            'reference_to_pay' => json_encode([
                 'reference' => 'FOO',
                 'amount' => '12.34',
                 'expirationDate' => '0000-00-00',
-            ],
+            ]),
         ];
 
         $orderRequest = $this->getHostedFiledsOrderRequest(

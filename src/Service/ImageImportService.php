@@ -3,9 +3,11 @@
 namespace HiPay\Payment\Service;
 
 use Psr\Log\LoggerInterface;
-use Shopware\Core\Content\Media\Exception\DuplicatedMediaFileNameException;
+use Shopware\Core\Content\Media\Aggregate\MediaFolder\MediaFolderCollection;
 use Shopware\Core\Content\Media\File\FileSaver;
 use Shopware\Core\Content\Media\File\MediaFile;
+use Shopware\Core\Content\Media\MediaCollection;
+use Shopware\Core\Content\Media\MediaException;
 use Shopware\Core\Content\Media\MediaService;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
@@ -15,38 +17,27 @@ use Symfony\Component\HttpFoundation\File\Exception\FileException;
 
 class ImageImportService
 {
-    private string $mediaRootDirectory;
-
-    protected EntityRepository $mediaRepository;
-
-    protected EntityRepository $mediaFolderRepository;
-
-    protected MediaService $mediaService;
-
-    protected FileSaver $fileSaver;
-
     protected LoggerInterface $logger;
 
+    /**
+     * @param EntityRepository<MediaCollection> $mediaRepository
+     * @param EntityRepository<MediaFolderCollection> $mediaFolderRepository
+     */
     public function __construct(
-        EntityRepository $mediaRepository,
-        EntityRepository $mediaFolderRepository,
-        MediaService $mediaService,
-        FileSaver $fileSaver,
-        string $mediaRootDirectory,
+        protected EntityRepository $mediaRepository,
+        protected EntityRepository $mediaFolderRepository,
+        protected MediaService $mediaService,
+        protected FileSaver $fileSaver,
+        private string $mediaRootDirectory,
         LoggerInterface $hipayApiLogger
     ) {
-        $this->mediaRepository = $mediaRepository;
-        $this->mediaFolderRepository = $mediaFolderRepository;
-        $this->mediaService = $mediaService;
-        $this->fileSaver = $fileSaver;
-        $this->mediaRootDirectory = $mediaRootDirectory;
         $this->logger = $hipayApiLogger;
     }
 
     public function addImageToMediaFromFile(string $fileName, string $directoryName, string $mediaFolder, Context $context): ?string
     {
         // compose the path to file
-        $filePath = dirname(__DIR__).$this->mediaRootDirectory.$directoryName.'/'.$fileName;
+        $filePath = dirname(__DIR__) . $this->mediaRootDirectory . $directoryName . '/' . $fileName;
 
         // get the file extension
         $fileNameParts = explode('.', $fileName);
@@ -78,14 +69,14 @@ class ImageImportService
                 $mediaFile = new MediaFile($filePath, $mimeType, $fileExtension, $fileSize);
                 $mediaId = $this->mediaService->saveMediaFile($mediaFile, $fileName, $context, $folder, null, false);
             }
-        } catch (DuplicatedMediaFileNameException $e) {
-            $this->logger->error($e->getCode().' : '.$e->getMessage());
+        } catch (MediaException $e) {
+            $this->logger->error($e->getCode() . ' : ' . $e->getMessage());
             $mediaId = $this->mediaCleanup($mediaId, $context);
         } catch (FileException $e) {
-            $this->logger->error($e->getCode().' : '.$e->getMessage());
+            $this->logger->error($e->getCode() . ' : ' . $e->getMessage());
             $mediaId = $this->mediaCleanup($mediaId, $context);
         } catch (\Exception $e) {
-            $this->logger->error($e->getCode().' : '.$e->getMessage());
+            $this->logger->error($e->getCode() . ' : ' . $e->getMessage());
             $mediaId = $this->mediaCleanup($mediaId, $context);
         }
 
@@ -98,6 +89,7 @@ class ImageImportService
         $criteria->addFilter(new EqualsFilter('mediaFolderId', $this->getMediaDefaultFolderId($folder, $context)));
         $criteria->addFilter(new EqualsFilter('fileName', $fileName));
         $criteria->addFilter(new EqualsFilter('fileExtension', $fileExtension));
+        $criteria->setLimit(1);
 
         return $this->mediaRepository->searchIds($criteria, $context)->firstId();
     }
@@ -124,9 +116,9 @@ class ImageImportService
         $criteria->setLimit(1);
         $defaultFolder = $this->mediaFolderRepository->search($criteria, $context);
         $defaultFolderId = null;
-        if (1 === $defaultFolder->count()) {
-            $folder = $defaultFolder->first();
-            if (method_exists($folder, 'getId')) {
+        if ($defaultFolder->count() === 1) {
+            $folder = $defaultFolder->getEntities()->first();
+            if (!is_null($folder) && method_exists($folder, 'getId')) {
                 $defaultFolderId = $folder->getId();
             }
         }

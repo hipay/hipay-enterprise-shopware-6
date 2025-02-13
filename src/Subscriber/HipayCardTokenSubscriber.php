@@ -12,12 +12,9 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 class HipayCardTokenSubscriber implements EventSubscriberInterface
 {
-    private HipayCardTokenRoute $route;
-
-    public function __construct(HipayCardTokenRoute $hipayCardTokenRoute)
-    {
-        $this->route = $hipayCardTokenRoute;
-    }
+    public function __construct(
+        private HipayCardTokenRoute $hipayCardTokenRoute
+    ) {}
 
     /**
      * @return array<string, string>
@@ -33,7 +30,7 @@ class HipayCardTokenSubscriber implements EventSubscriberInterface
 
     public function addCardTokens(PageLoadedEvent $event): void
     {
-        $cardTokenResponse = $this->route->load(new Criteria(), $event->getSalesChannelContext());
+        $cardTokenResponse = $this->hipayCardTokenRoute->load(new Criteria(), $event->getSalesChannelContext());
 
         $event->getPage()->addExtension('card_tokens', $cardTokenResponse->getCardTokens());
     }

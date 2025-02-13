@@ -7,7 +7,7 @@ use HiPay\Payment\PaymentMethod\Giropay;
 use HiPay\Payment\Tests\Tools\PaymentMethodMockTrait;
 use PHPUnit\Framework\TestCase;
 
-class GyropayTest extends TestCase
+class GiropayTest extends TestCase
 {
     use PaymentMethodMockTrait;
 

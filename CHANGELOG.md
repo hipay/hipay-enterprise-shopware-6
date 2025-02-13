@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## Version 3.0.1
+
+- **Fix** : Fixed store context in whole HiPay module
+- **Fix** : Fixed code base according to code audit
+
 ## Version 3.0.0
 
 - **BREAKING CHANGE** : Added support for Shopware version **6.6**

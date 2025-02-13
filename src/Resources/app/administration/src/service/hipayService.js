@@ -26,6 +26,12 @@ class ApiHiPay extends ApiService {
       url: `/_action/${this.getApiBasePath()}/get-logs`,
       responseType: 'arraybuffer'
     })
+      .catch((error) => {
+        return {
+          success: false,
+          message: error.response.data.message
+        };
+      });
   }
 
   validateConfig(values) {
@@ -37,6 +43,12 @@ class ApiHiPay extends ApiService {
       })
       .then((response) => {
         return ApiService.handleResponse(response);
+      })
+      .catch((error) => {
+        return {
+          success: false,
+          message: error.response.data.message
+        };
       });
   }
 
@@ -51,6 +63,12 @@ class ApiHiPay extends ApiService {
       )
       .then((response) => {
         return ApiService.handleResponse(response);
+      })
+      .catch((error) => {
+        return {
+          success: false,
+          message: error.response.data.message
+        };
       });
   }
 
@@ -68,6 +86,12 @@ class ApiHiPay extends ApiService {
       )
       .then((response) => {
         return ApiService.handleResponse(response);
+      })
+      .catch((error) => {
+        return {
+          success: false,
+          message: error.response.data.message
+        };
       });
   }
 
@@ -85,6 +109,12 @@ class ApiHiPay extends ApiService {
       )
       .then((response) => {
         return ApiService.handleResponse(response);
+      })
+      .catch((error) => {
+        return {
+          success: false,
+          message: error.response.data.message
+        };
       });
   }
 

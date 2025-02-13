@@ -1,0 +1,3 @@
+hipay_routes:
+    resource: ../../Controller/*Controller.php
+    type: attribute
