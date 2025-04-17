@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## Version 3.1.0
+
+- **Fix** : Fixed the missing save button in the order detail view when the order was not created using HiPay.
+
 ## Version 3.0.1
 
 - **Fix** : Fixed store context in whole HiPay module
@@ -10,6 +14,10 @@
 - **BREAKING CHANGE** : Added support for Shopware version **6.6**
 
 > :warning: This version is not compatible with Shopware version **6.5**
+
+## Version 2.4.0
+
+- **Fix** : Fixed the missing save button in the order detail view when the order was not created using HiPay.
 
 ## Version 2.3.0
 
