@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## Version 2.4.0
+
+- **Fix** : Fixed the missing save button in the order detail view when the order was not created using HiPay.
+
 ## Version 2.3.0
 
 - **Add** : Added **Klarna** payment method
