@@ -20,7 +20,6 @@ services:
       - './reports:/var/www/html/custom/plugins/HiPayPaymentPlugin/reports'
       - './composer.json:/var/www/html/custom/plugins/HiPayPaymentPlugin/composer.json'
       - './log:/var/www/html/var/log'
-      - './vendor:/var/www/html/vendor'
   proxy:
     container_name: proxy
     image: dockware/proxy:latest
