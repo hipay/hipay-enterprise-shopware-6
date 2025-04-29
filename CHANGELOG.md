@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## Version 2.4.0
+
+- **Fix** : Fixed missing status update for orders with multiple transactions
+
 ## Version 2.3.0
 
 - **Add** : Added **Klarna** payment method
