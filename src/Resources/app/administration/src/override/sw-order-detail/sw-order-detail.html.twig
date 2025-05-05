@@ -21,7 +21,6 @@
       {{ $tc('hipay.action.cancelOrder') }}
     </sw-button>
     <div class="separator" v-if="canCapture || canRefund || canCancel"></div>
-    {% parent %}
     <sw-modal :title="$tc('hipay.action.capture')"
       v-if="showOrderCapture"
       v-show="!showOrderStateForCapture"
@@ -153,6 +152,7 @@
         @page-leave="closeCancelModal"
         @page-leave-confirm="makeCancel"></sw-order-state-change-modal>
   </template>
+  {% parent %}
 {% endblock %}
 {% block sw_order_detail_actions_abort %}
   <sw-button
