@@ -100,6 +100,7 @@ build-test:
     APP_URL: http://web
   script:
     - /kaniko/executor
+      --force
       --cache=true
       --context "dir://${CI_PROJECT_DIR}"
       --dockerfile "./bin/docker/images/shopware/Dockerfile"
@@ -435,6 +436,7 @@ build:
   extends: .login_to_registry
   script:
     - /kaniko/executor
+      --force
       --cache=true
       --context "dir://${CI_PROJECT_DIR}"
       --dockerfile "./bin/docker/images/shopware/Dockerfile"
