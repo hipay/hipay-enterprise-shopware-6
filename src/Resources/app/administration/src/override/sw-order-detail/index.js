@@ -151,7 +151,7 @@ Shopware.Component.override('sw-order-detail', {
       return this.captureAmount ?? this.manualCaptureAmount;
     },
     getRefundAmount() {
-      return this.refundAmount ?? this.manualRefundAmount;
+      return this.manualRefundAmount ?? this.refundAmount;
     },
     isInvalidFullCaptureAmount() {
       return this.remainingCaptureAmount <= 0;
