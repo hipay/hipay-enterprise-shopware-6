@@ -226,6 +226,7 @@ Shopware.Component.override('sw-order-detail', {
       this.captureAmount = captureAmount || null;
     },
     onSelectProductForRefund(selections) {
+      this.manualRefundAmount = null;
       // Calcul refund amount according to selected products + current quantity
       let refundAmount = 0;
       for (const key in selections) {
@@ -259,6 +260,7 @@ Shopware.Component.override('sw-order-detail', {
       this.onSelectProductForCapture(this.lineItems);
     },
     onQuantityChangeForRefund(val, product) {
+      this.manualRefundAmount = null;
       // Change current quantity of a lineItem & trigger selectProduct event
       const itemIndex = this.lineItems.findIndex(
         lineItem => lineItem.id === product.id
