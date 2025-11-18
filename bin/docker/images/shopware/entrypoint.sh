@@ -28,7 +28,7 @@ sudo mysql -u root --password=root -D shopware -e "update shipping_method s inne
 echo "-----------------------------------------------------"
 echo "ACTIVATING HIPAY PAYMENT MODULE"
 # Activate custom module
-composer require hipay/hipay-fullservice-sdk-php giggsey/libphonenumber-for-php:^8.13
+composer require hipay/hipay-fullservice-sdk-php giggsey/libphonenumber-for-php
 bin/console plugin:refresh --quiet
 bin/console plugin:install --activate HiPayPaymentPlugin
 bin/console cache:clear --quiet
