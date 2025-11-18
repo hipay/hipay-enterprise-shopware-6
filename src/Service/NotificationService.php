@@ -383,6 +383,10 @@ class NotificationService
                     );
                 }
 
+                if ($stateMachine === OrderTransactionStates::STATE_FAILED) {
+                    $this->orderTransactionStateHandler->reopen($hipayOrder->getTransactionId(), $context);
+                }
+
                 $this->orderTransactionStateHandler->authorize($hipayOrder->getTransactionId(), $context);
                 $this->handleSepaAuthorizedNotification($notification, $hipayOrder, $context);
                 $statusChange = true;
