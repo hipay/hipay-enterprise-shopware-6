@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## Version 3.0.3
+
+- **Fix** : Fixed the partial refund issue when one or more items were selected.
+
 ## Version 3.0.2
 
 - **Fix** : Fixed the missing save button in the order detail view when the order was not created using HiPay.

@@ -6,7 +6,7 @@ include:
 
 variables:
   SAST_EXCLUDED_ANALYZERS: 'eslint,semgrep'
-  DOCKWARE_VERSION: '6.6.8.2'
+  DOCKWARE_VERSION: '6.6.10.5'
   GIT_DEPTH: 10
   RELEASE_NAME: ${DOCKER_STACK}-${DOCKER_SERVICE}-${CI_COMMIT_REF_SLUG}
 
@@ -100,6 +100,7 @@ build-test:
     APP_URL: http://web
   script:
     - /kaniko/executor
+      --force
       --cache=true
       --context "dir://${CI_PROJECT_DIR}"
       --dockerfile "./bin/docker/images/shopware/Dockerfile"
@@ -435,6 +436,7 @@ build:
   extends: .login_to_registry
   script:
     - /kaniko/executor
+      --force
       --cache=true
       --context "dir://${CI_PROJECT_DIR}"
       --dockerfile "./bin/docker/images/shopware/Dockerfile"
