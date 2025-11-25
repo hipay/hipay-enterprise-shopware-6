@@ -20,7 +20,7 @@
 
 > :warning: This version is not compatible with Shopware version **6.5**
 
-## Version 2.4.1
+## Version 2.3.1
 
 - **Fix** : Fixed the missing save button in the order detail view when the order was not created using HiPay.
 - **Fix** : Fixed missing status update for orders with multiple transactions
