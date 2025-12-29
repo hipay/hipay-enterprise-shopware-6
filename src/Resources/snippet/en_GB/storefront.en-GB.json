@@ -33,6 +33,9 @@
         "tos": "Please accept the terms of service.",
         "infoMessage": "This browser does not handle Apple Pay. Please use another payment method.",
         "card-missing": "Please select a card to complete the Apple Pay payment."
+      },
+      "paypal": {
+        "tos": "Please accept the terms of service."
       }
     },
     "finish-details": {
