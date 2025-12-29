@@ -1,4 +1,5 @@
 import './service/hipayService';
+import './styles/hipay-plugin-icon.scss';
 
 import './config/hipay-html-bloc';
 import './config/hipay-help-bloc';

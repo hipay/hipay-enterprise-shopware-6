@@ -3,11 +3,11 @@
   "entryPoints": {
     "hi-pay-payment-plugin": {
       "css": [
-        "/bundles/hipaypaymentplugin/administration/assets/hi-pay-payment-plugin-DEYNhjiQ.css"
+        "/bundles/hipaypaymentplugin/administration/assets/hi-pay-payment-plugin-uc2KKG8T.css"
       ],
       "dynamic": [],
       "js": [
-        "/bundles/hipaypaymentplugin/administration/assets/hi-pay-payment-plugin-BEE4RHVx.js"
+        "/bundles/hipaypaymentplugin/administration/assets/hi-pay-payment-plugin-B5YdNAsA.js"
       ],
       "legacy": false,
       "preload": []
