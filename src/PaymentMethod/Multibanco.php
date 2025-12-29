@@ -12,8 +12,9 @@ use HiPay\Payment\Service\HiPayHttpClientService;
 use HiPay\Payment\Service\ReadHipayConfigService;
 use Psr\Log\LoggerInterface;
 use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionCollection;
+use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionEntity;
 use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStateHandler;
-use Shopware\Core\Checkout\Payment\Cart\AsyncPaymentTransactionStruct;
+use Shopware\Core\Checkout\Payment\Cart\PaymentTransactionStruct;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\Store\Authentication\LocaleProvider;
@@ -57,6 +58,7 @@ class Multibanco extends AbstractPaymentMethod
             $requestStack,
             $localeProvider,
             $orderCustomerRepository,
+            $orderTransactionRepository,
             $logger
         );
     }
@@ -96,9 +98,9 @@ class Multibanco extends AbstractPaymentMethod
         return ['PT'];
     }
 
-    protected function hydrateHostedFields(OrderRequest $orderRequest, array $payload, AsyncPaymentTransactionStruct $transaction): OrderRequest
+    protected function hydrateHostedFields(OrderRequest $orderRequest, array $payload, OrderTransactionEntity $orderTransaction): OrderRequest
     {
-        $customFields = $transaction->getOrderTransaction()->getPaymentMethod()->getCustomFields();
+        $customFields = $orderTransaction->getPaymentMethod()->getCustomFields();
 
         $paymentMethod = new ExpirationLimitPaymentMethod();
         $paymentMethod->expiration_limit = intval($customFields['expiration_limit'] ?? 3);
@@ -107,29 +109,29 @@ class Multibanco extends AbstractPaymentMethod
         return $orderRequest;
     }
 
-    protected function handleHostedFieldResponse(AsyncPaymentTransactionStruct $transaction, Transaction $response, Context $context): string
+    protected function handleHostedFieldResponse(OrderTransactionEntity $orderTransaction, Transaction $response, string $returnUrl, Context $context): string
     {
         // error as main return
-        $redirect = $transaction->getReturnUrl() . '&return=' . TransactionState::ERROR;
+        $redirect = $returnUrl . '&return=' . TransactionState::ERROR;
 
         switch ($response->getState()) {
             case TransactionState::FORWARDING:
             case TransactionState::COMPLETED:
             case TransactionState::PENDING:
-                $redirect = $transaction->getReturnUrl();
+                $redirect = $returnUrl;
                 break;
 
             case TransactionState::DECLINED:
-                $redirect = $transaction->getReturnUrl() . '&return=' . TransactionState::DECLINED;
+                $redirect = $returnUrl . '&return=' . TransactionState::DECLINED;
                 break;
         }
 
         // save the reference to pay
         $this->orderTransactionRepository->update(
             [[
-                'id' => $transaction->getOrderTransaction()->getId(),
+                'id' => $orderTransaction->getId(),
                 'customFields' => array_merge(
-                    $transaction->getOrderTransaction()->getCustomFields() ?? [],
+                    $orderTransaction->getCustomFields() ?? [],
                     ['reference_to_pay' => $response->getReferenceToPay ? json_decode($response->getReferenceToPay()) : []]
                 ),
             ]],
@@ -139,9 +141,9 @@ class Multibanco extends AbstractPaymentMethod
         return $redirect;
     }
 
-    protected function hydrateHostedPage(HostedPaymentPageRequest $orderRequest, AsyncPaymentTransactionStruct $transaction): HostedPaymentPageRequest
+    protected function hydrateHostedPage(HostedPaymentPageRequest $orderRequest, OrderTransactionEntity $orderTransaction): HostedPaymentPageRequest
     {
-        $customFields = $transaction->getOrderTransaction()->getPaymentMethod()->getCustomFields();
+        $customFields = $orderTransaction->getPaymentMethod()->getCustomFields();
 
         $paymentMethod = new ExpirationLimitPaymentMethod();
         $paymentMethod->expiration_limit = intval($customFields['expiration_limit'] ?? 3);

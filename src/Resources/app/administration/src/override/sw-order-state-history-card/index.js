@@ -1,4 +1,4 @@
-import template from './sw-order-state-history-card.html';
+import template from './sw-order-state-history-card.html.twig';
 
 /**
  * Inject credit cards selector

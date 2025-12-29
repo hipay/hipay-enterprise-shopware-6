@@ -1,0 +1,25 @@
+{
+  "base": "/bundles/hipaypaymentplugin/administration/",
+  "entryPoints": {
+    "hi-pay-payment-plugin": {
+      "css": [
+        "/bundles/hipaypaymentplugin/administration/assets/hi-pay-payment-plugin-DEYNhjiQ.css"
+      ],
+      "dynamic": [],
+      "js": [
+        "/bundles/hipaypaymentplugin/administration/assets/hi-pay-payment-plugin-BEE4RHVx.js"
+      ],
+      "legacy": false,
+      "preload": []
+    }
+  },
+  "legacy": false,
+  "metadatas": {},
+  "version": [
+    "7.1.0",
+    7,
+    1,
+    0
+  ],
+  "viteServer": null
+}

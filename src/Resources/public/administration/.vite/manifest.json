@@ -1,0 +1,11 @@
+{
+  "main.js": {
+    "file": "assets/hi-pay-payment-plugin-BEE4RHVx.js",
+    "name": "hi-pay-payment-plugin",
+    "src": "main.js",
+    "isEntry": true,
+    "css": [
+      "assets/hi-pay-payment-plugin-DEYNhjiQ.css"
+    ]
+  }
+}

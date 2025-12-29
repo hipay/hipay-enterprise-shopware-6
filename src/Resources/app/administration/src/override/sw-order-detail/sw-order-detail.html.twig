@@ -24,6 +24,7 @@
     <sw-modal :title="$tc('hipay.action.capture')"
       v-if="showOrderCapture"
       v-show="!showOrderStateForCapture"
+      :showFooter="true"
       @modal-close="closeOrderCaptureModal">
       <sw-data-grid ref="basket"
         :dataSource="orderBasket"
@@ -59,7 +60,7 @@
           @update:value="onManualCaptureAmount"
           :placeholder="captureAmountPlaceholder ? formatCurrency(captureAmountPlaceholder) : null"></sw-number-field>
       </div>
-      <template slot="modal-footer">
+      <template v-slot:modal-footer>
         <sw-button @click="closeOrderCaptureModal">
           {{ $tc('hipay.action.cancel') }}
         </sw-button>
@@ -86,6 +87,7 @@
     <sw-modal :title="$tc('hipay.action.refund')"
       v-if="showOrderRefund"
       v-show="!showOrderStateForRefund"
+      :showFooter="true"
       @modal-close="closeOrderRefundModal">
       <sw-data-grid ref="basket"
         :dataSource="orderBasket"
@@ -121,7 +123,7 @@
           @update:value="onManualRefundAmount"
           :placeholder="refundAmountPlaceholder ? formatCurrency(refundAmountPlaceholder) : null"></sw-number-field>
       </div>
-      <template slot="modal-footer">
+      <template v-slot:modal-footer>
         <sw-button @click="closeOrderRefundModal">
           {{ $tc('hipay.action.cancel') }}
         </sw-button>
@@ -137,13 +139,13 @@
           {{ $tc('hipay.action.full_refund') }}
         </sw-button>
       </template>
-      <sw-order-state-change-modal :order="order"
-        :isLoading="isLoadingRequest"
-        technicalName=""
-        v-if="showOrderStateForRefund"
-        @page-leave="closeOrderStateModal"
-        @page-leave-confirm="makeRefund"></sw-order-state-change-modal>
     </sw-modal>
+    <sw-order-state-change-modal :order="order"
+      :isLoading="isLoadingRequest"
+      technicalName=""
+      v-if="showOrderStateForRefund"
+      @page-leave="closeOrderStateModal"
+      @page-leave-confirm="makeRefund"></sw-order-state-change-modal>
 
     <sw-order-state-change-modal :order="order"
         :isLoading="isLoadingRequest"

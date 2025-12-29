@@ -6,6 +6,11 @@
     {% set summary = page.order %}
 {% endif %}
 
+{# Get currency and locale from sales channel context #}
+{% set currency = context.currency.isoCode|default(app.request.get('sw-currency'))|default('EUR') %}
+{% set localeCode = app.request.locale|default('en-GB') %}
+{% set locale = localeCode|replace({'-':'_'}) %}
+
  {% block component_payment_method_image %}
   {% if 'handler_hipay_creditcard' in payment.formattedHandlerIdentifier %}
     {% sw_include '@HiPayPaymentPlugin/storefront/component/payment/creditcards/hipay-creditcard-image.html.twig' %}
@@ -34,11 +39,11 @@
             merchantId: payment.customFields.merchantId,
             merchantName: payment.customFields.merchantName,
             shopname: page.metaInformation.metaTitle,
-            environment: environment|lower,
-            lang: page.header.activeLanguage.translationCode.code|slice(0, 2),
-            countryCode: page.header.activeLanguage.translationCode.code|slice(3, 2),
-            amount: summary.price.rawTotal,
-            currency: page.header.activeCurrency.isoCode,
+            environment: environment|lower|default('stage'),
+            lang: localeCode|slice(0, 2),
+            countryCode: localeCode|slice(3, 2),
+            amount: summary.price.totalPrice,
+            currency: currency|default('EUR'),
             styles: {
               base: {
                 color: config('HiPayPaymentPlugin.config.hostedFieldsTextColor'),
@@ -58,12 +63,12 @@
         {% set hipayConfig = {
           username: config('HiPayPaymentPlugin.config.publicLogin' ~ environment),
           password: config('HiPayPaymentPlugin.config.publicPassword' ~ environment),
-          environment: environment|lower,
+          environment: environment|lower|default('stage'),
           canPayLater: payment.customFields.bnpl,
-          amount: summary.price.rawTotal,
-          currency: page.header.activeCurrency.isoCode,
-          lang: page.header.activeLanguage.translationCode.code|slice(0, 2),
-          locale: page.header.activeLanguage.translationCode.code|replace({'-':'_'}),
+          amount: summary.price.totalPrice,
+          currency: currency|default('EUR'),
+          lang: localeCode|slice(0, 2),
+          locale: locale,
           styles: {
             color: payment.customFields.color,
             shape: payment.customFields.shape,
@@ -76,9 +81,10 @@
             paymentProductName: payment.technicalName|replace({'hipay-':''}),
             username: config('HiPayPaymentPlugin.config.publicLogin' ~ environment),
             password: config('HiPayPaymentPlugin.config.publicPassword' ~ environment),
-            environment: environment|lower,
-            lang: page.header.activeLanguage.translationCode.code|slice(0, 2),
-            amount: summary.price.rawTotal,
+            environment: environment|lower|default('stage'),
+            lang: localeCode|slice(0, 2),
+            amount: summary.price.totalPrice,
+            currency: currency|default('EUR'),
             styles: {
               base: {
                 color: config('HiPayPaymentPlugin.config.hostedFieldsTextColor'),

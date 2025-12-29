@@ -5,7 +5,8 @@ namespace HiPay\Payment\PaymentMethod;
 use HiPay\Fullservice\Data\PaymentProduct;
 use HiPay\Fullservice\Gateway\Request\Order\OrderRequest;
 use HiPay\Fullservice\Gateway\Request\PaymentMethod\CardTokenPaymentMethod;
-use Shopware\Core\Checkout\Payment\Cart\AsyncPaymentTransactionStruct;
+use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionEntity;
+use Shopware\Core\Checkout\Payment\Cart\PaymentTransactionStruct;
 
 /**
  * ApplePay payment Methods.
@@ -63,7 +64,7 @@ class ApplePay extends AbstractPaymentMethod
         ];
     }
 
-    protected function hydrateHostedFields(OrderRequest $orderRequest, array $payload, AsyncPaymentTransactionStruct $transaction): OrderRequest
+    protected function hydrateHostedFields(OrderRequest $orderRequest, array $payload, OrderTransactionEntity $orderTransaction): OrderRequest
     {
         $paymentMethod = new CardTokenPaymentMethod();
         $paymentMethod->cardtoken = $payload['token'];

@@ -51,7 +51,7 @@ elif [ "$1" = 'cache' ]; then
 elif [ "$1" = 'build' ] && [ "$2" = 'admin' ]; then
     docker exec $container bash -c "cd ../ && make build-admin"
 elif [ "$1" = 'build' ] && [ "$2" = 'front' ]; then
-    docker exec $container bash -c "./bin/build-storefront.sh && php bin/console theme:dump"
+    docker exec $container bash -c "cd custom/plugins/HiPayPaymentPlugin && npm install && cd /var/www/html && ./bin/build-storefront.sh && php bin/console theme:dump"
 elif [ "$1" = 'watch' ] && [ "$2" = 'admin' ]; then
     docker exec $container bash -c "cd ../ && make watch-admin"
 elif [ "$1" = 'watch' ] && [ "$2" = 'front' ]; then

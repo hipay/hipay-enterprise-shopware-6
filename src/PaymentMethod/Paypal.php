@@ -8,8 +8,9 @@ use HiPay\Fullservice\Gateway\Request\Order\OrderRequest;
 use HiPay\Payment\Service\HiPayHttpClientService;
 use HiPay\Payment\Service\ReadHipayConfigService;
 use Psr\Log\LoggerInterface;
+use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionEntity;
 use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStateHandler;
-use Shopware\Core\Checkout\Payment\Cart\AsyncPaymentTransactionStruct;
+use Shopware\Core\Checkout\Payment\Cart\PaymentTransactionStruct;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\Store\Authentication\LocaleProvider;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -52,6 +53,7 @@ class Paypal extends AbstractPaymentMethod
             $requestStack,
             $localeProvider,
             $orderCustomerRepository,
+            $orderTransactionRepository,
             $logger,
         );
     }
@@ -87,7 +89,7 @@ class Paypal extends AbstractPaymentMethod
         ];
     }
 
-    protected function hydrateHostedFields(OrderRequest $orderRequest, array $payload, AsyncPaymentTransactionStruct $transaction): OrderRequest
+    protected function hydrateHostedFields(OrderRequest $orderRequest, array $payload, OrderTransactionEntity $orderTransaction): OrderRequest
     {
         if ($orderRequest->payment_product === 'paypal' && isset($payload['orderID'])) {
             $providerData = ['paypal_id' => $payload['orderID']];
@@ -99,10 +101,10 @@ class Paypal extends AbstractPaymentMethod
 
     protected function hydrateHostedPage(
         HostedPaymentPageRequest      $orderRequest,
-        AsyncPaymentTransactionStruct $transaction
+        OrderTransactionEntity $orderTransaction
     ): HostedPaymentPageRequest
     {
-        $customFields = $transaction->getOrderTransaction()->getPaymentMethod()->getCustomFields();
+        $customFields = $orderTransaction->getPaymentMethod()->getCustomFields();
 
         $orderRequest->paypal_v2_label = $customFields['label'] ?? null;
         $orderRequest->paypal_v2_shape = $customFields['shape'] ?? null;

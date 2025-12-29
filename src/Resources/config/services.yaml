@@ -2,7 +2,7 @@ imports:
     - { resource: packages/* }
 
 parameters:
-    hipayMediaDirectory: /Resources/public/
+    hipayMediaDirectory: /Resources/app/administration/static/
 
 services:
     _defaults:
@@ -84,19 +84,20 @@ services:
         exclude: '../../PaymentMethod/*Interface.php'
         arguments:
             $orderCustomerRepository: '@order_customer.repository'
-        tags: ['shopware.payment.method.async']
+            $orderTransactionRepository: '@order_transaction.repository'
+        tags: ['shopware.payment.method']
 
     HiPay\Payment\PaymentMethod\Multibanco:
         arguments:
             $orderCustomerRepository: '@order_customer.repository'
             $orderTransactionRepository: '@order_transaction.repository'
-        tags: ['shopware.payment.method.async']
+        tags: ['shopware.payment.method']
 
     HiPay\Payment\PaymentMethod\Paypal:
         arguments:
             $orderCustomerRepository: '@order_customer.repository'
             $orderTransactionRepository: '@order_transaction.repository'
-        tags: ['shopware.payment.method.async']
+        tags: ['shopware.payment.method']
 
     HiPay\Payment\ScheduledTask\UpdatePaymentStatus\UpdatePaymentStatusTask:
         tags: ['shopware.scheduled.task']
