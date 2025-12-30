@@ -29,6 +29,7 @@
       and 'handler_hipay_' in payment.formattedHandlerIdentifier
       and activeRoute in ['frontend.account.edit-order.page', 'frontend.checkout.confirm.page']
   %}
+    <div class="hipay-hosted-fields-wrapper">
     {% set environment = config('HiPayPaymentPlugin.config.environment') %}
     {% set componentName = payment.formattedHandlerIdentifier|replace({'_':'-'}) %}
 
@@ -120,6 +121,7 @@
     %}
       <p>{{ 'hipay.hosted-page.redirect-message'|trans }}</p>
     {% endif %}
+    </div>
   {% endif %}
 
   {% if 'handler_hipay_creditcard' in payment.formattedHandlerIdentifier
