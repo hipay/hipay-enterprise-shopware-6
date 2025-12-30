@@ -15,10 +15,6 @@ export default class HandlerHipayPaypalPlugin extends window.PluginBaseClass {
     };
 
     init() {
-        const tosElement = document.querySelector('#tos');
-        if(tosElement) {
-            tosElement.checked = false;
-        }
         // Remove global payment button
         let element = document.querySelector('#confirmFormSubmit');
         if (element) {

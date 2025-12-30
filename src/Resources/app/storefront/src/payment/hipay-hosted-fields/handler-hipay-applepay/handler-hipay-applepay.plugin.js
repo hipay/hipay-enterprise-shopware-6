@@ -31,9 +31,6 @@ export default class HandlerHipayApplePayPlugin extends window.PluginBaseClass {
       shopName: this.options.shopname
     };
 
-    // Reset term of service checkbox on refresh
-    document.querySelector('#tos').checked = false;
-
     // Remove global payment button
     let element = document.querySelector('#confirmFormSubmit');
     if (element) {
