@@ -11,7 +11,7 @@ import './settings/hipay-settings-multibanco';
 import './settings/hipay-settings-applepay';
 import './settings/hipay-settings-paypal';
 
-import './override/sw-data-grid';
+import './component/hipay-basket-grid';
 import './override/sw-order-detail-details';
 import './override/sw-order-detail';
 import './override/sw-settings-payment-detail';
