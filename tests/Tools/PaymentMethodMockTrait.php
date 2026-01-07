@@ -22,7 +22,7 @@ use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionColl
 use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionEntity;
 use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStateHandler;
 use Shopware\Core\Checkout\Order\OrderEntity;
-use Shopware\Core\Checkout\Payment\Cart\AsyncPaymentTransactionStruct;
+use Shopware\Core\Checkout\Payment\Cart\PaymentTransactionStruct;
 use Shopware\Core\Checkout\Payment\PaymentMethodEntity;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
@@ -47,8 +47,12 @@ trait PaymentMethodMockTrait
     use HipayHttpClientServiceMockTrait;
     use RequestStackMockTrait;
 
-    protected function getPaymentMethod(string $classname, array $config, array $responses, Request $request = null, array $orderCustomerConfig = [], array $construct = []): AbstractPaymentMethod
+    protected function getPaymentMethod(string $classname, array $config, array $responses, Request $request = null, array $orderCustomerConfig = [], array $construct = [], ?EntityRepository $orderTransactionRepo = null): AbstractPaymentMethod
     {
+        if (!$orderTransactionRepo) {
+            $orderTransactionRepo = $this->createMock(EntityRepository::class);
+        }
+
         return new $classname(
             $this->createMock(OrderTransactionStateHandler::class),
             $this->getReadHipayConfig($config),
@@ -56,6 +60,7 @@ trait PaymentMethodMockTrait
             $this->getRequestStack($request),
             $this->getLocaleProvider(),
             $this->generateOrderCustomerRepo($orderCustomerConfig),
+            $orderTransactionRepo,
             $this->createMock(LoggerInterface::class),
             ...$construct
         );
@@ -143,6 +148,8 @@ trait PaymentMethodMockTrait
         // transaction
         $orderTransaction = new OrderTransactionEntity();
         $orderTransaction->setId($config['transaction.id'] ?? md5(rand(1, PHP_INT_MAX)));
+        $orderTransaction->setOrder($order);
+        $orderTransaction->setOrderId($order->getId());
 
         if (isset($config['transaction.payment_method.custom_fields'])) {
             $paymentMethod = new PaymentMethodEntity();
@@ -150,13 +157,12 @@ trait PaymentMethodMockTrait
             $orderTransaction->setPaymentMethod($paymentMethod);
         }
 
-        /** @var AsyncPaymentTransactionStruct&MockObject */
-        $transaction = $this->createMock(AsyncPaymentTransactionStruct::class);
-        $transaction->method('getOrderTransaction')->willReturn($orderTransaction);
-        $transaction->method('getOrder')->willReturn($order);
-        $transaction->method('getReturnUrl')->willReturn($config['return_url'] ?? md5(rand(1, PHP_INT_MAX)));
+        $transaction = new PaymentTransactionStruct(
+            $orderTransaction->getId(),
+            $config['return_url'] ?? md5(rand(1, PHP_INT_MAX))
+        );
 
-        return $transaction;
+        return ['struct' => $transaction, 'entity' => $orderTransaction];
     }
 
     private function generateOrderCustomerRepo(array $config = [])
@@ -333,20 +339,33 @@ trait PaymentMethodMockTrait
             'hipay-response' => json_encode($jsonResponse),
         ]);
 
+        $transactionData = $this->generateTransaction($configTransaction);
+        $orderTransactionRepo = $this->createMock(EntityRepository::class);
+        $orderTransactionRepo->method('search')->willReturn(
+            new EntitySearchResult(
+                'order_transaction',
+                1,
+                new OrderTransactionCollection([$transactionData['entity']]),
+                null,
+                new Criteria(),
+                $this->createMock(Context::class)
+            )
+        );
+
         $paymentMethod = $this->getPaymentMethod(
             $classname,
             $config,
             $responses,
             $request,
             [],
-            $construct
+            $construct,
+            $orderTransactionRepo
         );
-        $this->createMock(SalesChannelContext::class);
-
         $paymentMethod->pay(
-            $this->generateTransaction($configTransaction),
-            $this->createMock(RequestDataBag::class),
-            $this->createMock(SalesChannelContext::class)
+            $request,
+            $transactionData['struct'],
+            $this->createMock(Context::class),
+            null
         );
 
         return $orderRequest;
@@ -375,19 +394,36 @@ trait PaymentMethodMockTrait
             },
         ];
 
+        $request = new Request();
+
+        $transactionData = $this->generateTransaction($transactionConfig);
+        $orderTransactionRepo = $this->createMock(EntityRepository::class);
+        $orderTransactionRepo->method('search')->willReturn(
+            new EntitySearchResult(
+                'order_transaction',
+                1,
+                new OrderTransactionCollection([$transactionData['entity']]),
+                null,
+                new Criteria(),
+                $this->createMock(Context::class)
+            )
+        );
+
         $paymentMethod = $this->getPaymentMethod(
             $classname,
             $config,
             $responses,
-            null,
+            $request,
             [],
-            $construct
+            $construct,
+            $orderTransactionRepo
         );
 
         $paymentMethod->pay(
-            $this->generateTransaction($transactionConfig),
-            $this->createMock(RequestDataBag::class),
-            $this->createMock(SalesChannelContext::class)
+            $request,
+            $transactionData['struct'],
+            $this->createMock(Context::class),
+            null
         );
 
         return $hostedPaymentPageRequest;

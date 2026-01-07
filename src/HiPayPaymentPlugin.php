@@ -257,7 +257,7 @@ class HiPayPaymentPlugin extends Plugin
         bool $active,
         string $classname,
         Context $context,
-        string $directory = 'administration/media'
+        string $directory = 'media'
     ): void {
         /** @var EntityRepository $paymentRepository */
         $paymentRepository = $this->container->get($this->paymentMethodRepoName);

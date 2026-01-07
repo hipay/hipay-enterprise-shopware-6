@@ -47,8 +47,8 @@ class Multibanco extends AbstractPaymentMethod
         RequestStack                 $requestStack,
         LocaleProvider               $localeProvider,
         EntityRepository             $orderCustomerRepository,
-        LoggerInterface              $logger,
-        protected EntityRepository   $orderTransactionRepository
+        protected EntityRepository   $orderTransactionRepository,
+        LoggerInterface              $logger
     )
     {
         parent::__construct(
