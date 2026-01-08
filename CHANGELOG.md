@@ -2,7 +2,7 @@
 
 ## Version 3.1.0
 
-- **BREAKING CHANGE** : Added support for Shopware version **6.7**
+- **Add** : Added support for Shopware version **6.7**
 
 ## Version 3.0.3
 

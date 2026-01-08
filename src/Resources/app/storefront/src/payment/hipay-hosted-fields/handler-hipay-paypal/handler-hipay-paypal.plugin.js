@@ -49,7 +49,7 @@ export default class HandlerHipayPaypalPlugin extends window.PluginBaseClass {
 
         const paypalErrorMessage = document.querySelector('#paypal-error-message');
         if(paypalErrorMessage) {
-            paypalErrorMessage.style.display = 'inline';
+            paypalErrorMessage.hidden = false;
         }
 
         this._paypalInstance = this._hipayInstance.create('paypal', config);
@@ -92,14 +92,14 @@ export default class HandlerHipayPaypalPlugin extends window.PluginBaseClass {
         if (!paypalField) return;
 
         if (!tosElement || tosElement.checked) {
-            paypalField.style.display = '';
+            paypalField.hidden = false;
             if (paypalErrorMessage) {
-                paypalErrorMessage.style.display = 'none';
+                paypalErrorMessage.hidden = true;
             }
         } else {
-            paypalField.style.display = 'none';
+            paypalField.hidden = true;
             if (paypalErrorMessage) {
-                paypalErrorMessage.style.display = 'inline';
+                paypalErrorMessage.hidden = false;
             }
         }
     }

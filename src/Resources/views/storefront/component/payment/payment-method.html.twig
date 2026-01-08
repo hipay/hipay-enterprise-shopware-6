@@ -31,6 +31,7 @@
   %}
     <div class="hipay-hosted-fields-wrapper">
     {% set environment = config('HiPayPaymentPlugin.config.environment') %}
+    {% set env = environment|lower|default('stage') %}
     {% set componentName = payment.formattedHandlerIdentifier|replace({'_':'-'}) %}
 
     {% if config('HiPayPaymentPlugin.config.operationMode') == 'hostedFields' %}
@@ -42,11 +43,11 @@
             merchantId: payment.customFields.merchantId,
             merchantName: payment.customFields.merchantName,
             shopname: page.metaInformation.metaTitle,
-            environment: environment|lower|default('stage'),
+            environment: env,
             lang: localeCode|slice(0, 2),
             countryCode: localeCode|slice(3, 2),
             amount: summary.price.totalPrice,
-            currency: currency|default('EUR'),
+            currency: currency,
             styles: {
               base: {
                 color: config('HiPayPaymentPlugin.config.hostedFieldsTextColor'),
@@ -66,10 +67,10 @@
         {% set hipayConfig = {
           username: config('HiPayPaymentPlugin.config.publicLogin' ~ environment),
           password: config('HiPayPaymentPlugin.config.publicPassword' ~ environment),
-          environment: environment|lower|default('stage'),
+          environment: env,
           canPayLater: payment.customFields.bnpl,
           amount: summary.price.totalPrice,
-          currency: currency|default('EUR'),
+          currency: currency,
           lang: localeCode|slice(0, 2),
           locale: locale,
           styles: {
@@ -84,10 +85,10 @@
             paymentProductName: payment.technicalName|replace({'hipay-':''}),
             username: config('HiPayPaymentPlugin.config.publicLogin' ~ environment),
             password: config('HiPayPaymentPlugin.config.publicPassword' ~ environment),
-            environment: environment|lower|default('stage'),
+            environment: env,
             lang: localeCode|slice(0, 2),
             amount: summary.price.totalPrice,
-            currency: currency|default('EUR'),
+            currency: currency,
             styles: {
               base: {
                 color: config('HiPayPaymentPlugin.config.hostedFieldsTextColor'),
