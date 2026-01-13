@@ -47,7 +47,7 @@ class Alma4X extends AbstractPaymentMethod
 
     public static function getCountries(): ?array
     {
-        return ['FR', 'DE', 'IT', 'BE', 'LU', 'NL', 'IE', 'AT', 'PT', 'ES'];
+        return ['FR'];
     }
 
     public static function getMinAmount(): ?float

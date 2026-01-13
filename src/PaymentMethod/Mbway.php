@@ -7,7 +7,8 @@ use HiPay\Fullservice\Gateway\Request\Order\HostedPaymentPageRequest;
 use HiPay\Fullservice\Gateway\Request\Order\OrderRequest;
 use HiPay\Fullservice\Gateway\Request\PaymentMethod\PhonePaymentMethod;
 use libphonenumber\PhoneNumberFormat;
-use Shopware\Core\Checkout\Payment\Cart\AsyncPaymentTransactionStruct;
+use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionEntity;
+use Shopware\Core\Checkout\Payment\Cart\PaymentTransactionStruct;
 
 /**
  * Mbway payment Methods.
@@ -55,7 +56,7 @@ class Mbway extends AbstractPaymentMethod
         return ['PT'];
     }
 
-    protected function hydrateHostedFields(OrderRequest $orderRequest, array $payload, AsyncPaymentTransactionStruct $transaction): OrderRequest
+    protected function hydrateHostedFields(OrderRequest $orderRequest, array $payload, OrderTransactionEntity $orderTransaction): OrderRequest
     {
         $paymentMethod = new PhonePaymentMethod();
         $paymentMethod->phone = $this->formatPhoneNumber(
@@ -70,7 +71,7 @@ class Mbway extends AbstractPaymentMethod
         return $orderRequest;
     }
 
-    protected function hydrateHostedPage(HostedPaymentPageRequest $orderRequest, AsyncPaymentTransactionStruct $transaction): HostedPaymentPageRequest
+    protected function hydrateHostedPage(HostedPaymentPageRequest $orderRequest, OrderTransactionEntity $orderTransaction): HostedPaymentPageRequest
     {
         $orderRequest->customerBillingInfo->phone = $this->formatPhoneNumber(
             $orderRequest->customerBillingInfo->phone,

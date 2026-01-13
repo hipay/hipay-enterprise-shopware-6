@@ -33,6 +33,9 @@
         "tos": "Bitte akzeptieren Sie die Nutzungsbedingungen.",
         "infoMessage": "Dieser Browser unterstützt kein Apple Pay. Bitte verwenden Sie eine andere Zahlungsmethode.",
         "card-missing": "Bitte wählen Sie eine Karte aus, um die Apple Pay-Zahlung abzuschließen."
+      },
+      "paypal": {
+        "tos": "Bitte akzeptieren Sie die Nutzungsbedingungen."
       }
     },
     "finish-details": {

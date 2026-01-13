@@ -257,7 +257,7 @@ class HiPayPaymentPlugin extends Plugin
         bool $active,
         string $classname,
         Context $context,
-        string $directory = 'administration/media'
+        string $directory = 'media'
     ): void {
         /** @var EntityRepository $paymentRepository */
         $paymentRepository = $this->container->get($this->paymentMethodRepoName);
@@ -411,11 +411,6 @@ class HiPayPaymentPlugin extends Plugin
             ->addFilter(new ContainsFilter('customFields', $classname::getProductCode()))
             ->setLimit(1);
 
-        // Existing rule
-        if ($ruleId = $ruleRepo->searchIds($ruleCriteria, $context)->firstId()) {
-            return ['id' => $ruleId];
-        }
-
         $countries = $classname::getCountries();
         $currencies = $classname::getCurrencies();
         $minAmount = $classname::getMinAmount();
@@ -486,12 +481,37 @@ class HiPayPaymentPlugin extends Plugin
             ];
         }
 
-        return [
+        $ruleData = [
             'name' => $classname::getName('en-GB') . ' rule',
             'priority' => 1,
             'customFields' => ['hipay-payment' => $classname::getProductCode()],
             'conditions' => $conditions,
         ];
+
+        // Check if rule already exists
+        $ruleCriteria->addAssociation('conditions');
+        if ($existingRule = $ruleRepo->search($ruleCriteria, $context)->first()) {
+            $ruleId = $existingRule->getId();
+
+            // Delete old conditions first
+            /** @var EntityRepository */
+            $ruleConditionRepo = $this->container->get('rule_condition.repository');
+            $oldConditions = $existingRule->getConditions();
+            if ($oldConditions && $oldConditions->count() > 0) {
+                $conditionsToDelete = [];
+                foreach ($oldConditions as $condition) {
+                    $conditionsToDelete[] = ['id' => $condition->getId()];
+                }
+                $ruleConditionRepo->delete($conditionsToDelete, $context);
+            }
+
+            // Update existing rule with new conditions
+            $ruleData['id'] = $ruleId;
+            $ruleRepo->update([$ruleData], $context);
+            return ['id' => $ruleId];
+        }
+
+        return $ruleData;
     }
 }
 

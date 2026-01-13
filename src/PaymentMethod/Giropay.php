@@ -5,7 +5,8 @@ namespace HiPay\Payment\PaymentMethod;
 use HiPay\Fullservice\Data\PaymentProduct;
 use HiPay\Fullservice\Gateway\Request\Order\OrderRequest;
 use HiPay\Fullservice\Gateway\Request\PaymentMethod\IssuerBankIDPaymentMethod;
-use Shopware\Core\Checkout\Payment\Cart\AsyncPaymentTransactionStruct;
+use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionEntity;
+use Shopware\Core\Checkout\Payment\Cart\PaymentTransactionStruct;
 
 /**
  * Giropay payment Methods.
@@ -53,7 +54,7 @@ class Giropay extends AbstractPaymentMethod
         return ['DE'];
     }
 
-    protected function hydrateHostedFields(OrderRequest $orderRequest, array $payload, AsyncPaymentTransactionStruct $transaction): OrderRequest
+    protected function hydrateHostedFields(OrderRequest $orderRequest, array $payload, OrderTransactionEntity $orderTransaction): OrderRequest
     {
         $paymentMethod = new IssuerBankIDPaymentMethod();
         $paymentMethod->issuer_bank_id = $payload['issuer_bank_id'];

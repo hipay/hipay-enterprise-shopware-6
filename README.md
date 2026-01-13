@@ -71,6 +71,7 @@ Go to your Shopware root directory of your project and use the folowing command:
 | 6.4 | 1.x | `composer require hipay/hipay-enterprise-shopware-6 "^1"` |
 | 6.5 | 2.x | `composer require hipay/hipay-enterprise-shopware-6 "^2"` |
 | 6.6 | 3.x | `composer require hipay/hipay-enterprise-shopware-6 "^3"` |
+| 6.7 | 3.1 | `composer require hipay/hipay-enterprise-shopware-6 "^3.1"` |
 
 Afterward, you can easily activate this plugin via the console and start working with it:
 
