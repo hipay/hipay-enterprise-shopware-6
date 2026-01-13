@@ -26,6 +26,7 @@ use HiPay\Fullservice\Gateway\Request\Info\CustomerShippingInfoRequest;
 use HiPay\Fullservice\Gateway\Request\Order\HostedPaymentPageRequest;
 use HiPay\Fullservice\Gateway\Request\Order\OrderRequest;
 use HiPay\Payment\Enum\HipayLoggerChannel;
+use HiPay\Payment\Helper\IpAddress;
 use HiPay\Payment\Helper\Source;
 use HiPay\Payment\Service\HiPayHttpClientService;
 use HiPay\Payment\Service\ReadHipayConfigService;
@@ -419,7 +420,7 @@ abstract class AbstractPaymentMethod extends AbstractPaymentHandler implements P
             $requestInfo = $payload['browser_info'] ?? [];
 
             $browserInfo = new BrowserInfo();
-            $browserInfo->ipaddr = $this->request->getClientIp();
+            $browserInfo->ipaddr = IpAddress::getClientIp($this->request);
             $browserInfo->http_accept = 'application/json';
             $browserInfo->http_user_agent = $requestInfo['http_user_agent'] ?? null;
             $browserInfo->java_enabled = $requestInfo['java_enabled'] ?? null;
@@ -473,7 +474,7 @@ abstract class AbstractPaymentMethod extends AbstractPaymentHandler implements P
 
         // Client Data
         $orderRequest->language = str_replace('-', '_', $locale);
-        $orderRequest->ipaddr = $order->getOrderCustomer()->getRemoteAddress();
+        $orderRequest->ipaddr = IpAddress::getClientIp($this->request);
         $orderRequest->http_user_agent = $this->request->headers->get('User-Agent');
         $orderRequest->http_accept = 'application/json';
         $orderRequest->device_channel = DeviceChannel::BROWSER;
