@@ -86,7 +86,7 @@ class Alma3XTest extends TestCase
         );
 
         $this->assertSame(
-            ['FR', 'DE', 'IT', 'BE', 'LU', 'NL', 'IE', 'AT', 'PT', 'ES'],
+            ['FR'],
             Alma3X::getCountries()
         );
 

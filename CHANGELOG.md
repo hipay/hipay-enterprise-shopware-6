@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## Version 3.1.0
+
+- **Add** : Added support for Shopware version **6.7**
+
 ## Version 3.0.3
 
 - **Fix** : Fixed the partial refund issue when one or more items were selected.

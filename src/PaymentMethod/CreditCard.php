@@ -6,7 +6,8 @@ use HiPay\Fullservice\Data\PaymentProduct;
 use HiPay\Fullservice\Gateway\Request\Order\HostedPaymentPageRequest;
 use HiPay\Fullservice\Gateway\Request\Order\OrderRequest;
 use HiPay\Fullservice\Gateway\Request\PaymentMethod\CardTokenPaymentMethod;
-use Shopware\Core\Checkout\Payment\Cart\AsyncPaymentTransactionStruct;
+use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionEntity;
+use Shopware\Core\Checkout\Payment\Cart\PaymentTransactionStruct;
 
 /**
  * Credit card payment Methods.
@@ -61,7 +62,7 @@ class CreditCard extends AbstractPaymentMethod
         ];
     }
 
-    protected function hydrateHostedFields(OrderRequest $orderRequest, array $payload, AsyncPaymentTransactionStruct $transaction): OrderRequest
+    protected function hydrateHostedFields(OrderRequest $orderRequest, array $payload, OrderTransactionEntity $orderTransaction): OrderRequest
     {
         $paymentMethod = new CardTokenPaymentMethod();
         $paymentMethod->cardtoken = $payload['token'];
@@ -78,9 +79,9 @@ class CreditCard extends AbstractPaymentMethod
         return $orderRequest;
     }
 
-    protected function hydrateHostedPage(HostedPaymentPageRequest $orderRequest, AsyncPaymentTransactionStruct $transaction): HostedPaymentPageRequest
+    protected function hydrateHostedPage(HostedPaymentPageRequest $orderRequest, OrderTransactionEntity $orderTransaction): HostedPaymentPageRequest
     {
-        $customFields = $transaction->getOrderTransaction()->getPaymentMethod()->getCustomFields();
+        $customFields = $orderTransaction->getPaymentMethod()->getCustomFields();
 
         $orderRequest->payment_product_list = implode(',', $customFields['cards'] ?? []);
 
