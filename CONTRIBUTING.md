@@ -43,8 +43,10 @@ If you want to contribute on our module, you have to use a branch based on the c
 | --- | --- | --- |
 | 6.4 | [develop-6-4](https://github.com/hipay/hipay-enterprise-shopware-6/tree/develop-6-4) | [main-6-4](https://github.com/hipay/hipay-enterprise-shopware-6/tree/main-6-4) |
 | 6.5 | [develop-6-5](https://github.com/hipay/hipay-enterprise-shopware-6/tree/develop-6-5) | [main-6-5](https://github.com/hipay/hipay-enterprise-shopware-6/tree/main-6-5) |
-| 6.6 | [develop-6-6](https://github.com/hipay/hipay-enterprise-shopware-6/tree/develop-6-6) | [main-6-6](https://github.com/hipay/hipay-enterprise-shopware-6/tree/main-6-6) |
-| 6.7 | [develop-6-6](https://github.com/hipay/hipay-enterprise-shopware-6/tree/develop-6-6) | [main-6-6](https://github.com/hipay/hipay-enterprise-shopware-6/tree/main-6-6) |
+| 6.6 | [develop-6-7](https://github.com/hipay/hipay-enterprise-shopware-6/tree/develop-6-6) | [main-6-6](https://github.com/hipay/hipay-enterprise-shopware-6/tree/main-6-6) |
+| 6.7 | [develop-6-7](https://github.com/hipay/hipay-enterprise-shopware-6/tree/develop-6-7) | [main-6-7](https://github.com/hipay/hipay-enterprise-shopware-6/tree/main-6-7) |
+
+> :warning: Branch `develop-6-6` still exists but `develop-6-7` is currently working with Shopware `6.6`. Tags `3.x` will be created based on `develop-6-7` for both Shopware versions `6.6` and `6.7` until a breaking change will appear
 
 ### Setup
 
