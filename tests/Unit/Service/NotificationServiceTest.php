@@ -136,17 +136,18 @@ class NotificationServiceTest extends TestCase
             return $return[$i++];
         });
 
-        $transactionReference = random_int(0, PHP_INT_MAX);
+        $transactionReference = (string) random_int(0, PHP_INT_MAX);
         $hipayOrderRepo->expects($this->once())->method('create')->willReturnCallback(function ($entities) use ($hipayOrder, $transactionReference) {
+            $expected = $hipayOrder->toArray();
+            $expected['transactionReference'] = $transactionReference;
+            // Remove some fields for compatibility between Shopware 6.6 and 6.7
+            unset($expected['id'], $expected['_uniqueIdentifier']);
+            $actual = $entities[0];
+            unset($actual['id'], $actual['_uniqueIdentifier']);
+
             $this->assertEquals(
-                [
-                    array_merge($hipayOrder->toArray(), [
-                        'transactionReference' => $transactionReference,
-                        'id' => null,
-                        '_uniqueIdentifier' => null,
-                    ]),
-                ],
-                $entities
+                $expected,
+                $actual
             );
 
             return $this->createMock(EntityWrittenContainerEvent::class);
@@ -224,7 +225,7 @@ class NotificationServiceTest extends TestCase
             return new EntitySearchResult(HipayOrderEntity::class, $collection->count(), $collection, null, $criteria, $context);
         });
 
-        $transactionReference = random_int(0, PHP_INT_MAX);
+        $transactionReference = (string) random_int(0, PHP_INT_MAX);
         $hipayOrderRepo->expects($this->once())->method('update')->willReturnCallback(function ($entities) use ($hipayOrder, $transactionReference) {
             $this->assertEquals(
                 [
