@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## UNRELEASE
+- **Fix** : fix some unit tests/ phpstan
+
 ## 3.1.0
 
 - **Add** : Added support for Shopware version **6.7**
