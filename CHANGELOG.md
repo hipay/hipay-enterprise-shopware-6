@@ -2,6 +2,7 @@
 
 ## UNRELEASE
 - **Fix** : fix some unit tests/ phpstan
+- **Fix** : fix shipping address for Paypal v2
 
 ## 3.1.0
 
