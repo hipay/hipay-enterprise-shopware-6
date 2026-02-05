@@ -1,0 +1,55 @@
+{
+  "hipay": {
+    "hosted-page": {
+      "redirect-message": "Será redirigido a una página de pago externa. Por favor, no actualice la página durante el proceso"
+    },
+    "hosted-fields": {
+      "creditcard": {
+        "fullname": "Nombre completo",
+        "card-number": "Número de tarjeta",
+        "expiry-date": "Fecha de caducidad",
+        "cvc": "CVC",
+        "remember": "Recordar tarjeta para futuras compras",
+        "disabled": "Este tipo de tarjeta de pago está deshabilitada",
+        "delete": "Eliminar"
+      },
+      "giropay": {
+        "bic": "BIC"
+      },
+      "ideal": {
+        "bic": "Elija su banco"
+      },
+      "mbway": {
+        "phone": "Teléfono"
+      },
+      "sdd": {
+        "gender": "Género",
+        "firstname": "Nombre",
+        "lastname": "Apellido",
+        "bank-name": "Nombre del banco",
+        "iban": "IBAN"
+      },
+      "applepay": {
+        "tos": "Por favor, acepte los términos de servicio.",
+        "infoMessage": "Este navegador no admite Apple Pay. Por favor, utilice otro método de pago.",
+        "card-missing": "Por favor, seleccione una tarjeta para completar el pago de Apple Pay."
+      },
+      "paypal": {
+        "tos": "Por favor, acepte los términos de servicio.",
+        "invalid-address": "Dirección de entrega no válida. Por favor, revise o corrija los siguientes campos: {fields}.",
+        "field-streetaddress": "dirección",
+        "field-zipcode": "código postal",
+        "field-city": "ciudad",
+        "field-country": "país"
+      }
+    },
+    "finish-details": {
+      "multibanco": {
+        "title": "Información de Multibanco",
+        "reference": "Referencia",
+        "amount": "Cantidad",
+        "expiration": "Expiración"
+      }
+    }
+  }
+}
