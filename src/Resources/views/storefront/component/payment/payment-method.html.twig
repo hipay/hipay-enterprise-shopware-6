@@ -64,6 +64,33 @@
           }
         %}
       {% elseif isPayPalV2Enabled %}
+        {% set shippingAddress = null %}
+        {% set addr = null %}
+
+        {# For order context (order-pay page) - use deliveries #}
+        {% if page.order is defined and summary.deliveries is defined and summary.deliveries|length > 0 %}
+          {% set delivery = summary.deliveries.first %}
+          {% if delivery.shippingOrderAddress is defined and delivery.shippingOrderAddress %}
+            {% set addr = delivery.shippingOrderAddress %}
+          {% endif %}
+        {# For cart context (checkout confirm page) - use customer shipping address #}
+        {% elseif page.cart is defined and context.shippingLocation is defined %}
+          {% set addr = context.shippingLocation.address %}
+        {% endif %}
+
+        {# Build shipping address object if we have an address #}
+        {% if addr %}
+          {% set shippingAddress = {
+            firstname: addr.firstName|default(''),
+            lastname: addr.lastName|default(''),
+            recipientinfo: addr.company|default(''),
+            streetaddress: addr.street|default(''),
+            streetaddress2: (addr.additionalAddressLine1|default('') ~ ' ' ~ addr.additionalAddressLine2|default(''))|trim,
+            city: addr.city|default(''),
+            zipcode: addr.zipcode|default(''),
+            country: (addr.country and addr.country.iso) ? addr.country.iso : ''
+          } %}
+        {% endif %}
         {% set hipayConfig = {
           username: config('HiPayPaymentPlugin.config.publicLogin' ~ environment),
           password: config('HiPayPaymentPlugin.config.publicPassword' ~ environment),
@@ -73,11 +100,19 @@
           currency: currency,
           lang: localeCode|slice(0, 2),
           locale: locale,
+          shippingAddress: shippingAddress,
+          translations: {
+            'invalid-address': 'hipay.hosted-fields.paypal.invalid-address'|trans,
+            'field-streetaddress': 'hipay.hosted-fields.paypal.field-streetaddress'|trans,
+            'field-zipcode': 'hipay.hosted-fields.paypal.field-zipcode'|trans,
+            'field-city': 'hipay.hosted-fields.paypal.field-city'|trans,
+            'field-country': 'hipay.hosted-fields.paypal.field-country'|trans
+          },
           styles: {
-            color: payment.customFields.color,
-            shape: payment.customFields.shape,
-            label: payment.customFields.label,
-            height: payment.customFields.height
+            color: payment.customFields.color|default('gold'),
+            shape: payment.customFields.shape|default('pill'),
+            label: payment.customFields.label|default('paypal'),
+            height: payment.customFields.height|default('40')
           }
         }%}
       {% else %}

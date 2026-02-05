@@ -35,7 +35,12 @@
         "card-missing": "Bitte wählen Sie eine Karte aus, um die Apple Pay-Zahlung abzuschließen."
       },
       "paypal": {
-        "tos": "Bitte akzeptieren Sie die Nutzungsbedingungen."
+        "tos": "Bitte akzeptieren Sie die Nutzungsbedingungen.",
+        "invalid-address": "Ungültige Lieferadresse. Bitte überprüfen oder korrigieren Sie die folgenden Felder: {fields}.",
+        "field-streetaddress": "Adresse",
+        "field-zipcode": "Postleitzahl",
+        "field-city": "Stadt",
+        "field-country": "Land"
       }
     },
     "finish-details": {
