@@ -136,17 +136,19 @@ class NotificationServiceTest extends TestCase
             return $return[$i++];
         });
 
-        $transactionReference = random_int(0, PHP_INT_MAX);
+        $transactionReference = (string) random_int(0, PHP_INT_MAX);
         $hipayOrderRepo->expects($this->once())->method('create')->willReturnCallback(function ($entities) use ($hipayOrder, $transactionReference) {
+            
+            $expected = $hipayOrder->toArray();
+            $expected['transactionReference'] = $transactionReference;
+            // Remove some fields for compatibility between Shopware 6.6 and 6.7
+            unset($expected['id'], $expected['_uniqueIdentifier']);
+            $actual = $entities[0];
+            unset($actual['id'], $actual['_uniqueIdentifier']);
+
             $this->assertEquals(
-                [
-                    array_merge($hipayOrder->toArray(), [
-                        'transactionReference' => $transactionReference,
-                        'id' => null,
-                        '_uniqueIdentifier' => null,
-                    ]),
-                ],
-                $entities
+                $expected,
+                $actual
             );
 
             return $this->createMock(EntityWrittenContainerEvent::class);
@@ -224,7 +226,7 @@ class NotificationServiceTest extends TestCase
             return new EntitySearchResult(HipayOrderEntity::class, $collection->count(), $collection, null, $criteria, $context);
         });
 
-        $transactionReference = random_int(0, PHP_INT_MAX);
+        $transactionReference = (string) random_int(0, PHP_INT_MAX);
         $hipayOrderRepo->expects($this->once())->method('update')->willReturnCallback(function ($entities) use ($hipayOrder, $transactionReference) {
             $this->assertEquals(
                 [
@@ -1374,7 +1376,7 @@ class NotificationServiceTest extends TestCase
             'Deleteds notifications ID missmatch'
         );
 
-        $this->assertEquals($capture->getId(), $captures[0]['id']);
+        $this->assertEquals($capture->getId(), $captures[0]['id'] ?? null);
         $this->assertEquals($capture->getOperationId(), $captures[0]['operationId']);
         $this->assertEquals(CaptureStatus::COMPLETED, $captures[0]['status']);
     }
@@ -1515,7 +1517,7 @@ class NotificationServiceTest extends TestCase
             'Deleteds notifications ID missmatch'
         );
 
-        $this->assertEquals($capture->getId(), $captures[0]['id']);
+        $this->assertEquals($capture->getId(), $captures[0]['id'] ?? null);
         $this->assertEquals($capture->getOperationId(), $captures[0]['operationId']);
         $this->assertEquals(CaptureStatus::COMPLETED, $captures[0]['status']);
     }
@@ -1778,7 +1780,7 @@ class NotificationServiceTest extends TestCase
             'Deleteds notifications ID missmatch'
         );
 
-        $this->assertEquals(null, $captures[0]['id']);
+        $this->assertEquals(null, $captures[0]['id'] ?? null);
         $this->assertEquals($operationId, $captures[0]['operationId']);
         $this->assertEquals(CaptureStatus::IN_PROGRESS, $captures[0]['status']);
     }
@@ -1919,7 +1921,7 @@ class NotificationServiceTest extends TestCase
             'Deleteds notifications ID missmatch'
         );
 
-        $this->assertEquals($capture->getId(), $captures[0]['id']);
+        $this->assertEquals($capture->getId(), $captures[0]['id'] ?? null);
         $this->assertEquals($operationId, $captures[0]['operationId']);
         $this->assertEquals(CaptureStatus::IN_PROGRESS, $captures[0]['status']);
     }
@@ -2201,7 +2203,7 @@ class NotificationServiceTest extends TestCase
             'Deleteds notifications ID missmatch'
         );
 
-        $this->assertEquals($refund->getId(), $refunds[0]['id']);
+        $this->assertEquals($refund->getId(), $refunds[0]['id'] ?? null);
         $this->assertEquals($refund->getOperationId(), $refunds[0]['operationId']);
         $this->assertEquals(RefundStatus::COMPLETED, $refunds[0]['status']);
     }
@@ -2988,7 +2990,7 @@ class NotificationServiceTest extends TestCase
                     'Dispatching notification ' . $entity->getId() . ' for the transaction ' . $hipayOrder->getTransactionId(),
                 ],
                 'info' => [
-                    'Notification ' . $entity->getId() . ' update refund ' . $refunds[0]['id'] . ' to IN_PROGRESS status for the transaction TRX_ID',
+                    'Notification ' . $entity->getId() . ' update refund ' . ($refunds[0]['id'] ?? null) . ' to IN_PROGRESS status for the transaction TRX_ID',
                 ],
             ],
             $logs
@@ -3000,7 +3002,7 @@ class NotificationServiceTest extends TestCase
             'Deleteds notifications ID missmatch'
         );
 
-        $this->assertEquals($refund->getId(), $refunds[0]['id']);
+        $this->assertEquals($refund->getId(), $refunds[0]['id'] ?? null);
         $this->assertEquals($refund->getOperationId(), $refunds[0]['operationId']);
         $this->assertEquals(RefundStatus::IN_PROGRESS, $refunds[0]['status']);
     }
@@ -3134,7 +3136,7 @@ class NotificationServiceTest extends TestCase
             'Deleteds notifications ID missmatch'
         );
 
-        $this->assertEquals(null, $refunds[0]['id']);
+        $this->assertEquals(null, $refunds[0]['id'] ?? null);
         $this->assertEquals($operationId, $refunds[0]['operationId']);
         $this->assertEquals(RefundStatus::IN_PROGRESS, $refunds[0]['status']);
     }
@@ -3408,7 +3410,7 @@ class NotificationServiceTest extends TestCase
             'Deleteds notifications ID missmatch'
         );
 
-        $this->assertEquals($refund->getId(), $refunds[0]['id']);
+        $this->assertEquals($refund->getId(), $refunds[0]['id'] ?? null);
         $this->assertEquals($refund->getOperationId(), $refunds[0]['operationId']);
         $this->assertEquals(RefundStatus::FAILED, $refunds[0]['status']);
     }

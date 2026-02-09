@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## UNRELEASE
+
+## 3.2.0
+- **Fix** : fix some unit tests/ phpstan
+- **Fix** : fix shipping address for Paypal v2
+
 ## 3.1.0
 
 - **Add** : Added support for Shopware version **6.7**
