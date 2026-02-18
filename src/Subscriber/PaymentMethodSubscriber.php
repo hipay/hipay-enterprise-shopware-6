@@ -58,10 +58,16 @@ class PaymentMethodSubscriber implements EventSubscriberInterface
             // Check if PayPal is the active payment method
             if ($this->isPayPalPayment($activePaymentMethod)) {
                 $paymentsProducts = HipayAvailablePaymentProducts::getInstance($this->config)
-                    ->getAvailablePaymentProducts()[0];
-                $isPayPalV2Enabled = isset($paymentsProducts['options']['provider_architecture_version'])
-                    && 'v1' === $paymentsProducts['options']['provider_architecture_version']
-                    && !empty($paymentsProducts['options']['payer_id']);
+                    ->getAvailablePaymentProducts();
+
+                if (!empty($paymentsProducts) && isset($paymentsProducts[0])) {
+                    $paymentsProducts = $paymentsProducts[0];
+                    $isPayPalV2Enabled = isset($paymentsProducts['options']['provider_architecture_version'])
+                        && 'v1' === $paymentsProducts['options']['provider_architecture_version']
+                        && !empty($paymentsProducts['options']['payer_id']);
+                } else {
+                    $isPayPalV2Enabled = false;
+                }
                 $event->setParameter('isPayPalV2Enabled', $isPayPalV2Enabled);
             }
         }
