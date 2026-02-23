@@ -2,6 +2,9 @@
 
 ## UNRELEASE
 
+## 3.2.1
+- **Fix** : fix checkout error when plugin is not configured
+
 ## 3.2.0
 - **Fix** : fix some unit tests/ phpstan
 - **Fix** : fix shipping address for Paypal v2
