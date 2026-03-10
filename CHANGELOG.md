@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## UNRELEASE
+- **Fix** : fix currency error on install
 
 ## 3.2.0
 - **Fix** : fix some unit tests/ phpstan
