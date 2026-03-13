@@ -509,9 +509,7 @@ abstract class AbstractPaymentMethod extends AbstractPaymentHandler implements P
     {
         $description = [];
         foreach ($lineItems as $lineItem) {
-            if ( $lineItem->getType() === 'product' ) {
-                $description[] = $lineItem->getQuantity() . ' x ' . $lineItem->getLabel();
-            }
+            $description[] = $lineItem->getQuantity() . ' x ' . $lineItem->getLabel();
         }
         $description = implode(' + ', $description);
         $maxLength -= strlen($trailing);
