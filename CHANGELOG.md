@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## UNRELEASE
+- **Fix** : fix empty description error for non-product line items
 
 ## 3.2.0
 - **Fix** : fix some unit tests/ phpstan
