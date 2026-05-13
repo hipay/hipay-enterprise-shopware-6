@@ -3,6 +3,7 @@
 ## UNRELEASE
 - **Fix** : fix currency error on install
 - **Fix** : fix empty description error for non-product line items
+- **Fix** : fix an issue related to card network filtering
 
 ## 3.2.0
 - **Fix** : fix some unit tests/ phpstan
