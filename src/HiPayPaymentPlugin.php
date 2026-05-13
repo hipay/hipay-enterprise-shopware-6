@@ -95,7 +95,7 @@ class HiPayPaymentPlugin extends Plugin
         CreditCard::class,
         Giropay::class,
         Ideal::class,
-        Klarna::class,
+        //Klarna::class,
         Paypal::class,
         Mbway::class,
         Multibanco::class,
