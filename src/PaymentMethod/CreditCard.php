@@ -8,6 +8,7 @@ use HiPay\Fullservice\Gateway\Request\Order\OrderRequest;
 use HiPay\Fullservice\Gateway\Request\PaymentMethod\CardTokenPaymentMethod;
 use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionEntity;
 use Shopware\Core\Checkout\Payment\Cart\PaymentTransactionStruct;
+use Shopware\Core\Checkout\Payment\PaymentException;
 
 /**
  * Credit card payment Methods.
@@ -64,6 +65,16 @@ class CreditCard extends AbstractPaymentMethod
 
     protected function hydrateHostedFields(OrderRequest $orderRequest, array $payload, OrderTransactionEntity $orderTransaction): OrderRequest
     {
+        $customFields = $orderTransaction->getPaymentMethod()->getCustomFields();
+        $allowedCards = $customFields['cards'] ?? [];
+
+        if (!empty($allowedCards) && !in_array($payload['payment_product'] ?? '', $allowedCards, true)) {
+            throw PaymentException::asyncProcessInterrupted(
+                $orderTransaction->getId(),
+                sprintf('Payment product "%s" is not allowed', $payload['payment_product'] ?? '')
+            );
+        }
+
         $paymentMethod = new CardTokenPaymentMethod();
         $paymentMethod->cardtoken = $payload['token'];
         $paymentMethod->eci = isset($payload['card_id']) ? 7 : 9;
