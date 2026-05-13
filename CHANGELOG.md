@@ -3,6 +3,7 @@
 ## UNRELEASE
 - **Fix** : fix currency error on install
 - **Fix** : fix empty description error for non-product line items
+- **Fix** : fix issues related to Configuration buttons for applepay/paypal
 
 ## 3.2.0
 - **Fix** : fix some unit tests/ phpstan
