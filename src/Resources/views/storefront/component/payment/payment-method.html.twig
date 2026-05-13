@@ -137,6 +137,9 @@
             }
           }
         %}
+        {% if componentName == 'handler-hipay-creditcard' and payment.customFields.cards is not empty %}
+          {% set hipayConfig = hipayConfig|merge({ brand: payment.customFields.cards }) %}
+        {% endif %}
       {% endif %}
       {% block hipay_hosted_fields_html %}
         <input type="text"
