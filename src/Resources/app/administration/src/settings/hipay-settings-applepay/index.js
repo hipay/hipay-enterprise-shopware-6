@@ -66,6 +66,14 @@ Shopware.Component.register('hipay-settings-applepay', {
         }],
     };
   },
+  computed: {
+    displayModeOptions() {
+      return [
+        { value: 'popup', label: this.$tc('hipay.settings.applepay.displayMode.popup') },
+        { value: 'modal', label: this.$tc('hipay.settings.applepay.displayMode.modal') },
+      ];
+    },
+  },
   methods: {
     updateMerchantName(newValue) {
       if (this.paymentMethod.customFields === null) {
@@ -93,6 +101,20 @@ Shopware.Component.register('hipay-settings-applepay', {
         this.paymentMethod.customFields = { ...this.paymentMethod.customFields, merchantId: newValue };
       } else {
         this.paymentMethod.customFields.merchantId = newValue;
+      }
+    },
+    updateMultiBrowserEnabled(newValue) {
+      if (this.paymentMethod.customFields === null) {
+        this.paymentMethod.customFields = { ...this.paymentMethod.customFields, multiBrowserEnabled: newValue };
+      } else {
+        this.paymentMethod.customFields.multiBrowserEnabled = newValue;
+      }
+    },
+    updateDisplayMode(newValue) {
+      if (this.paymentMethod.customFields === null) {
+        this.paymentMethod.customFields = { ...this.paymentMethod.customFields, displayMode: newValue };
+      } else {
+        this.paymentMethod.customFields.displayMode = newValue;
       }
     },
   }
