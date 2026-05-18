@@ -100,7 +100,7 @@ abstract class AbstractPaymentMethod extends AbstractPaymentHandler implements P
         RequestStack $requestStack,
         protected LocaleProvider $localeProvider,
         private EntityRepository $orderCustomerRepository,
-        private EntityRepository $orderTransactionRepository,
+        protected EntityRepository $orderTransactionRepository,
         protected LoggerInterface $logger
     ) {
         $this->request = $requestStack->getCurrentRequest();
