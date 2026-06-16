@@ -10,10 +10,9 @@ data:
   NODE_VERSION: '20'
   COMPOSER_HOME: /var/www/html/var/cache/composer
   APP_URL: https://{{ .Values.shopware_url }}
-  TRUSTED_PROXIES: 127.0.0.1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
   framework.yaml: |-
     framework:
-        trusted_proxies: '%env(TRUSTED_PROXIES)%'
+        trusted_proxies: '127.0.0.1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16'
         trusted_headers: ['x-forwarded-for', 'x-forwarded-host', 'x-forwarded-proto', 'x-forwarded-port', 'x-forwarded-prefix']
   # HiPay env var
   CAPTURE_MODE: automatic
