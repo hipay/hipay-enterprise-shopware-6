@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## UNRELEASE
+- **Fix** : fix currency error on install
+- **Fix** : fix empty description error for non-product line items
+
+## 3.2.0
+- **Fix** : fix some unit tests/ phpstan
+- **Fix** : fix shipping address for Paypal v2
+
 ## 3.1.0
 
 - **Add** : Added support for Shopware version **6.7**

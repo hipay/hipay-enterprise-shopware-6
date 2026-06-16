@@ -5,7 +5,6 @@ namespace HiPay\Payment\Subscriber;
 use HiPay\Payment\Route\HipayCardToken\HipayCardTokenRoute;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Storefront\Page\Account\Order\AccountEditOrderPageLoadedEvent;
-use Shopware\Storefront\Page\Account\PaymentMethod\AccountPaymentMethodPageLoadedEvent;
 use Shopware\Storefront\Page\Checkout\Confirm\CheckoutConfirmPageLoadedEvent;
 use Shopware\Storefront\Page\PageLoadedEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -21,11 +20,17 @@ class HipayCardTokenSubscriber implements EventSubscriberInterface
      */
     public static function getSubscribedEvents(): array
     {
-        return [
+        $events = [
             CheckoutConfirmPageLoadedEvent::class => 'addCardTokens',
             AccountEditOrderPageLoadedEvent::class => 'addCardTokens',
-            AccountPaymentMethodPageLoadedEvent::class => 'addCardTokens',
         ];
+
+        // AccountPaymentMethodPageLoadedEvent only exists in Shopware 6.6, removed in 6.7
+        if (class_exists('Shopware\Storefront\Page\Account\PaymentMethod\AccountPaymentMethodPageLoadedEvent')) {
+            $events['Shopware\Storefront\Page\Account\PaymentMethod\AccountPaymentMethodPageLoadedEvent'] = 'addCardTokens';
+        }
+
+        return $events;
     }
 
     public function addCardTokens(PageLoadedEvent $event): void

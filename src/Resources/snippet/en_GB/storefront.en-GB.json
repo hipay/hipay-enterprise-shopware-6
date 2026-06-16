@@ -35,7 +35,12 @@
         "card-missing": "Please select a card to complete the Apple Pay payment."
       },
       "paypal": {
-        "tos": "Please accept the terms of service."
+        "tos": "Please accept the terms of service.",
+        "invalid-address": "Invalid delivery address. Please check or correct the following fields: {fields}.",
+        "field-streetaddress": "address",
+        "field-zipcode": "postal code",
+        "field-city": "city",
+        "field-country": "country"
       }
     },
     "finish-details": {
