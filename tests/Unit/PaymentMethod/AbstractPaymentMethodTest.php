@@ -282,8 +282,9 @@ class AbstractPaymentMethodTest extends TestCase
 
         $this->orderRequestTesting($orderRequest, $configTransaction);
 
-        $handler->expects($this->never())
-            ->method('process');
+        $handler->expects($this->once())
+            ->method('process')
+            ->with($this->equalTo($transaction['entity']->getId()));
 
         $paymentMethod->finalize(
             new Request(),
@@ -435,10 +436,6 @@ class AbstractPaymentMethodTest extends TestCase
             $redirectUri.'&return='.$state,
             $redirectResponse->getTargetUrl()
         );
-
-        $handler->expects($this->once())
-            ->method('cancel')
-            ->with($this->equalTo($transaction['entity']->getId()));
 
         $this->expectException(PaymentException::class);
         $this->expectExceptionMessage('Payment '.$state);
