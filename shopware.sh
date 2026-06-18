@@ -47,7 +47,7 @@ elif [ "$1" = 'command' ]; then
 elif [ "$1" = 'l' ]; then
     docker compose logs -f
 elif [ "$1" = 'cache' ]; then
-    docker exec $container bash -c "rm -rf custom/plugins/HiPayPaymentPlugin/vendor && ./bin/console cache:clear --quiet"
+    docker exec $container bash -c "./bin/console cache:clear --quiet"
 elif [ "$1" = 'build' ] && [ "$2" = 'admin' ]; then
     npm install && docker exec $container bash -c "cd ../ && make build-admin"
 elif [ "$1" = 'build' ] && [ "$2" = 'front' ]; then
@@ -123,7 +123,5 @@ elif [ "$1" = 'test' ]; then
 
     if ! $find; then
         echo "Test option \"$2\" doesn't exist. Please use \"./shopware test [<phpunit|phpstan|infection|lint>]\""
-    else
-        docker exec $container bash -c "rm -rf custom/plugins/HiPayPaymentPlugin/vendor"
     fi
 fi
