@@ -13,7 +13,6 @@ web/
 reports/
 log/
 node_modules/
-package.json
 package-lock.json
 /yarn.lock
 package-ready-for-shopware/

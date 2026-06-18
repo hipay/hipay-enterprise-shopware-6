@@ -193,7 +193,7 @@ class NotificationService
                 throw new ApiErrorException('Bad configuration unknown algorythm "' . $this->config->getHash() . '"');
             }
         }
-        return true;
+
         if (!$signature = $request->headers->get('x-allopass-signature', null)) {
             throw new UnauthorizedHttpException('header', 'Missing signature header');
         }
