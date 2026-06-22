@@ -65,7 +65,7 @@ class CreditCard extends AbstractPaymentMethod
 
     protected function hydrateHostedFields(OrderRequest $orderRequest, array $payload, OrderTransactionEntity $orderTransaction): OrderRequest
     {
-        $customFields = $orderTransaction->getPaymentMethod()->getCustomFields();
+        $customFields = $orderTransaction->getPaymentMethod()?->getCustomFields() ?? [];
         $allowedCards = $customFields['cards'] ?? [];
 
         if (!empty($allowedCards) && !in_array($payload['payment_product'] ?? '', $allowedCards, true)) {
@@ -92,7 +92,7 @@ class CreditCard extends AbstractPaymentMethod
 
     protected function hydrateHostedPage(HostedPaymentPageRequest $orderRequest, OrderTransactionEntity $orderTransaction): HostedPaymentPageRequest
     {
-        $customFields = $orderTransaction->getPaymentMethod()->getCustomFields();
+        $customFields = $orderTransaction->getPaymentMethod()?->getCustomFields() ?? [];
 
         $orderRequest->payment_product_list = implode(',', $customFields['cards'] ?? []);
 
