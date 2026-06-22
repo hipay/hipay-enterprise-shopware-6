@@ -310,6 +310,7 @@ package:
   script:
     - sudo service mysql start
     - cd /var/www/html
+    - composer require hipay/hipay-fullservice-sdk-php giggsey/libphonenumber-for-php
     - bin/console plugin:refresh --quiet
     - bin/console plugin:install --activate HiPayPaymentPlugin
     - bin/console cache:clear --quiet
