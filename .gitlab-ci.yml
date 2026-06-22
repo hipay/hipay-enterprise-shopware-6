@@ -310,10 +310,10 @@ package:
   script:
     - sudo service mysql start
     - cd /var/www/html
-    - cd custom/plugins/HiPayPaymentPlugin && composer install --no-dev && cd /var/www/html
     - bin/console plugin:refresh --quiet
     - bin/console plugin:install --activate HiPayPaymentPlugin
     - bin/console cache:clear --quiet
+    - cd custom/plugins/HiPayPaymentPlugin && composer install --no-dev && cd /var/www/html
     - chmod -R g+w custom/plugins/HiPayPaymentPlugin
     - cd custom/plugins/HiPayPaymentPlugin && npm install && cd /var/www/html
     - (cd /var/www && make build-admin)
