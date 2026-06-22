@@ -37,6 +37,18 @@ spec:
     certResolver: default
 ---
 apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: redirect-https-{{ .Release.Name }}
+  namespace: default
+  labels:
+    cd-hipay: cron-delete
+spec:
+  redirectScheme:
+    scheme: https
+    permanent: true
+---
+apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 metadata:
   name: ingressroute-{{ .Release.Name }}
@@ -50,6 +62,8 @@ spec:
     - match: Host(`{{ .Values.shopware_url  }}`)
       kind: Rule
       priority: 1
+      middlewares:
+        - name: redirect-https-{{ .Release.Name }}
       services:
         - name: shopware-service-{{ .Release.Name }}
           port: 80
@@ -89,3 +103,12 @@ spec:
         ports:
           - containerPort: 80
             name: shopware
+        volumeMounts:
+          - name: shopware-framework-config
+            mountPath: /var/www/html/config/packages/framework.yaml
+            subPath: framework.yaml
+            readOnly: true
+      volumes:
+        - name: shopware-framework-config
+          configMap:
+            name: shopware-configmap-{{ .Release.Name }}
