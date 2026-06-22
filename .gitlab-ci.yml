@@ -302,7 +302,27 @@ package:
     entrypoint: ['']
   needs:
     - build-test
+  variables:
+    TZ: Europe/Paris
+    NODE_VERSION: 20
+    COMPOSER_HOME: /var/www/html/var/cache/composer
+    APP_URL: http://web
   script:
+    - sudo service mysql start
+    - cd /var/www/html
+    - composer require hipay/hipay-fullservice-sdk-php giggsey/libphonenumber-for-php
+    - bin/console plugin:refresh --quiet
+    - bin/console plugin:install --activate HiPayPaymentPlugin
+    - bin/console cache:clear --quiet
+    - sudo chmod -R g+w custom/plugins/HiPayPaymentPlugin
+    - cd custom/plugins/HiPayPaymentPlugin && npm install && cd /var/www/html
+    - (cd /var/www && make build-admin)
+    - ./bin/build-storefront.sh
+    - php bin/console theme:dump
+    - cd custom/plugins/HiPayPaymentPlugin && composer install --no-dev && cd /var/www/html
+    - '[ -d /var/www/html/custom/plugins/HiPayPaymentPlugin/src/Resources/public ] && cp -r /var/www/html/custom/plugins/HiPayPaymentPlugin/src/Resources/public $CI_PROJECT_DIR/src/Resources/ || true'
+    - '[ -d /var/www/html/custom/plugins/HiPayPaymentPlugin/src/Resources/app/storefront/dist ] && cp -r /var/www/html/custom/plugins/HiPayPaymentPlugin/src/Resources/app/storefront/dist $CI_PROJECT_DIR/src/Resources/app/storefront/ || true'
+    - cd $CI_PROJECT_DIR
     - echo "Package module $CI_COMMIT_REF_SLUG"
     - ./package-ready-for-shopware/builder/module_builder.sh -v $CI_COMMIT_REF_SLUG
   artifacts:
