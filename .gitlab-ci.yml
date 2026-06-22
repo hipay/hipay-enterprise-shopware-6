@@ -320,8 +320,8 @@ package:
     - ./bin/build-storefront.sh
     - php bin/console theme:dump
     - cd custom/plugins/HiPayPaymentPlugin && composer install --no-dev && cd /var/www/html
-    - cp -r /var/www/html/custom/plugins/HiPayPaymentPlugin/src/Resources/public $CI_PROJECT_DIR/src/Resources/
-    - cp -r /var/www/html/custom/plugins/HiPayPaymentPlugin/src/Resources/app/storefront/dist $CI_PROJECT_DIR/src/Resources/app/storefront/
+    - '[ -d /var/www/html/custom/plugins/HiPayPaymentPlugin/src/Resources/public ] && cp -r /var/www/html/custom/plugins/HiPayPaymentPlugin/src/Resources/public $CI_PROJECT_DIR/src/Resources/ || true'
+    - '[ -d /var/www/html/custom/plugins/HiPayPaymentPlugin/src/Resources/app/storefront/dist ] && cp -r /var/www/html/custom/plugins/HiPayPaymentPlugin/src/Resources/app/storefront/dist $CI_PROJECT_DIR/src/Resources/app/storefront/ || true'
     - cd $CI_PROJECT_DIR
     - echo "Package module $CI_COMMIT_REF_SLUG"
     - ./package-ready-for-shopware/builder/module_builder.sh -v $CI_COMMIT_REF_SLUG
