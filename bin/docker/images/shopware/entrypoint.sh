@@ -35,6 +35,8 @@ bin/console cache:clear --quiet
 
 echo "-----------------------------------------------------"
 echo "BUILDING ASSETS"
+sudo chown -R www-data:www-data /var/www/html/custom/plugins/HiPayPaymentPlugin
+sudo chmod -R g+w /var/www/html/custom/plugins/HiPayPaymentPlugin
 cd custom/plugins/HiPayPaymentPlugin && npm install && cd /var/www/html
 (cd /var/www && make build-admin)
 ./bin/build-storefront.sh
@@ -53,8 +55,6 @@ if [ "$XDEBUG_ENABLED" = "1" ]; then
 
     sudo service php$PHP_VERSION-fpm reload
 fi
-sudo chown -R www-data:www-data /var/www/html/custom/plugins/HiPayPaymentPlugin
-sudo chmod -R g+w /var/www/html/custom/plugins/HiPayPaymentPlugin
 
 echo "-----------------------------------------------------"
 echo "SHOP URL: $BASE_URL"

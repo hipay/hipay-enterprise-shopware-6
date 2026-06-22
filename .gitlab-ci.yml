@@ -314,6 +314,7 @@ package:
     - bin/console plugin:refresh --quiet
     - bin/console plugin:install --activate HiPayPaymentPlugin
     - bin/console cache:clear --quiet
+    - chmod -R g+w custom/plugins/HiPayPaymentPlugin
     - cd custom/plugins/HiPayPaymentPlugin && npm install && cd /var/www/html
     - (cd /var/www && make build-admin)
     - ./bin/build-storefront.sh
