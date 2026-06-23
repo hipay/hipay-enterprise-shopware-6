@@ -70,15 +70,27 @@ class Mybank extends AbstractPaymentMethod
 
         // Fix the issue that MyBank redirects cancellations to the same accept_url as successful payments.
         $criteria = (new Criteria([$orderTransactionId]))->addAssociation('order');
-        /** @var OrderTransactionEntity|null $orderTransaction */
         $orderTransaction = $this->orderTransactionRepository->search($criteria, $context)->first();
 
-        $hipayOrderId = $orderTransaction?->getOrder()?->getOrderNumber()
+        if (!$orderTransaction instanceof OrderTransactionEntity || $orderTransaction->getOrder() === null) {
+            throw PaymentException::invalidTransaction($orderTransactionId);
+        }
+
+        $hipayOrderId = $orderTransaction->getOrder()->getOrderNumber()
             . '-' . dechex(crc32($orderTransactionId));
 
-        $transactions = $this->clientService
-            ->getConfiguredClient()
-            ->requestOrderTransactionInformation($hipayOrderId);
+        try {
+            $transactions = $this->clientService
+                ->getConfiguredClient()
+                ->requestOrderTransactionInformation($hipayOrderId);
+        } catch (\Throwable $e) {
+            $this->logger->error('Failed to verify MyBank payment status: ' . $e->getMessage());
+
+            throw PaymentException::asyncFinalizeInterrupted(
+                $orderTransactionId,
+                'Unable to verify MyBank payment status'
+            );
+        }
 
         $latestTransaction = !empty($transactions) ? end($transactions) : null;
         $state = $latestTransaction?->getState();
