@@ -33,6 +33,16 @@ bin/console plugin:refresh --quiet
 bin/console plugin:install --activate HiPayPaymentPlugin
 bin/console cache:clear --quiet
 
+echo "-----------------------------------------------------"
+echo "BUILDING ASSETS"
+sudo chown -R www-data:www-data /var/www/html/custom/plugins/HiPayPaymentPlugin
+sudo chmod -R g+w /var/www/html/custom/plugins/HiPayPaymentPlugin
+cd custom/plugins/HiPayPaymentPlugin && npm install && cd /var/www/html
+(cd /var/www && make build-admin)
+./bin/build-storefront.sh
+bin/console theme:dump
+bin/console cache:clear --quiet
+
 if [ "$XDEBUG_ENABLED" = "1" ]; then
     if ! grep "xdebug.start_with_request = yes" /etc/php/$PHP_VERSION/fpm/conf.d/20-xdebug.ini >/dev/null; then
         printf "\nxdebug.start_with_request = yes\n" | sudo tee -a /etc/php/$PHP_VERSION/fpm/conf.d/20-xdebug.ini >/dev/null
@@ -45,8 +55,6 @@ if [ "$XDEBUG_ENABLED" = "1" ]; then
 
     sudo service php$PHP_VERSION-fpm reload
 fi
-sudo chown -R www-data:www-data /var/www/html/custom/plugins/HiPayPaymentPlugin
-sudo chmod -R g+w /var/www/html/custom/plugins/HiPayPaymentPlugin
 
 echo "-----------------------------------------------------"
 echo "SHOP URL: $BASE_URL"
