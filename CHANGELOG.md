@@ -10,6 +10,7 @@
 - **Fix** : Fixed capture and cancel button colors on the admin order detail page.
 - **Fix** : Fixed issues related to Configuration buttons for applepay/paypal
 - **Add** : Added Apple Pay MultiBrowser
+- **Fix** : Remove Klarna from APMs list
 
 ## 3.2.0
 

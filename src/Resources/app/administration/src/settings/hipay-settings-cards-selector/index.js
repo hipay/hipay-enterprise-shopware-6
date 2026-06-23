@@ -32,7 +32,7 @@ Shopware.Component.register('hipay-settings-cards-selector', {
           value: 'mastercard'
         },
         {
-          label: 'Amercian Express',
+          label: 'American Express',
           value: 'american-express'
         },
         {
