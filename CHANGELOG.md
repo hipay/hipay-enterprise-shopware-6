@@ -9,6 +9,7 @@
 - **Fix** : Fixed empty description error for non-product line items
 - **Fix** : Fixed capture and cancel button colors on the admin order detail page.
 - **Fix** : Fixed issues related to Configuration buttons for applepay/paypal
+- **Add** : Added Apple Pay MultiBrowser
 
 ## 3.2.0
 

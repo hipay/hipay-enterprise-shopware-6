@@ -27,4 +27,18 @@
           :disabled="false"
           @update:value="updateMerchantId">
   </sw-text-field>
+
+  <sw-switch-field
+    :label="$tc('hipay.settings.applepay.multiBrowserEnabled.title')"
+    :value="paymentMethod.customFields?.multiBrowserEnabled || false"
+    @update:value="updateMultiBrowserEnabled">
+  </sw-switch-field>
+
+  <sw-single-select
+    :label="$tc('hipay.settings.applepay.displayMode.title')"
+    :value="paymentMethod.customFields?.displayMode || 'popup'"
+    :options="displayModeOptions"
+    :disabled="!paymentMethod.customFields?.multiBrowserEnabled"
+    @update:value="updateDisplayMode">
+  </sw-single-select>
 </sw-card>
