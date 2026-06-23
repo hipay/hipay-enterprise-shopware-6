@@ -1,12 +1,12 @@
 {% block sw_order_detail_actions_slot_smart_bar_actions %}
   <template v-if="showOnHipayMethod">
-    <sw-button variant="contrast"
+    <sw-button class="hipay-btn--warning"
       v-if="canCapture"
       @click="openCapture"
       :disabled="!acl.can('order.editor')">
       {{ $tc('hipay.action.capture') }}
     </sw-button>
-    <sw-button variant="contrast"
+    <sw-button class="hipay-btn--warning"
       v-if="canRefund"
       @click="openRefund"
       :disabled="!acl.can('order.editor')">
@@ -14,7 +14,7 @@
     </sw-button>
     <sw-button
       :title="$tc('hipay.action.cancelOrderInfo')"
-      variant="danger"
+      class="hipay-btn--danger"
       v-if="canCancel"
       @click="openCancel"
       :disabled="!acl.can('order.editor')">
