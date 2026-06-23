@@ -66,33 +66,55 @@ Shopware.Component.register('hipay-settings-applepay', {
         }],
     };
   },
+  computed: {
+    displayModeOptions() {
+      return [
+        { value: 'popup', label: this.$tc('hipay.settings.applepay.displayMode.popup') },
+        { value: 'modal', label: this.$tc('hipay.settings.applepay.displayMode.modal') },
+      ];
+    },
+  },
   methods: {
     updateMerchantName(newValue) {
-      if (this.paymentMethod.customFields === null) {
+      if (!this.paymentMethod.customFields) {
         this.paymentMethod.customFields = { ...this.paymentMethod.customFields, merchantName: newValue };
       } else {
         this.paymentMethod.customFields.merchantName = newValue;
       }
     },
     updateButtonType(newValue) {
-      if (this.paymentMethod.customFields === null) {
+      if (!this.paymentMethod.customFields) {
         this.paymentMethod.customFields = { ...this.paymentMethod.customFields, buttonType: newValue };
       } else {
         this.paymentMethod.customFields.buttonType = newValue;
       }
     },
     updateButtonStyle(newValue) {
-      if (this.paymentMethod.customFields === null) {
+      if (!this.paymentMethod.customFields) {
         this.paymentMethod.customFields = { ...this.paymentMethod.customFields, buttonStyle: newValue };
       } else {
         this.paymentMethod.customFields.buttonStyle = newValue;
       }
     },
     updateMerchantId(newValue) {
-      if (this.paymentMethod.customFields === null) {
+      if (!this.paymentMethod.customFields) {
         this.paymentMethod.customFields = { ...this.paymentMethod.customFields, merchantId: newValue };
       } else {
         this.paymentMethod.customFields.merchantId = newValue;
+      }
+    },
+    updateMultiBrowserEnabled(newValue) {
+      if (!this.paymentMethod.customFields) {
+        this.paymentMethod.customFields = { ...this.paymentMethod.customFields, multiBrowserEnabled: newValue };
+      } else {
+        this.paymentMethod.customFields.multiBrowserEnabled = newValue;
+      }
+    },
+    updateDisplayMode(newValue) {
+      if (!this.paymentMethod.customFields) {
+        this.paymentMethod.customFields = { ...this.paymentMethod.customFields, displayMode: newValue };
+      } else {
+        this.paymentMethod.customFields.displayMode = newValue;
       }
     },
   }

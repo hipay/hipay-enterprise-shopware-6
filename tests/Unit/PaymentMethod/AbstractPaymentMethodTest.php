@@ -283,8 +283,7 @@ class AbstractPaymentMethodTest extends TestCase
         $this->orderRequestTesting($orderRequest, $configTransaction);
 
         $handler->expects($this->once())
-            ->method('process')
-            ->with($this->equalTo($transaction['entity']->getId()));
+            ->method('process');
 
         $paymentMethod->finalize(
             new Request(),

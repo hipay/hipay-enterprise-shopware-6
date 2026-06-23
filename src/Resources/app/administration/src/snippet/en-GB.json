@@ -99,6 +99,14 @@
           "black": "Black",
           "white": "White",
           "whiteOutline": "White outline"
+        },
+        "multiBrowserEnabled": {
+          "title": "Enable multi-browser support"
+        },
+        "displayMode": {
+          "title": "Display mode",
+          "popup": "Popup",
+          "modal": "Modal"
         }
       },
       "multibanco": {

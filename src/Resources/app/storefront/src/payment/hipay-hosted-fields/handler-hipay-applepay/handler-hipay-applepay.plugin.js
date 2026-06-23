@@ -13,7 +13,9 @@ export default class HandlerHipayApplePayPlugin extends window.PluginBaseClass {
     errorClass: 'is-invalid',
     errorPrefix: 'error',
     styles: null,
-    merchantId: null
+    merchantId: null,
+    multiBrowserEnabled: false,
+    displayMode: 'popup'
   };
 
   init() {
@@ -28,7 +30,9 @@ export default class HandlerHipayApplePayPlugin extends window.PluginBaseClass {
       buttonType: this.options.styles.buttonType,
       buttonStyle: this.options.styles.buttonStyle,
       totalAmount: (this.options.amount).toString(),
-      shopName: this.options.shopname
+      shopName: this.options.shopname,
+      multiBrowserEnabled: this.options.multiBrowserEnabled,
+      displayMode: this.options.displayMode
     };
 
     // Remove global payment button
@@ -39,24 +43,45 @@ export default class HandlerHipayApplePayPlugin extends window.PluginBaseClass {
 
     this._form = document.querySelector('#' + this.options.idResponse).form;
 
-    document.querySelector('#apple-pay-button').style.display = 'none';
-
     this._hfInstance = this.createHostedFieldsInstance(parameters);
 
-    this.canMakeApplePayPayment(parameters.merchantId).then((canMakePayment) => {
-      if (canMakePayment) {
-        document.querySelector('#apple-pay-info-message').style.display = 'none';
-        document.querySelector('#apple-pay-error-message').style.display = 'inline';
-        document.querySelector('#apple-pay-error-message').textContent = document.querySelector('#apple-pay-termes-of-service-error-message').textContent;
+    const showInfoMessage = () => {
+      document.querySelector('#apple-pay-button').style.display = 'none';
+      document.querySelector('#apple-pay-info-message').style.display = '';
+      document.querySelector('#apple-pay-error-message').style.display = 'none';
+    };
 
-        this._applePayInstance = this.createApplePayInstance(parameters);
-        this.handleTermsOfService();
-        this.handleApplePayEvents();
-      } else {
-        document.querySelector('#apple-pay-info-message').style.display = '';
-        document.querySelector('#apple-pay-error-message').style.display = 'none';
+    const onInstance = (instance) => {
+      if (!instance) {
+        showInfoMessage();
+        return;
       }
-    });
+      this._applePayInstance = instance;
+      document.querySelector('#apple-pay-info-message').style.display = 'none';
+      document.querySelector('#apple-pay-error-message').style.display = 'inline';
+      document.querySelector('#apple-pay-error-message').textContent = document.querySelector('#apple-pay-termes-of-service-error-message').textContent;
+      this.handleTermsOfService();
+      this.handleApplePayEvents();
+    };
+
+    if (parameters.multiBrowserEnabled) {
+      // Keep button visible so the SDK can render into it, then handle result
+      document.querySelector('#apple-pay-button').style.display = '';
+      Promise.resolve(this.createApplePayInstance(parameters))
+        .then(onInstance)
+        .catch(showInfoMessage);
+    } else {
+      document.querySelector('#apple-pay-button').style.display = 'none';
+      this.canMakeApplePayPayment(parameters.merchantId).then((canMakePayment) => {
+        if (canMakePayment) {
+          Promise.resolve(this.createApplePayInstance(parameters))
+            .then(onInstance)
+            .catch(showInfoMessage);
+        } else {
+          showInfoMessage();
+        }
+      });
+    }
   }
 
   /**
@@ -176,6 +201,13 @@ export default class HandlerHipayApplePayPlugin extends window.PluginBaseClass {
       applePayStyle: applePayStyle,
       selector: 'apple-pay-button'
     };
+
+    if (parameters.multiBrowserEnabled) {
+      options.multiBrowsers = true;
+      if (parameters.displayMode) {
+        options.displayMode = parameters.displayMode;
+      }
+    }
 
     return this._hfInstance.create(
       'paymentRequestButton',

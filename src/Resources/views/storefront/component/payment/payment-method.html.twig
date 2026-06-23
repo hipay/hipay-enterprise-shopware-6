@@ -48,6 +48,8 @@
             countryCode: localeCode|slice(3, 2),
             amount: summary.price.totalPrice,
             currency: currency,
+            multiBrowserEnabled: payment.customFields.multiBrowserEnabled|default(false),
+            displayMode: payment.customFields.displayMode|default('popup'),
             styles: {
               base: {
                 color: config('HiPayPaymentPlugin.config.hostedFieldsTextColor'),
