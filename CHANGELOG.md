@@ -6,9 +6,14 @@
 - **Fix** : fix an issue related to card network filtering
 - **Fix** : fix MyBank redirects cancellations to accept_url
 
+- **Fix** : Fixed currency error on install
+- **Fix** : Fixed empty description error for non-product line items
+- **Fix** : Fixed capture and cancel button colors on the admin order detail page.
+
 ## 3.2.0
-- **Fix** : fix some unit tests/ phpstan
-- **Fix** : fix shipping address for Paypal v2
+
+- **Fix** : Fixed some unit tests/ phpstan
+- **Fix** : Fixed shipping address for Paypal v2
 
 ## 3.1.0
 
