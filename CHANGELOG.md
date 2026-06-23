@@ -1,14 +1,14 @@
 # CHANGELOG
 
 ## UNRELEASE
-- **Fix** : fix currency error on install
-- **Fix** : fix empty description error for non-product line items
-- **Fix** : fix an issue related to card network filtering
-- **Fix** : fix MyBank redirects cancellations to accept_url
-
+- **Fix** : Fixed currency error on install
+- **Fix** : Fixed empty description error for non-product line items
+- **Fix** : Fixed an issue related to card network filtering
+- **Fix** : Fixed MyBank redirects cancellations to accept_url
 - **Fix** : Fixed currency error on install
 - **Fix** : Fixed empty description error for non-product line items
 - **Fix** : Fixed capture and cancel button colors on the admin order detail page.
+- **Fix** : Fixed issues related to Configuration buttons for applepay/paypal
 
 ## 3.2.0
 
