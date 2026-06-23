@@ -886,6 +886,10 @@ class AbstractPaymentMethodTest extends TestCase
         );
 
         $this->assertSame(
+            ($orderRequest->forward_url ?? $configTransaction['return_url']),
+            $orderRequest->pending_url
+        );
+        $this->assertSame(
             ($orderRequest->forward_url ?? $configTransaction['return_url']).'&return=error',
             $orderRequest->decline_url
         );

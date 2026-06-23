@@ -57,6 +57,7 @@ export default class HandlerHipayCreditcardPlugin extends HipayHostedFieldsPlugi
    */
   getConfigHostedFields() {
     const config = {
+      selector: 'hipay-creditcard-wrapper',
       fields: {
         cardHolder: {
           selector: this.options.idCardHolder,
@@ -75,6 +76,10 @@ export default class HandlerHipayCreditcardPlugin extends HipayHostedFieldsPlugi
         }
       }
     };
+
+    if (this.options.brand) {
+      config.brand = this.options.brand;
+    }
 
     if (this.options.styles) {
       config.styles = this.options.styles;

@@ -13,7 +13,8 @@ export default class HipayHostedFieldsPlugin extends window.PluginBaseClass {
     cvcHelp: false,
     errorClass: 'is-invalid',
     errorPrefix: 'error',
-    styles: null
+    styles: null,
+    brand: null
   };
 
   /**

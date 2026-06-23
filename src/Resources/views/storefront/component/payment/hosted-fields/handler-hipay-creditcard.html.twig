@@ -55,48 +55,50 @@
 
     {% else %}
       {% block hipay_new_creditcard %}
-        <div class="form-group">
-          <label class="form-label" for="hipay-card-holder">
-            {{ 'hipay.hosted-fields.creditcard.fullname'|trans }}
-          </label>
-          <div class="hostedfield form-control" id="hipay-card-holder"></div>
-          <div class="invalid-feedback" id="error-hipay-card-holder"></div>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="hipay-card-number">
-            {{ 'hipay.hosted-fields.creditcard.card-number'|trans }}
-          </label>
-          <div class="hostedfield form-control" id="hipay-card-number"></div>
-          <div class="invalid-feedback" id="error-hipay-card-number"></div>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="hipay-expiry-date">
-            {{ 'hipay.hosted-fields.creditcard.expiry-date'|trans }}
-          </label>
-          <div class="hostedfield form-control" id="hipay-expiry-date"></div>
-          <div class="invalid-feedback" id="error-hipay-expiry-date"></div>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="hipay-cvc">
-            {{ 'hipay.hosted-fields.creditcard.cvc'|trans }}
-          </label>
-          <div class="hostedfield form-control" id="hipay-cvc"></div>
-          <div class="invalid-feedback" id="error-hipay-cvc"></div>
-        </div>
-
-        {% if context.customer.guest == 0 %}
-          <div class="{{ formCheckboxWrapperClass }} force-checkbox" >
-            <input type="checkbox" 
-              class="{{ formCheckInputClass }}"
-              id="hipay-multiuse"
-              name="hipay-multiuse"
-              form="confirmOrderForm" />
-            <label for="hipay-multiuse" class="custom-control-label">{{ 'hipay.hosted-fields.creditcard.remember'|trans }}</label>
+        <div id="hipay-creditcard-wrapper">
+          <div class="form-group">
+            <label class="form-label" for="hipay-card-holder">
+              {{ 'hipay.hosted-fields.creditcard.fullname'|trans }}
+            </label>
+            <div class="hostedfield form-control" id="hipay-card-holder"></div>
+            <div class="invalid-feedback" id="error-hipay-card-holder"></div>
           </div>
-        {% endif %}
+
+          <div class="form-group">
+            <label class="form-label" for="hipay-card-number">
+              {{ 'hipay.hosted-fields.creditcard.card-number'|trans }}
+            </label>
+            <div class="hostedfield form-control" id="hipay-card-number"></div>
+            <div class="invalid-feedback" id="error-hipay-card-number"></div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="hipay-expiry-date">
+              {{ 'hipay.hosted-fields.creditcard.expiry-date'|trans }}
+            </label>
+            <div class="hostedfield form-control" id="hipay-expiry-date"></div>
+            <div class="invalid-feedback" id="error-hipay-expiry-date"></div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="hipay-cvc">
+              {{ 'hipay.hosted-fields.creditcard.cvc'|trans }}
+            </label>
+            <div class="hostedfield form-control" id="hipay-cvc"></div>
+            <div class="invalid-feedback" id="error-hipay-cvc"></div>
+          </div>
+
+          {% if context.customer.guest == 0 %}
+            <div class="{{ formCheckboxWrapperClass }} force-checkbox" >
+              <input type="checkbox"
+                class="{{ formCheckInputClass }}"
+                id="hipay-multiuse"
+                name="hipay-multiuse"
+                form="confirmOrderForm" />
+              <label for="hipay-multiuse" class="custom-control-label">{{ 'hipay.hosted-fields.creditcard.remember'|trans }}</label>
+            </div>
+          {% endif %}
+        </div>
       {% endblock %}
     {% endif %}
   {% endblock %}
