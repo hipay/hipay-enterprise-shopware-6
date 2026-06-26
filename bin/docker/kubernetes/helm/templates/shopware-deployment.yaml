@@ -88,6 +88,8 @@ spec:
         app: shopware-{{ .Release.Name }}
         tier: frontend-{{ .Release.Name }}
         cd-hipay: cron-delete
+      annotations:
+        cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
     spec:
       containers:
       - image: {{ .Values.shopware_image }}:{{ .Values.shopware_tag }}
@@ -95,8 +97,8 @@ spec:
         name: shopware-{{ .Release.Name }}
         resources:
           requests:
-            memory: "5G"
-            cpu: "1200m"
+            memory: "2Gi"
+            cpu: "750m"
             ephemeral-storage: "2Gi"
         envFrom:
           - configMapRef:
