@@ -1,3 +1,27 @@
+.sw-button.hipay-btn--warning,
+.mt-button.hipay-btn--warning {
+  background-color: #ffc700;
+  color: #1a1a2e;
+  border-color: #ffc700;
+
+  &:hover:not(:disabled) {
+    background-color: #e6b400;
+    border-color: #e6b400;
+  }
+}
+
+.sw-button.hipay-btn--danger,
+.mt-button.hipay-btn--danger {
+  background-color: #de294c;
+  color: #ffffff;
+  border-color: #de294c;
+
+  &:hover:not(:disabled) {
+    background-color: #c4243f;
+    border-color: #c4243f;
+  }
+}
+
 .captureBtnGrp,
 .refundBtnGrp {
   display: flex;

@@ -95,7 +95,6 @@ class HiPayPaymentPlugin extends Plugin
         CreditCard::class,
         Giropay::class,
         Ideal::class,
-        Klarna::class,
         Paypal::class,
         Mbway::class,
         Multibanco::class,
@@ -437,12 +436,14 @@ class HiPayPaymentPlugin extends Plugin
             $countryRepo = $this->container->get('country.repository');
             $countryIds = $countryRepo->searchIds((new Criteria())->addFilter($filter), $context)->getIds();
 
-            $conditions[] = [
-                'type' => 'customerBillingCountry',
-                'position' => 1,
-                'value' => ['operator' => Rule::OPERATOR_EQ, 'countryIds' => $countryIds],
-                'parentId' => $andId,
-            ];
+            if (!empty($countryIds)) {
+                $conditions[] = [
+                    'type' => 'customerBillingCountry',
+                    'position' => 1,
+                    'value' => ['operator' => Rule::OPERATOR_EQ, 'countryIds' => $countryIds],
+                    'parentId' => $andId,
+                ];
+            }
         }
 
         if ($currencies) {
@@ -455,12 +456,14 @@ class HiPayPaymentPlugin extends Plugin
             $currencyRepo = $this->container->get('currency.repository');
             $currencyIds = $currencyRepo->searchIds((new Criteria())->addFilter($filter), $context)->getIds();
 
-            $conditions[] = [
-                'type' => 'currency',
-                'position' => 0,
-                'value' => ['operator' => Rule::OPERATOR_EQ, 'currencyIds' => $currencyIds],
-                'parentId' => $andId,
-            ];
+            if (!empty($currencyIds)) {
+                $conditions[] = [
+                    'type' => 'currency',
+                    'position' => 0,
+                    'value' => ['operator' => Rule::OPERATOR_EQ, 'currencyIds' => $currencyIds],
+                    'parentId' => $andId,
+                ];
+            }
         }
 
         if ($minAmount) {

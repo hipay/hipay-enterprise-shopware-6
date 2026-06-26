@@ -8,35 +8,37 @@
           @update:value="updateMerchantName">
   </sw-text-field>
 
-  <sw-select-field 
+  <sw-single-select
     :label="$tc('hipay.settings.applepay.buttonType.title')"
     :value="paymentMethod.customFields?.buttonType || 'default'"
+    :options="buttonTypes"
     @update:value="updateButtonType">
-        <option
-            v-for="buttonType in buttonTypes"
-            :key="buttonType.value"
-            :value="buttonType.value"
-        >
-            {{ buttonType.label }}
-        </option>
-  </sw-select-field>
+  </sw-single-select>
 
-  <sw-select-field 
+  <sw-single-select
     :label="$tc('hipay.settings.applepay.buttonStyle.title')"
     :value="paymentMethod.customFields?.buttonStyle || 'black'"
+    :options="buttonStyles"
     @update:value="updateButtonStyle">
-        <option
-            v-for="buttonStyle in buttonStyles"
-            :key="buttonStyle.value"
-            :value="buttonStyle.value"
-        >
-            {{ buttonStyle.label }}
-        </option>
-  </sw-select-field>
+  </sw-single-select>
 
   <sw-text-field :label="$tc('hipay.settings.applepay.merchantId')"
           :value="paymentMethod.customFields?.merchantId"
           :disabled="false"
           @update:value="updateMerchantId">
   </sw-text-field>
+
+  <sw-switch-field
+    :label="$tc('hipay.settings.applepay.multiBrowserEnabled.title')"
+    :value="paymentMethod.customFields?.multiBrowserEnabled || false"
+    @update:value="updateMultiBrowserEnabled">
+  </sw-switch-field>
+
+  <sw-single-select
+    :label="$tc('hipay.settings.applepay.displayMode.title')"
+    :value="paymentMethod.customFields?.displayMode || 'popup'"
+    :options="displayModeOptions"
+    :disabled="!paymentMethod.customFields?.multiBrowserEnabled"
+    @update:value="updateDisplayMode">
+  </sw-single-select>
 </sw-card>

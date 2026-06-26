@@ -99,6 +99,14 @@
           "black": "Schwarz",
           "white": "Weiß",
           "whiteOutline": "Weißer Umriss"
+        },
+        "multiBrowserEnabled": {
+          "title": "Multi-Browser-Unterstützung aktivieren"
+        },
+        "displayMode": {
+          "title": "Anzeigemodus",
+          "popup": "Popup",
+          "modal": "Modal"
         }
       },
       "multibanco": {

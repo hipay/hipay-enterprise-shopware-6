@@ -61,6 +61,8 @@ class ApplePay extends AbstractPaymentMethod
             'buttonType' => 'default',
             'buttonStyle' => 'black',
             'merchantId' => '',
+            'multiBrowserEnabled' => false,
+            'displayMode' => 'popup',
         ];
     }
 

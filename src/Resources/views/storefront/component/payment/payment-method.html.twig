@@ -48,6 +48,8 @@
             countryCode: localeCode|slice(3, 2),
             amount: summary.price.totalPrice,
             currency: currency,
+            multiBrowserEnabled: payment.customFields.multiBrowserEnabled|default(false),
+            displayMode: payment.customFields.displayMode|default('popup'),
             styles: {
               base: {
                 color: config('HiPayPaymentPlugin.config.hostedFieldsTextColor'),
@@ -137,6 +139,9 @@
             }
           }
         %}
+        {% if componentName == 'handler-hipay-creditcard' and payment.customFields.cards is not empty %}
+            {% set hipayConfig = hipayConfig|merge({ brand: payment.customFields.cards }) %}
+        {% endif %}
       {% endif %}
       {% block hipay_hosted_fields_html %}
         <input type="text"

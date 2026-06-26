@@ -6,44 +6,29 @@
         <div>{{ $tc('hipay.settings.paypal.info')}}</div>
     </sw-alert>
 
-    <sw-select-field :label="$tc('hipay.settings.paypal.color.title')"
+    <sw-single-select
+        :label="$tc('hipay.settings.paypal.color.title')"
         :value="paymentMethod.customFields?.color || 'gold'"
         :disabled="!isPayPalV2"
+        :options="colors"
         @update:value="updateColor">
-            <option
-                v-for="color in colors"
-                :key="color.value"
-                :value="color.value"
-            >
-                {{ color.label }}
-            </option>
-    </sw-select-field>
+    </sw-single-select>
 
-    <sw-select-field :label="$tc('hipay.settings.paypal.shape.title')"
+    <sw-single-select
+        :label="$tc('hipay.settings.paypal.shape.title')"
         :value="paymentMethod.customFields?.shape || 'pill'"
         :disabled="!isPayPalV2"
+        :options="shapes"
         @update:value="updateShape">
-            <option
-                v-for="shape in shapes"
-                :key="shape.value"
-                :value="shape.value"
-            >
-                {{ shape.label }}
-            </option>
-    </sw-select-field>
+    </sw-single-select>
 
-    <sw-select-field :label="$tc('hipay.settings.paypal.label.title')"
+    <sw-single-select
+        :label="$tc('hipay.settings.paypal.label.title')"
         :value="paymentMethod.customFields?.label || 'paypal'"
         :disabled="!isPayPalV2"
+        :options="labels"
         @update:value="updateLabel">
-            <option
-                v-for="label in labels"
-                :key="label.value"
-                :value="label.value"
-            >
-                {{ label.label }}
-            </option>
-    </sw-select-field>
+    </sw-single-select>
 
     <sw-number-field numberType="int"
         :disabled="!isPayPalV2"
