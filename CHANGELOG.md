@@ -1,6 +1,9 @@
 # CHANGELOG
 
 ## UNRELEASE
+
+## 3.3.0
+
 - **Fix** : Fixed currency error on install
 - **Fix** : Fixed empty description error for non-product line items
 - **Fix** : Fixed an issue related to card network filtering
