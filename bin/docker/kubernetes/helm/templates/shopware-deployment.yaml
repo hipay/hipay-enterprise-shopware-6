@@ -117,10 +117,10 @@ spec:
                 value: https
               - name: X-Forwarded-Host
                 value: {{ .Values.shopware_url | quote }}
-          initialDelaySeconds: 120
+          initialDelaySeconds: 240
           periodSeconds: 30
           failureThreshold: 25
-          timeoutSeconds: 10
+          timeoutSeconds: 30
         volumeMounts:
           - name: shopware-framework-config
             mountPath: /var/www/html/config/packages/framework.yaml
