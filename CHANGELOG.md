@@ -1,6 +1,8 @@
 # CHANGELOG
 
 ## UNRELEASE
+- **Fix** : Complete payment button not working on mobile
+
 
 ## 3.3.0
 
