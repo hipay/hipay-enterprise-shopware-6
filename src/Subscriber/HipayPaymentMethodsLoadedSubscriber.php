@@ -23,6 +23,7 @@ use Shopware\Core\Framework\DataAbstractionLayer\Event\EntitySearchResultLoadedE
 use Shopware\Core\Framework\Plugin\KernelPluginLoader\KernelPluginLoader;
 use Shopware\Core\System\SystemConfig\SystemConfigService;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 class HipayPaymentMethodsLoadedSubscriber implements EventSubscriberInterface
 {
@@ -49,7 +50,8 @@ class HipayPaymentMethodsLoadedSubscriber implements EventSubscriberInterface
 
     public function __construct(
         private KernelPluginLoader $kernelPluginLoader,
-        private SystemConfigService $systemConfigService)
+        private SystemConfigService $systemConfigService,
+        private RequestStack $requestStack)
     {
     }
 
@@ -73,6 +75,16 @@ class HipayPaymentMethodsLoadedSubscriber implements EventSubscriberInterface
 
         if(!$pluginData->isActive()) {
             return;
+        }
+
+        $paymentMethods = $event->getResult()->getEntities();
+
+        if($this->isAndroidDevice()) {
+            foreach ($paymentMethods as $key => $paymentMethod) {
+                if($paymentMethod->getHandlerIdentifier() === ApplePay::class) {
+                    $paymentMethods->remove($key);
+                }
+            }
         }
 
         $env = $this->systemConfigService->get("HiPayPaymentPlugin.config.environment");
@@ -108,12 +120,17 @@ class HipayPaymentMethodsLoadedSubscriber implements EventSubscriberInterface
             return;
         }
 
-        $paymentMethods = $event->getResult()->getEntities();
-
         foreach ($paymentMethods as $key => $paymentMethod) {
             if(in_array($paymentMethod->getHandlerIdentifier(), self::HIPAY_PAYMENT_METHODS)) {
                 $paymentMethods->remove($key);
             }
         }
+    }
+
+    private function isAndroidDevice(): bool
+    {
+        $userAgent = $this->requestStack->getCurrentRequest()?->headers->get('User-Agent');
+
+        return $userAgent !== null && stripos($userAgent, 'Android') !== false;
     }
 }

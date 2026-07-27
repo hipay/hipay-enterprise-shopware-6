@@ -2,6 +2,7 @@
 
 ## UNRELEASE
 - **Fix** : Complete payment button not working on mobile
+- **Fix** : Remove Apple Pay from Android devices
 
 
 ## 3.3.0
