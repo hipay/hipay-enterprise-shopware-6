@@ -97,7 +97,7 @@ spec:
         name: shopware-{{ .Release.Name }}
         resources:
           requests:
-            memory: "2Gi"
+            memory: "3Gi"
             cpu: "750m"
             ephemeral-storage: "2Gi"
         envFrom:
@@ -106,6 +106,21 @@ spec:
         ports:
           - containerPort: 80
             name: shopware
+        readinessProbe:
+          httpGet:
+            path: /
+            port: shopware
+            httpHeaders:
+              - name: Host
+                value: {{ .Values.shopware_url | quote }}
+              - name: X-Forwarded-Proto
+                value: https
+              - name: X-Forwarded-Host
+                value: {{ .Values.shopware_url | quote }}
+          initialDelaySeconds: 240
+          periodSeconds: 30
+          failureThreshold: 25
+          timeoutSeconds: 30
         volumeMounts:
           - name: shopware-framework-config
             mountPath: /var/www/html/config/packages/framework.yaml

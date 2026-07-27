@@ -59,9 +59,17 @@ export default class HipayHostedFieldsPlugin extends window.PluginBaseClass {
       this._cardInstance.on('change', (response) => {
         valid = response.valid;
         if (valid) {
-          this._cardInstance.getPaymentData().then((result) => {
-            inputResponse.setAttribute('value', JSON.stringify(result));
-          });
+          this._cardInstance.getPaymentData().then(
+            (result) => {
+              inputResponse.setAttribute('value', JSON.stringify(result));
+            },
+            (errors) => {
+              inputResponse.setAttribute('value', '');
+              errors.forEach((element) =>
+                this._errorHandler(element.field, true, element.error)
+              );
+            }
+          );
         } else {
           inputResponse.setAttribute('value', '');
         }
@@ -86,10 +94,18 @@ export default class HipayHostedFieldsPlugin extends window.PluginBaseClass {
         e.preventDefault();
         const target = e.currentTarget;
 
-        this._cardInstance.getPaymentData().then((result) => {
-          inputResponse.setAttribute('value', JSON.stringify(result));
-          target.submit();
-        });
+        this._cardInstance.getPaymentData().then(
+          (result) => {
+            inputResponse.setAttribute('value', JSON.stringify(result));
+            target.submit();
+          },
+          (errors) => {
+            inputResponse.setAttribute('value', '');
+            errors.forEach((element) =>
+              this._errorHandler(element.field, true, element.error)
+            );
+          }
+        );
       });
     });
   }
