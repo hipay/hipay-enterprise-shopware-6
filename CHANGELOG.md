@@ -1,9 +1,11 @@
 # CHANGELOG
 
 ## UNRELEASE
-- **Fix** : Complete payment button not working on mobile
-- **Fix** : Remove Apple Pay from Android devices
 
+## 3.3.1
+
+- **Fix** : Fixed Complete payment button on mobile
+- **Fix** : Removed Apple Pay from Android devices
 
 ## 3.3.0
 
