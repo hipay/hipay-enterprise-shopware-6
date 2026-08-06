@@ -40,7 +40,7 @@ class Przelewy24Test extends TestCase
         );
 
         $this->assertEquals(
-            ['haveHostedFields' => false,  'allowPartialCapture' => false, 'allowPartialRefund' => false],
+            ['haveHostedFields' => false,  'allowPartialCapture' => false, 'allowPartialRefund' => false, 'forceHostedFields' => false],
             Przelewy24::getConfig()
         );
 

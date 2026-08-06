@@ -286,7 +286,7 @@ class NotificationService
     public function dispatchNotifications(): void
     {
         try {
-            $context = Context::createDefaultContext();
+            $context = Context::createCLIContext();
 
             $notifications = $this->getActiveHipayNotifications($context);
 

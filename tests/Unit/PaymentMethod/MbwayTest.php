@@ -52,7 +52,7 @@ class MbwayTest extends TestCase
         );
 
         $this->assertEquals(
-            ['haveHostedFields' => true, 'allowPartialCapture' => true, 'allowPartialRefund' => true],
+            ['haveHostedFields' => true, 'allowPartialCapture' => true, 'allowPartialRefund' => true, 'forceHostedFields' => false],
             Mbway::getConfig()
         );
 

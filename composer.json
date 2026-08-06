@@ -26,8 +26,8 @@
       "de-DE": "HiPay Payment"
     },
     "description": {
-      "en-GB": "Hipay enterprise module for Shopware",
-      "de-DE": "Hipay Enterprise-Modul für Shopware"
+      "en-GB": "HiPay's native Shopware 6 plugin: accept European local payment methods (cards, Apple Pay, PayPal, iDEAL…), boost authorization rates, built-in fraud scoring, PSD2/SCA-ready.",
+      "de-DE": "Das native Shopware 6-Plugin von HiPay: europäische Zahlungsmethoden (Karten, Apple Pay, PayPal, iDEAL…), höhere Autorisierungsraten, integrierte Betrugsprüfung, PSD2/SCA-konform."
     },
     "manufacturerLink": {
       "en-GB": "#",
@@ -50,11 +50,11 @@
   },
   "require": {
     "hipay/hipay-fullservice-sdk-php": "^2.24.0",
-    "giggsey/libphonenumber-for-php": "^9.0"
+    "giggsey/libphonenumber-for-php": "^9.0",
+    "shopware/core": "^6.6.0 || ^6.7.0",
+    "shopware/storefront": "^6.6.0 || ^6.7.0"
   },
   "require-dev": {
-    "shopware/core": "^6.6.0 || ^6.7.0",
-    "shopware/storefront": "^6.6.0 || ^6.7.0",
     "phpunit/php-code-coverage": "~11.0.6",
     "phpunit/phpunit": "~11.4.0",
     "symfony/phpunit-bridge": "~4.4 || ~5.2.3 || ~5.3.0 || ~5.4.0 || ^6.0 | ^v7.2.0",

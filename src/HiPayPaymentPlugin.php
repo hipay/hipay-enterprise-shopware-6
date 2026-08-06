@@ -35,6 +35,7 @@ use Shopware\Core\Framework\Plugin\Context\ActivateContext;
 use Shopware\Core\Framework\Plugin\Context\DeactivateContext;
 use Shopware\Core\Framework\Plugin\Context\InstallContext;
 use Shopware\Core\Framework\Plugin\Context\UninstallContext;
+use Shopware\Core\Content\Rule\RuleEntity;
 use Shopware\Core\Framework\Plugin\Util\PluginIdProvider;
 use Shopware\Core\Framework\Rule\Rule;
 use Shopware\Core\Framework\Uuid\Uuid;
@@ -136,12 +137,11 @@ class HiPayPaymentPlugin extends Plugin
      */
     public static function getShopwareVersion(): ?string
     {
-        $version = null;
         if (InstalledVersions::isInstalled('shopware/core')) {
-            $version = InstalledVersions::getVersion('shopware/core');
+            return InstalledVersions::getVersion('shopware/core');
         }
 
-        return $version ?? exec("cd ../ && php bin/console --version | awk '{print $2}'");
+        return null;
     }
 
     public function install(InstallContext $context): void
@@ -493,7 +493,9 @@ class HiPayPaymentPlugin extends Plugin
 
         // Check if rule already exists
         $ruleCriteria->addAssociation('conditions');
-        if ($existingRule = $ruleRepo->search($ruleCriteria, $context)->first()) {
+        /** @var RuleEntity|null $existingRule */
+        $existingRule = $ruleRepo->search($ruleCriteria, $context)->first();
+        if ($existingRule) {
             $ruleId = $existingRule->getId();
 
             // Delete old conditions first

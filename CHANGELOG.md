@@ -1,6 +1,8 @@
 # CHANGELOG
 
 ## UNRELEASE
+- **Fix** : Force Apple Pay to hostedFields (not yet available on hostedPage)
+- **Fix** : Fixed some issues related to Shopware Store submission
 
 ## 3.3.1
 

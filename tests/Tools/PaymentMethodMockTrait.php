@@ -307,12 +307,12 @@ trait PaymentMethodMockTrait
         return $localeProvider;
     }
 
-    protected function getHostedFiledsOrderRequest(string $classname, array $jsonResponse = null, $redirectUri = null, array $construct = [], array $configTransaction = []): OrderRequest
+    protected function getHostedFiledsOrderRequest(string $classname, array $jsonResponse = null, $redirectUri = null, array $construct = [], array $configTransaction = [], array $configOverride = []): OrderRequest
     {
-        $config = [
+        $config = array_merge([
             'operationMode' => 'hostedFields',
             'captureMode' => 'auto',
-        ];
+        ], $configOverride);
 
         if (null === $redirectUri) {
             $redirectUri = md5(rand(PHP_INT_MIN, PHP_INT_MAX));
