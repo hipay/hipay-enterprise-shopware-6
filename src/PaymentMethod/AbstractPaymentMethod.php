@@ -39,6 +39,7 @@ use Shopware\Core\Checkout\Order\Aggregate\OrderCustomer\OrderCustomerCollection
 use Shopware\Core\Checkout\Order\Aggregate\OrderCustomer\OrderCustomerEntity;
 use Shopware\Core\Checkout\Order\Aggregate\OrderLineItem\OrderLineItemCollection;
 use Shopware\Core\Checkout\Order\Aggregate\OrderLineItem\OrderLineItemEntity;
+use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionCollection;
 use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionEntity;
 use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStateHandler;
 use Shopware\Core\Checkout\Order\OrderEntity;
@@ -77,7 +78,7 @@ abstract class AbstractPaymentMethod extends AbstractPaymentHandler implements P
     /** @var string Payment code and json file */
     protected const PAYMENT_CODE = '';
 
-    /** @var string Technical name of payment method */
+    /** @var ?string Technical name of payment method */
     protected const TECHNICAL_NAME = null;
 
     /** @var ?string Payment image to load */
@@ -91,7 +92,7 @@ abstract class AbstractPaymentMethod extends AbstractPaymentHandler implements P
 
     /**
      * @param EntityRepository<OrderCustomerCollection> $orderCustomerRepository
-     * @param EntityRepository<OrderTransactionEntity> $orderTransactionRepository
+     * @param EntityRepository<OrderTransactionCollection> $orderTransactionRepository
      */
     public function __construct(
         protected OrderTransactionStateHandler $transactionStateHandler,
@@ -223,7 +224,13 @@ abstract class AbstractPaymentMethod extends AbstractPaymentHandler implements P
             'haveHostedFields' => !empty(static::$paymentConfig->getAdditionalFields()),
             'allowPartialCapture' => (bool) static::$paymentConfig->getCanManualCapturePartially(),
             'allowPartialRefund' => (bool) static::$paymentConfig->getCanRefundPartially(),
+            'forceHostedFields' => static::forceHostedFields(),
         ];
+    }
+
+    protected static function forceHostedFields(): bool
+    {
+        return false;
     }
 
     public static function addDefaultCustomFields(): array
@@ -354,7 +361,7 @@ abstract class AbstractPaymentMethod extends AbstractPaymentHandler implements P
     {
         $isApplePay = false;
 
-        if ($this->config->isHostedFields()) {
+        if ($this->config->isHostedFields() || static::forceHostedFields()) {
             // hosted fields
             $request = $this->generateRequestHostedFields($orderTransaction, $returnUrl, $locale, $context);
             $this->logger->info('Sending an hosted fields request', [$request]);
@@ -457,7 +464,7 @@ abstract class AbstractPaymentMethod extends AbstractPaymentHandler implements P
         $orderRequest->description = $this->generateDescription($order->getLineItems(), 255, '...');
 
         if (static::requiresBasket()) {
-            $orderRequest->basket = $this->generateBasket($order);
+            $orderRequest->basket = json_encode($this->generateBasket($order));
         }
 
         // Amounts data
@@ -866,7 +873,7 @@ abstract class AbstractPaymentMethod extends AbstractPaymentHandler implements P
     /**
      * Format a phone number.
      *
-     * @param int $format libphonenumber\PhoneNumberFormat\PhoneNumberFormat const
+     * @param PhoneNumberFormat $format libphonenumber\PhoneNumberFormat const
      */
     protected function formatPhoneNumber(?string $phoneNumber, ?string $isoCountry = null, PhoneNumberFormat $format = PhoneNumberFormat::E164): ?string
     {

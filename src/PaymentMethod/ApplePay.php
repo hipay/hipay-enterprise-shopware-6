@@ -54,6 +54,11 @@ class ApplePay extends AbstractPaymentMethod
         return $descriptions[$lang] ?? null;
     }
 
+    protected static function forceHostedFields(): bool
+    {
+        return true;
+    }
+
     public static function addDefaultCustomFields(): array
     {
         return [

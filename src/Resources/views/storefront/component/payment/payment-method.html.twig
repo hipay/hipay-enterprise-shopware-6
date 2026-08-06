@@ -34,7 +34,7 @@
     {% set env = environment|lower|default('stage') %}
     {% set componentName = payment.formattedHandlerIdentifier|replace({'_':'-'}) %}
 
-    {% if config('HiPayPaymentPlugin.config.operationMode') == 'hostedFields' %}
+    {% if config('HiPayPaymentPlugin.config.operationMode') == 'hostedFields' or payment.extensions.hipayConfig.forceHostedFields %}
       <script src={{config('HiPayPaymentPlugin.config.sdkjsUrl')}}></script>
       {% if componentName == 'handler-hipay-applepay'%}
         {% set hipayConfig = {
@@ -148,7 +148,7 @@
           name="hipay-response"
           id="hipay-response"
           form="confirmOrderForm"
-          style="position: absolute; visibility: hidden;"
+          style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;"
           required
         />
       {% endblock %}

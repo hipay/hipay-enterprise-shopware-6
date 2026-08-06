@@ -62,7 +62,7 @@ class IdealTest extends TestCase
         );
 
         $this->assertEquals(
-            ['haveHostedFields' => true, 'allowPartialCapture' => false, 'allowPartialRefund' => true],
+            ['haveHostedFields' => true, 'allowPartialCapture' => false, 'allowPartialRefund' => true, 'forceHostedFields' => false],
             Ideal::getConfig()
         );
 

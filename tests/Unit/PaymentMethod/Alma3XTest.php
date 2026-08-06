@@ -40,7 +40,7 @@ class Alma3XTest extends TestCase
         );
 
         $this->assertEquals(
-            ['haveHostedFields' => false, 'allowPartialCapture' => false, 'allowPartialRefund' => true],
+            ['haveHostedFields' => false, 'allowPartialCapture' => false, 'allowPartialRefund' => true, 'forceHostedFields' => false],
             Alma3X::getConfig()
         );
 

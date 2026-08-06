@@ -23,20 +23,6 @@ class IpAddress
         'REMOTE_ADDR',
     ];
 
-    /**
-     * Private IP ranges that should never be returned as customer IP.
-     */
-    private const PRIVATE_IP_RANGES = [
-        '10.0.0.0/8',
-        '172.16.0.0/12',
-        '192.168.0.0/16',
-        '127.0.0.0/8',
-        'fd00::/8',
-        '::1/128',
-        'fe80::/10',
-    ];
-
-    
     public static function getClientIp(Request $request): ?string
     {
         $ip = $request->getClientIp();

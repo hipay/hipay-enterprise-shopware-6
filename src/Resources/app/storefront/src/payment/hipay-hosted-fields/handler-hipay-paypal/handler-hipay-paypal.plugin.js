@@ -244,8 +244,6 @@ export default class HandlerHipayPaypalPlugin extends window.PluginBaseClass {
     }
 
     handleSDKError(error) {
-        console.log('SDK Error caught:', error);
-
         const paypalField = document.querySelector('#paypal-field');
         if (paypalField) {
             paypalField.innerHTML = '';
@@ -265,8 +263,6 @@ export default class HandlerHipayPaypalPlugin extends window.PluginBaseClass {
         const missingFields = [];
         const errorMessage = error.message || error.toString();
 
-        console.log('Parsing SDK error:', errorMessage);
-
         const fieldMapping = {
             'zipCode': 'zipcode',
             'city': 'city',
@@ -280,7 +276,6 @@ export default class HandlerHipayPaypalPlugin extends window.PluginBaseClass {
             }
         });
 
-        console.log('Extracted missing fields:', missingFields);
         return missingFields;
     }
 

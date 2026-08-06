@@ -5,7 +5,6 @@ namespace HiPay\Payment\Tests\Unit\PaymentMethod;
 use HiPay\Payment\PaymentMethod\ApplePay;
 use HiPay\Payment\Tests\Tools\PaymentMethodMockTrait;
 use PHPUnit\Framework\TestCase;
-use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 
 class ApplePayTest extends TestCase
 {
@@ -54,18 +53,22 @@ class ApplePayTest extends TestCase
         );
     }
 
-    public function testhydratePage()
+    public function testhydratePageIsOverriddenByForceHostedFields()
     {
-        $hostedPaymentPageRequest = $this->getHostedPagePaymentRequest(
+        // Even when the shop is configured for hosted page mode, ApplePay
+        // forces the hosted fields flow (see ApplePay::forceHostedFields()).
+        $orderRequest = $this->getHostedFiledsOrderRequest(
             ApplePay::class,
+            ['token' => static::class, 'payment_product' => 'foo'],
             null,
-            ['transaction.payment_method.custom_fields' => ['isApplePay' => '1']],
-            [$this->createMock(EntityRepository::class)],
+            [],
+            [],
+            ['operationMode' => 'hostedPage']
         );
 
         $this->assertSame(
-            ApplePay::getProductCode(),
-            $hostedPaymentPageRequest->payment_product_list
+            'foo',
+            $orderRequest->payment_product
         );
     }
 
@@ -86,6 +89,7 @@ class ApplePayTest extends TestCase
                 'haveHostedFields' => true,
                 'allowPartialCapture' => true,
                 'allowPartialRefund' => true,
+                'forceHostedFields' => true,
             ],
             ApplePay::getConfig()
         );

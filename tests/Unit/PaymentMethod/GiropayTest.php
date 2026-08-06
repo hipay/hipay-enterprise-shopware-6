@@ -57,7 +57,7 @@ class GiropayTest extends TestCase
         );
 
         $this->assertEquals(
-            ['haveHostedFields' => true, 'allowPartialCapture' => false, 'allowPartialRefund' => false],
+            ['haveHostedFields' => true, 'allowPartialCapture' => false, 'allowPartialRefund' => false, 'forceHostedFields' => false],
             Giropay::getConfig()
         );
 

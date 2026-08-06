@@ -299,8 +299,10 @@ class AdminController extends AbstractController
 
             $zip = new \ZipArchive();
             $zipName = 'hipay-log-' . (new \DateTime())->format('Y-m-d\TH-i-s\Z') . '.zip';
+            $zipPath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . $zipName;
 
-            $zip->open($zipName, \ZipArchive::CREATE);
+            // @phpstan-ignore shopware.forbidLocalDiskWrite
+            $zip->open($zipPath, \ZipArchive::CREATE);
 
             $files = new \RecursiveIteratorIterator(
                 new \RecursiveDirectoryIterator($path),
@@ -317,16 +319,17 @@ class AdminController extends AbstractController
             $zip->close();
 
             $response = new Response(
-                file_get_contents($zipName) ?: null,
+                file_get_contents($zipPath) ?: null,
                 Response::HTTP_OK,
                 [
                     'Content-Type' => 'application/zip',
                     'Content-Disposition' => 'attachment;filename="' . $zipName . '"',
-                    'Content-length' => filesize($zipName) . PHP_EOL,
+                    'Content-length' => filesize($zipPath) . PHP_EOL,
                 ]
             );
 
-            @unlink($zipName);
+            // @phpstan-ignore shopware.forbidLocalDiskWrite
+            @unlink($zipPath);
 
             return $response;
         } catch (\Throwable $e) {

@@ -58,7 +58,7 @@ class MultibancoTest extends TestCase
         );
 
         $this->assertEquals(
-            ['haveHostedFields' => false, 'allowPartialCapture' => false, 'allowPartialRefund' => false],
+            ['haveHostedFields' => false, 'allowPartialCapture' => false, 'allowPartialRefund' => false, 'forceHostedFields' => false],
             Multibanco::getConfig()
         );
 

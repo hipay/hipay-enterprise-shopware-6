@@ -99,6 +99,7 @@ class CreditCardTest extends TestCase
                 'haveHostedFields' => true,
                 'allowPartialCapture' => true,
                 'allowPartialRefund' => true,
+                'forceHostedFields' => false,
             ],
             CreditCard::getConfig()
         );

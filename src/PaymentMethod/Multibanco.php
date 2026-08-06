@@ -11,6 +11,7 @@ use HiPay\Fullservice\Gateway\Request\PaymentMethod\ExpirationLimitPaymentMethod
 use HiPay\Payment\Service\HiPayHttpClientService;
 use HiPay\Payment\Service\ReadHipayConfigService;
 use Psr\Log\LoggerInterface;
+use Shopware\Core\Checkout\Order\Aggregate\OrderCustomer\OrderCustomerCollection;
 use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionCollection;
 use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionEntity;
 use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStateHandler;
@@ -132,7 +133,7 @@ class Multibanco extends AbstractPaymentMethod
                 'id' => $orderTransaction->getId(),
                 'customFields' => array_merge(
                     $orderTransaction->getCustomFields() ?? [],
-                    ['reference_to_pay' => $response->getReferenceToPay ? json_decode($response->getReferenceToPay()) : []]
+                    ['reference_to_pay' => $response->getReferenceToPay() ? json_decode($response->getReferenceToPay()) : []]
                 ),
             ]],
             $context
