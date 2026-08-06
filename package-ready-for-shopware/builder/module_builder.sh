@@ -16,9 +16,16 @@ function package() {
     cp composer.json $built_dir/
     cp *.md $built_dir/
 
-    # Prepare files before install
-    sed -i "/\"shopware\\/core\"/d" $built_dir/composer.json
-    sed -i "/\"shopware\\/storefront\"/d" $built_dir/composer.json
+    # Prepare files before install (Shopware is provided by the host platform)
+    php -r '
+        $path = $argv[1];
+        $data = json_decode(file_get_contents($path), true);
+        unset($data["require"]["shopware/core"], $data["require"]["shopware/storefront"]);
+        file_put_contents(
+            $path,
+            json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n"
+        );
+    ' "$built_dir/composer.json"
 
     # Install production dependencies
     cd $built_dir
