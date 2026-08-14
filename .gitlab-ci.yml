@@ -395,6 +395,7 @@ deploy2recette:
       --set public_applepay_password_stage="$HIPAY_APPLEPAY_TOKENJS_PUBLICKEY_RE7"
       --set applepay_passphrase_stage="$HIPAY_APPLEPAY_SECRET_PASSPHRASE_RE7"
       --set branch="$CI_COMMIT_REF_NAME"
+      --set-file apple_pay_domain_association=./bin/docker/conf/well-known/apple-developer-merchantid-domain-association
   allow_failure: true
   environment:
     name: review/${CI_COMMIT_REF_SLUG}

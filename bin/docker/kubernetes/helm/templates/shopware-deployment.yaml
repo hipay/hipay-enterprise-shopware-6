@@ -126,7 +126,17 @@ spec:
             mountPath: /var/www/html/config/packages/framework.yaml
             subPath: framework.yaml
             readOnly: true
+          - name: shopware-applepay-well-known
+            mountPath: /var/www/html/public/.well-known/apple-developer-merchantid-domain-association
+            subPath: apple-developer-merchantid-domain-association
+            readOnly: true
       volumes:
         - name: shopware-framework-config
           configMap:
             name: shopware-configmap-{{ .Release.Name }}
+        - name: shopware-applepay-well-known
+          configMap:
+            name: shopware-applepay-well-known-{{ .Release.Name }}
+            items:
+              - key: apple-developer-merchantid-domain-association
+                path: apple-developer-merchantid-domain-association
