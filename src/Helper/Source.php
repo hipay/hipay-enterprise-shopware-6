@@ -2,7 +2,7 @@
 
 namespace HiPay\Payment\Helper;
 
-use HiPay\Payment\HiPayPaymentPlugin;
+use HiPay\Payment\HiPayPayments;
 
 class Source
 {
@@ -16,8 +16,8 @@ class Source
         return json_encode([
             'source' => 'CMS',
             'brand' => 'shopware',
-            'brand_version' => HiPayPaymentPlugin::getShopwareVersion(),
-            'integration_version' => HiPayPaymentPlugin::getModuleVersion(),
+            'brand_version' => HiPayPayments::getShopwareVersion(),
+            'integration_version' => HiPayPayments::getModuleVersion(),
         ]);
     }
 }

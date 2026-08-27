@@ -13,7 +13,7 @@
 
  {% block component_payment_method_image %}
   {% if 'handler_hipay_creditcard' in payment.formattedHandlerIdentifier %}
-    {% sw_include '@HiPayPaymentPlugin/storefront/component/payment/creditcards/hipay-creditcard-image.html.twig' %}
+    {% sw_include '@HiPayPayments/storefront/component/payment/creditcards/hipay-creditcard-image.html.twig' %}
   {% else %}
     {{ parent() }}
   {% endif %}
@@ -30,16 +30,16 @@
       and activeRoute in ['frontend.account.edit-order.page', 'frontend.checkout.confirm.page']
   %}
     <div class="hipay-hosted-fields-wrapper">
-    {% set environment = config('HiPayPaymentPlugin.config.environment') %}
+    {% set environment = config('HiPayPayments.config.environment') %}
     {% set env = environment|lower|default('stage') %}
     {% set componentName = payment.formattedHandlerIdentifier|replace({'_':'-'}) %}
 
-    {% if config('HiPayPaymentPlugin.config.operationMode') == 'hostedFields' or payment.extensions.hipayConfig.forceHostedFields %}
-      <script src={{config('HiPayPaymentPlugin.config.sdkjsUrl')}}></script>
+    {% if config('HiPayPayments.config.operationMode') == 'hostedFields' or payment.extensions.hipayConfig.forceHostedFields %}
+      <script src={{config('HiPayPayments.config.sdkjsUrl')}}></script>
       {% if componentName == 'handler-hipay-applepay'%}
         {% set hipayConfig = {
-            username: config('HiPayPaymentPlugin.config.publicApplePayLogin' ~ environment),
-            password: config('HiPayPaymentPlugin.config.publicApplePayPassword' ~ environment),
+            username: config('HiPayPayments.config.publicApplePayLogin' ~ environment),
+            password: config('HiPayPayments.config.publicApplePayPassword' ~ environment),
             merchantId: payment.customFields.merchantId,
             merchantName: payment.customFields.merchantName,
             shopname: page.metaInformation.metaTitle,
@@ -52,13 +52,13 @@
             displayMode: payment.customFields.displayMode|default('popup'),
             styles: {
               base: {
-                color: config('HiPayPaymentPlugin.config.hostedFieldsTextColor'),
-                fontSize: config('HiPayPaymentPlugin.config.hostedFieldsFontSize'),
-                fontFamily: config('HiPayPaymentPlugin.config.hostedFieldsFontFamilly'),
-                fontWeight: config('HiPayPaymentPlugin.config.hostedFieldsFontWeight'),
-                placeholderColor: config('HiPayPaymentPlugin.config.hostedFieldsPlaceholderColor'),
-                iconColor: config('HiPayPaymentPlugin.config.hostedFieldsIconColor'),
-                caretColor: config('HiPayPaymentPlugin.config.hostedFieldsCaretColor')
+                color: config('HiPayPayments.config.hostedFieldsTextColor'),
+                fontSize: config('HiPayPayments.config.hostedFieldsFontSize'),
+                fontFamily: config('HiPayPayments.config.hostedFieldsFontFamilly'),
+                fontWeight: config('HiPayPayments.config.hostedFieldsFontWeight'),
+                placeholderColor: config('HiPayPayments.config.hostedFieldsPlaceholderColor'),
+                iconColor: config('HiPayPayments.config.hostedFieldsIconColor'),
+                caretColor: config('HiPayPayments.config.hostedFieldsCaretColor')
               },
               buttonType: payment.customFields.buttonType,
               buttonStyle: payment.customFields.buttonStyle,
@@ -94,8 +94,8 @@
           } %}
         {% endif %}
         {% set hipayConfig = {
-          username: config('HiPayPaymentPlugin.config.publicLogin' ~ environment),
-          password: config('HiPayPaymentPlugin.config.publicPassword' ~ environment),
+          username: config('HiPayPayments.config.publicLogin' ~ environment),
+          password: config('HiPayPayments.config.publicPassword' ~ environment),
           environment: env,
           canPayLater: payment.customFields.bnpl,
           amount: summary.price.totalPrice,
@@ -120,21 +120,21 @@
       {% else %}
         {% set hipayConfig = {
             paymentProductName: payment.technicalName|replace({'hipay-':''}),
-            username: config('HiPayPaymentPlugin.config.publicLogin' ~ environment),
-            password: config('HiPayPaymentPlugin.config.publicPassword' ~ environment),
+            username: config('HiPayPayments.config.publicLogin' ~ environment),
+            password: config('HiPayPayments.config.publicPassword' ~ environment),
             environment: env,
             lang: localeCode|slice(0, 2),
             amount: summary.price.totalPrice,
             currency: currency,
             styles: {
               base: {
-                color: config('HiPayPaymentPlugin.config.hostedFieldsTextColor'),
-                fontSize: config('HiPayPaymentPlugin.config.hostedFieldsFontSize'),
-                fontFamily: config('HiPayPaymentPlugin.config.hostedFieldsFontFamilly'),
-                fontWeight: config('HiPayPaymentPlugin.config.hostedFieldsFontWeight'),
-                placeholderColor: config('HiPayPaymentPlugin.config.hostedFieldsPlaceholderColor'),
-                iconColor: config('HiPayPaymentPlugin.config.hostedFieldsIconColor'),
-                caretColor: config('HiPayPaymentPlugin.config.hostedFieldsCaretColor')
+                color: config('HiPayPayments.config.hostedFieldsTextColor'),
+                fontSize: config('HiPayPayments.config.hostedFieldsFontSize'),
+                fontFamily: config('HiPayPayments.config.hostedFieldsFontFamilly'),
+                fontWeight: config('HiPayPayments.config.hostedFieldsFontWeight'),
+                placeholderColor: config('HiPayPayments.config.hostedFieldsPlaceholderColor'),
+                iconColor: config('HiPayPayments.config.hostedFieldsIconColor'),
+                caretColor: config('HiPayPayments.config.hostedFieldsCaretColor')
               }
             }
           }
@@ -153,12 +153,12 @@
         />
       {% endblock %}
       {% if payment.extensions.hipayConfig.haveHostedFields or isPayPalV2Enabled %}
-        {% sw_include '@HiPayPaymentPlugin/storefront/component/payment/hosted-fields/' ~ componentName ~ '.html.twig' %}
+        {% sw_include '@HiPayPayments/storefront/component/payment/hosted-fields/' ~ componentName ~ '.html.twig' %}
       {% else %}
-        {% sw_include '@HiPayPaymentPlugin/storefront/component/payment/hosted-fields/handler-hipay-default.html.twig' %}
+        {% sw_include '@HiPayPayments/storefront/component/payment/hosted-fields/handler-hipay-default.html.twig' %}
       {% endif %}
 
-    {% elseif payment.formattedHandlerIdentifier != 'handler_hipay_multibanco' || config('HiPayPaymentPlugin.config.operationMode') != 'hostedFields'
+    {% elseif payment.formattedHandlerIdentifier != 'handler_hipay_multibanco' || config('HiPayPayments.config.operationMode') != 'hostedFields'
     %}
       <p>{{ 'hipay.hosted-page.redirect-message'|trans }}</p>
     {% endif %}
@@ -169,7 +169,7 @@
       and activeRoute in ['frontend.account.payment.page']
       and page.extensions.card_tokens
   %}
-    {% sw_include '@HiPayPaymentPlugin/storefront/component/payment/creditcards/account-creditcard.html.twig' %}
+    {% sw_include '@HiPayPayments/storefront/component/payment/creditcards/account-creditcard.html.twig' %}
   {% endif %}
 
 {% endblock %}

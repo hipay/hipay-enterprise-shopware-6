@@ -4,7 +4,7 @@ set -e
 
 version="1.0.0"
 base_dir=$(pwd)
-built_dir="hipay_enterprise"
+built_dir="HiPayPayments"
 
 function package() {
     # Copy src content to new directory
@@ -21,6 +21,7 @@ function package() {
         $path = $argv[1];
         $data = json_decode(file_get_contents($path), true);
         unset($data["require"]["shopware/core"], $data["require"]["shopware/storefront"]);
+        $data["require"]["brick/math"] = "^0.11.0";
         file_put_contents(
             $path,
             json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n"

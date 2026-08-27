@@ -2,6 +2,8 @@
 
 ## UNRELEASE
 
+- **Fix** : Renamed plugin base class from `HiPayPaymentPlugin` to `HiPayPayments` to match the technical name required by the Shopware Store
+
 ## 3.3.2
 
 - **Fix** : Force Apple Pay to hostedFields (not yet available on hostedPage)

@@ -12,7 +12,7 @@ use HiPay\Payment\Core\Checkout\Payment\HipayOrder\HipayOrderEntity;
 use HiPay\Payment\Enum\CaptureStatus;
 use HiPay\Payment\Enum\RefundStatus;
 use HiPay\Payment\Formatter\Request\MaintenanceRequestFormatter;
-use HiPay\Payment\HiPayPaymentPlugin;
+use HiPay\Payment\HiPayPayments;
 use HiPay\Payment\Service\HiPayHttpClientService;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -41,7 +41,7 @@ class AdminControllerTest extends TestCase
 
         foreach (['public', 'private'] as $scope) {
             foreach (['Login', 'Password'] as $field) {
-                $key = HiPayPaymentPlugin::getModuleName().'.config.'.$scope.$field.$env;
+                $key = HiPayPayments::getModuleName().'.config.'.$scope.$field.$env;
                 if (!isset($params[$key])) {
                     $params[$key] = $key;
                 }

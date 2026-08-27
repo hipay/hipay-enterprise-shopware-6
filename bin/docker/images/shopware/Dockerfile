@@ -36,7 +36,7 @@ HASH_STAGE_APPLEPAY=$HASH_STAGE_APPLEPAY \n\
 LOG_DEBUG=$LOG_DEBUG \
 ' >>.env
 
-COPY . /var/www/html/custom/plugins/HiPayPaymentPlugin/
+COPY . /var/www/html/custom/plugins/HiPayPayments/
 
 # Apple Pay domain verification (served at /.well-known/...)
 COPY --chown=www-data:www-data bin/docker/conf/well-known/apple-developer-merchantid-domain-association \

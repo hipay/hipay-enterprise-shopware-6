@@ -2,7 +2,7 @@
 
 namespace HiPay\Payment\Tests\Unit\Service;
 
-use HiPay\Payment\HiPayPaymentPlugin;
+use HiPay\Payment\HiPayPayments;
 use HiPay\Payment\Service\ReadHipayConfigService;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -15,7 +15,7 @@ class ReadHipayConfigServiceTest extends TestCase
     {
         $fullPathParams = [];
         foreach ($params as $key => &$value) {
-            $fullPathParams[HiPayPaymentPlugin::getModuleName().'.config.'.$key] = $value;
+            $fullPathParams[HiPayPayments::getModuleName().'.config.'.$key] = $value;
         }
 
         /** @var SystemConfigService&MockObject */

@@ -12,7 +12,7 @@ use HiPay\Payment\Core\Checkout\Payment\Refund\OrderRefundCollection;
 use HiPay\Payment\Core\Checkout\Payment\Refund\OrderRefundEntity;
 use HiPay\Payment\Enum\HipayLoggerChannel;
 use HiPay\Payment\Formatter\Request\MaintenanceRequestFormatter;
-use HiPay\Payment\HiPayPaymentPlugin;
+use HiPay\Payment\HiPayPayments;
 use HiPay\Payment\Service\HiPayHttpClientService;
 use Monolog\Attribute\WithMonologChannel;
 use Psr\Log\LoggerInterface;
@@ -262,7 +262,7 @@ class AdminController extends AbstractController
      */
     private function extractConfigurationFromPluginConfig(RequestDataBag $params, string $scope): Configuration
     {
-        $prefix = HiPayPaymentPlugin::getModuleName() . '.config.';
+        $prefix = HiPayPayments::getModuleName() . '.config.';
         $environement = ucfirst($params->getAlpha('environment'));
         $isApplePay = $params->get('isApplePay');
 

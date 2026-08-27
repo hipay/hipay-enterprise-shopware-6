@@ -51,7 +51,7 @@ elif [ "$1" = 'cache' ]; then
 elif [ "$1" = 'build' ] && [ "$2" = 'admin' ]; then
     npm install && docker exec $container bash -c "cd ../ && make build-admin"
 elif [ "$1" = 'build' ] && [ "$2" = 'front' ]; then
-    docker exec $container bash -c "cd custom/plugins/HiPayPaymentPlugin && npm install && cd /var/www/html && ./bin/build-storefront.sh && php bin/console theme:dump"
+    docker exec $container bash -c "cd custom/plugins/HiPayPayments && npm install && cd /var/www/html && ./bin/build-storefront.sh && php bin/console theme:dump"
 elif [ "$1" = 'watch' ] && [ "$2" = 'admin' ]; then
     docker exec $container bash -c "cd ../ && make watch-admin"
 elif [ "$1" = 'watch' ] && [ "$2" = 'front' ]; then
@@ -79,14 +79,14 @@ elif [ "$1" = 'test' ]; then
 
     find=false
     docker exec $container bash -c "
-        cd custom/plugins/HiPayPaymentPlugin
+        cd custom/plugins/HiPayPayments
         composer install -q
     "
 
     if [ "$2" = '' ] || [ "$2" = "phpunit" ]; then
         echo "----- PHPUNIT -----"
         docker exec $container bash -c "
-            cd custom/plugins/HiPayPaymentPlugin
+            cd custom/plugins/HiPayPayments
             php -d xdebug.mode=coverage vendor/bin/phpunit --coverage-html reports/coverage
         "
         find=true
@@ -95,7 +95,7 @@ elif [ "$1" = 'test' ]; then
     if [ "$2" = '' ] || [ "$2" = "phpstan" ]; then
         echo "----- PHPSTAN -----"
         docker exec $container bash -c "
-            cd custom/plugins/HiPayPaymentPlugin
+            cd custom/plugins/HiPayPayments
             vendor/bin/phpstan --version
             vendor/bin/phpstan analyse src --level 1 --xdebug --no-progress -vvv
         "
@@ -106,7 +106,7 @@ elif [ "$1" = 'test' ]; then
         echo "----- INFECTION -----"
         docker exec $container bash -c "
             export XDEBUG_MODE=coverage
-            cd custom/plugins/HiPayPaymentPlugin
+            cd custom/plugins/HiPayPayments
             php -d xdebug.mode=coverage vendor/bin/infection --logger-html=reports/infection.html --min-covered-msi=80 --threads=4
         "
         find=true
@@ -115,7 +115,7 @@ elif [ "$1" = 'test' ]; then
     if [ "$2" = '' ] || [ "$2" = "lint" ]; then
         echo "----- PHP CS FIXER -----"
         docker exec $container bash -c "
-            cd custom/plugins/HiPayPaymentPlugin
+            cd custom/plugins/HiPayPayments
             vendor/bin/php-cs-fixer fix src --dry-run --rules=@Symfony
         "
         find=true

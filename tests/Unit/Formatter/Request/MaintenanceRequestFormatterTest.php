@@ -3,7 +3,7 @@
 namespace HiPay\Payment\Tests\Unit\Formatter\Request;
 
 use HiPay\Payment\Formatter\Request\MaintenanceRequestFormatter;
-use HiPay\Payment\HiPayPaymentPlugin;
+use HiPay\Payment\HiPayPayments;
 use PHPUnit\Framework\TestCase;
 
 class MaintenanceRequestFormatterTest extends TestCase
@@ -21,8 +21,8 @@ class MaintenanceRequestFormatterTest extends TestCase
             json_encode([
                 'source' => 'CMS',
                 'brand' => 'shopware',
-                'brand_version' => HiPayPaymentPlugin::getShopwareVersion(),
-                'integration_version' => HiPayPaymentPlugin::getModuleVersion(),
+                'brand_version' => HiPayPayments::getShopwareVersion(),
+                'integration_version' => HiPayPayments::getModuleVersion(),
             ]),
             $maintenance->source
         );
@@ -46,8 +46,8 @@ class MaintenanceRequestFormatterTest extends TestCase
             json_encode([
                 'source' => 'CMS',
                 'brand' => 'shopware',
-                'brand_version' => HiPayPaymentPlugin::getShopwareVersion(),
-                'integration_version' => HiPayPaymentPlugin::getModuleVersion(),
+                'brand_version' => HiPayPayments::getShopwareVersion(),
+                'integration_version' => HiPayPayments::getModuleVersion(),
             ]),
             $maintenance->source
         );

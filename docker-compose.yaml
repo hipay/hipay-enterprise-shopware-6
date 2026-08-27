@@ -16,10 +16,10 @@ services:
       - ./bin/docker/conf/development/.env
     volumes:
       - 'shopware_data:/var/lib/mysql'
-      - './src:/var/www/html/custom/plugins/HiPayPaymentPlugin/src'
-      - './tests:/var/www/html/custom/plugins/HiPayPaymentPlugin/tests'
-      - './reports:/var/www/html/custom/plugins/HiPayPaymentPlugin/reports'
-      - './composer.json:/var/www/html/custom/plugins/HiPayPaymentPlugin/composer.json'
+      - './src:/var/www/html/custom/plugins/HiPayPayments/src'
+      - './tests:/var/www/html/custom/plugins/HiPayPayments/tests'
+      - './reports:/var/www/html/custom/plugins/HiPayPayments/reports'
+      - './composer.json:/var/www/html/custom/plugins/HiPayPayments/composer.json'
       - './log:/var/www/html/var/log'
   proxy:
     container_name: proxy

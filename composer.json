@@ -2,7 +2,7 @@
   "name": "hipay/hipay-enterprise-shopware-6",
   "description": "HiPay enterprise plugin for Shopware 6",
   "license": "Apache-2.0",
-  "version": "3.3.2",
+  "version": "3.4.0",
   "authors": [
     {
       "email": "support.tpp@hipay.com",
@@ -18,12 +18,12 @@
   ],
   "type": "shopware-platform-plugin",
   "extra": {
-    "shopware-plugin-class": "HiPay\\Payment\\HiPayPaymentPlugin",
+    "shopware-plugin-class": "HiPay\\Payment\\HiPayPayments",
     "plugin-icon": "src/Resources/config/hipay.png",
     "author": "HiPay",
     "label": {
-      "en-GB": "HiPay Payment",
-      "de-DE": "HiPay Payment"
+      "en-GB": "HiPay Payments",
+      "de-DE": "HiPay Payments"
     },
     "description": {
       "en-GB": "HiPay's native Shopware 6 plugin: accept European local payment methods (cards, Apple Pay, PayPal, iDEAL…), boost authorization rates, built-in fraud scoring, PSD2/SCA-ready.",
@@ -49,14 +49,15 @@
     }
   },
   "require": {
+    "php": "~8.2.0 || ~8.3.0 || ~8.4.0 || ~8.5.0",
     "hipay/hipay-fullservice-sdk-php": "^2.24.1",
     "giggsey/libphonenumber-for-php": "^9.0",
-    "shopware/core": "^6.6.0 || ^6.7.0",
-    "shopware/storefront": "^6.6.0 || ^6.7.0"
+    "shopware/core": "^6.5.0 ||^6.6.0 || ^6.7.0",
+    "shopware/storefront": "^6.5.0 ||^6.6.0 || ^6.7.0"
   },
   "require-dev": {
-    "phpunit/php-code-coverage": "~11.0.6",
-    "phpunit/phpunit": "~11.4.0",
+    "phpunit/php-code-coverage": "^11.0.12",
+    "phpunit/phpunit": "^11.5.50",
     "symfony/phpunit-bridge": "~4.4 || ~5.2.3 || ~5.3.0 || ~5.4.0 || ^6.0 | ^v7.2.0",
     "infection/infection": "^0.26.6 || ^0.27 || ^0.29.8",
     "phpstan/phpstan": "^1.10.15",
