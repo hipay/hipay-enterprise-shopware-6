@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: shopware-applepay-well-known-{{ .Release.Name }}
+  labels:
+    cd-hipay: cron-delete
+data:
+  apple-developer-merchantid-domain-association: {{ required "apple_pay_domain_association is required (use --set-file)" .Values.apple_pay_domain_association | quote }}

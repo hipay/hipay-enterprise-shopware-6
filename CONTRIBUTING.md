@@ -99,9 +99,9 @@ If you want to debug locally our CMS module, here are the steps :
     "hostname": "172.17.0.1", // Only for Linux users
     "port": 9000,
     "pathMappings": {
-        "/var/www/html/custom/plugins/HiPayPaymentPlugin/src": "${workspaceFolder}/src",
-        "/var/www/html/custom/plugins/HiPayPaymentPlugin/composer.json": "${workspaceFolder}/composer.json",
-        "/var/www/html/custom/plugins/HiPayPaymentPlugin/tests": "${workspaceFolder}/tests",
+        "/var/www/html/custom/plugins/HiPayPayments/src": "${workspaceFolder}/src",
+        "/var/www/html/custom/plugins/HiPayPayments/composer.json": "${workspaceFolder}/composer.json",
+        "/var/www/html/custom/plugins/HiPayPayments/tests": "${workspaceFolder}/tests",
         "/var/www/html": "${workspaceFolder}/web"
     },
     "runtimeArgs": [

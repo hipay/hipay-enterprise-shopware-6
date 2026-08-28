@@ -30,14 +30,14 @@ echo "ACTIVATING HIPAY PAYMENT MODULE"
 # Activate custom module
 composer require hipay/hipay-fullservice-sdk-php giggsey/libphonenumber-for-php
 bin/console plugin:refresh --quiet
-bin/console plugin:install --activate HiPayPaymentPlugin
+bin/console plugin:install --activate HiPayPayments
 bin/console cache:clear --quiet
 
 echo "-----------------------------------------------------"
 echo "BUILDING ASSETS"
-sudo chown -R www-data:www-data /var/www/html/custom/plugins/HiPayPaymentPlugin
-sudo chmod -R g+w /var/www/html/custom/plugins/HiPayPaymentPlugin
-cd custom/plugins/HiPayPaymentPlugin && npm install && cd /var/www/html
+sudo chown -R www-data:www-data /var/www/html/custom/plugins/HiPayPayments
+sudo chmod -R g+w /var/www/html/custom/plugins/HiPayPayments
+cd custom/plugins/HiPayPayments && npm install && cd /var/www/html
 (cd /var/www && make build-admin)
 ./bin/build-storefront.sh
 bin/console theme:dump

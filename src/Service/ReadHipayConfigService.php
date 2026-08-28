@@ -3,7 +3,7 @@
 namespace HiPay\Payment\Service;
 
 use HiPay\Fullservice\HTTP\Configuration\Configuration;
-use HiPay\Payment\HiPayPaymentPlugin;
+use HiPay\Payment\HiPayPayments;
 use Shopware\Core\System\SystemConfig\SystemConfigService;
 
 class ReadHipayConfigService
@@ -17,7 +17,7 @@ class ReadHipayConfigService
      */
     public function getEnvironment(): string
     {
-        return (string) $this->systemConfigService->getString(HiPayPaymentPlugin::getModuleName() . '.config.environment');
+        return (string) $this->systemConfigService->getString(HiPayPayments::getModuleName() . '.config.environment');
     }
 
     /**
@@ -161,7 +161,7 @@ class ReadHipayConfigService
      */
     public function getCaptureMode(): string
     {
-        return $this->systemConfigService->getString(HiPayPaymentPlugin::getModuleName() . '.config.captureMode');
+        return $this->systemConfigService->getString(HiPayPayments::getModuleName() . '.config.captureMode');
     }
 
     /**
@@ -185,7 +185,7 @@ class ReadHipayConfigService
      */
     public function getOperationMode(): string
     {
-        return $this->systemConfigService->getString(HiPayPaymentPlugin::getModuleName() . '.config.operationMode');
+        return $this->systemConfigService->getString(HiPayPayments::getModuleName() . '.config.operationMode');
     }
 
     /**
@@ -209,7 +209,7 @@ class ReadHipayConfigService
      */
     public function isOneClickPayment(): bool
     {
-        return $this->systemConfigService->getBool(HiPayPaymentPlugin::getModuleName() . '.config.oneClickPayment');
+        return $this->systemConfigService->getBool(HiPayPayments::getModuleName() . '.config.oneClickPayment');
     }
 
     /**
@@ -217,7 +217,7 @@ class ReadHipayConfigService
      */
     public function isCancelButtonDisplayed(): bool
     {
-        return $this->systemConfigService->getBool(HiPayPaymentPlugin::getModuleName() . '.config.cancelButton');
+        return $this->systemConfigService->getBool(HiPayPayments::getModuleName() . '.config.cancelButton');
     }
 
     /**
@@ -225,7 +225,7 @@ class ReadHipayConfigService
      */
     public function isRememberCart(): bool
     {
-        return $this->systemConfigService->getBool(HiPayPaymentPlugin::getModuleName() . '.config.rememberCart');
+        return $this->systemConfigService->getBool(HiPayPayments::getModuleName() . '.config.rememberCart');
     }
 
     /**
@@ -233,7 +233,7 @@ class ReadHipayConfigService
      */
     public function isDebugMode(): bool
     {
-        return $this->systemConfigService->getBool(HiPayPaymentPlugin::getModuleName() . '.config.debugMode');
+        return $this->systemConfigService->getBool(HiPayPayments::getModuleName() . '.config.debugMode');
     }
 
     /**
@@ -242,7 +242,7 @@ class ReadHipayConfigService
     public function get3DSAuthenticator(): int
     {
         try {
-            return $this->systemConfigService->getInt(HiPayPaymentPlugin::getModuleName() . '.config.authFlag3DS');
+            return $this->systemConfigService->getInt(HiPayPayments::getModuleName() . '.config.authFlag3DS');
         } catch (\Throwable $e) {
             return 0;
         }
@@ -283,6 +283,6 @@ class ReadHipayConfigService
      */
     private function getConfigPrefix(): string
     {
-        return HiPayPaymentPlugin::getModuleName() . '.config.';
+        return HiPayPayments::getModuleName() . '.config.';
     }
 }

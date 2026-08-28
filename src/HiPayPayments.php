@@ -46,7 +46,7 @@ use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
 /**
  * @infection-ignore-all
  */
-class HiPayPaymentPlugin extends Plugin
+class HiPayPayments extends Plugin
 {
     /**
      * Plugin ID.
@@ -54,38 +54,38 @@ class HiPayPaymentPlugin extends Plugin
     private string $pluginId;
 
     private const PARAMS = [
-        'CAPTURE_MODE' => 'HiPayPaymentPlugin.config.captureMode',
-        'HIPAY_ENVIRONMENT' => 'HiPayPaymentPlugin.config.environment',
-        'OPERATION_MODE' => 'HiPayPaymentPlugin.config.operationMode',
-        'LOG_DEBUG' => 'HiPayPaymentPlugin.config.debugMode',
+        'CAPTURE_MODE' => 'HiPayPayments.config.captureMode',
+        'HIPAY_ENVIRONMENT' => 'HiPayPayments.config.environment',
+        'OPERATION_MODE' => 'HiPayPayments.config.operationMode',
+        'LOG_DEBUG' => 'HiPayPayments.config.debugMode',
         // PRODUCTION
-        'PRIVATE_LOGIN_PRODUCTION' => 'HiPayPaymentPlugin.config.publicLoginProduction',
-        'PRIVATE_PASSWORD_PRODUCTION' => 'HiPayPaymentPlugin.config.privatePasswordProduction',
-        'PUBLIC_LOGIN_PRODUCTION' => 'HiPayPaymentPlugin.config.privateLoginProduction',
-        'PUBLIC_PASSWORD_PRODUCTION' => 'HiPayPaymentPlugin.config.publicPasswordProduction',
-        'PASSPHRASE_PRODUCTION' => 'HiPayPaymentPlugin.config.passphraseProduction',
-        'HASH_PRODUCTION' => 'HiPayPaymentPlugin.config.hashProduction',
+        'PRIVATE_LOGIN_PRODUCTION' => 'HiPayPayments.config.publicLoginProduction',
+        'PRIVATE_PASSWORD_PRODUCTION' => 'HiPayPayments.config.privatePasswordProduction',
+        'PUBLIC_LOGIN_PRODUCTION' => 'HiPayPayments.config.privateLoginProduction',
+        'PUBLIC_PASSWORD_PRODUCTION' => 'HiPayPayments.config.publicPasswordProduction',
+        'PASSPHRASE_PRODUCTION' => 'HiPayPayments.config.passphraseProduction',
+        'HASH_PRODUCTION' => 'HiPayPayments.config.hashProduction',
         // PRODUCTION APPLE PAY
-        'PUBLIC_APPLEPAY_LOGIN_PRODUCTION' => 'HiPayPaymentPlugin.config.publicApplePayLoginProduction',
-        'PUBLIC_APPLEPAY_PASSWORD_PRODUCTION' => 'HiPayPaymentPlugin.config.publicApplePayPasswordProduction',
-        'PRIVATE_APPLEPAY_LOGIN_PRODUCTION' => 'HiPayPaymentPlugin.config.privateApplePayLoginProduction',
-        'PRIVATE_APPLEPAY_PASSWORD_PRODUCTION' => 'HiPayPaymentPlugin.config.privateApplePayPasswordProduction',
-        'APPLEPAY_PASSPHRASE_PRODUCTION' => 'HiPayPaymentPlugin.config.applePayPassphraseProduction',
-        'HASH_PRODUCTION_APPLEPAY' => 'HiPayPaymentPlugin.config.hashProductionApplePay',
+        'PUBLIC_APPLEPAY_LOGIN_PRODUCTION' => 'HiPayPayments.config.publicApplePayLoginProduction',
+        'PUBLIC_APPLEPAY_PASSWORD_PRODUCTION' => 'HiPayPayments.config.publicApplePayPasswordProduction',
+        'PRIVATE_APPLEPAY_LOGIN_PRODUCTION' => 'HiPayPayments.config.privateApplePayLoginProduction',
+        'PRIVATE_APPLEPAY_PASSWORD_PRODUCTION' => 'HiPayPayments.config.privateApplePayPasswordProduction',
+        'APPLEPAY_PASSPHRASE_PRODUCTION' => 'HiPayPayments.config.applePayPassphraseProduction',
+        'HASH_PRODUCTION_APPLEPAY' => 'HiPayPayments.config.hashProductionApplePay',
         // STAGE
-        'PRIVATE_LOGIN_STAGE' => 'HiPayPaymentPlugin.config.privateLoginStage',
-        'PRIVATE_PASSWORD_STAGE' => 'HiPayPaymentPlugin.config.privatePasswordStage',
-        'PUBLIC_LOGIN_STAGE' => 'HiPayPaymentPlugin.config.publicLoginStage',
-        'PUBLIC_PASSWORD_STAGE' => 'HiPayPaymentPlugin.config.publicPasswordStage',
-        'PASSPHRASE_STAGE' => 'HiPayPaymentPlugin.config.passphraseStage',
-        'HASH_STAGE' => 'HiPayPaymentPlugin.config.hashStage',
+        'PRIVATE_LOGIN_STAGE' => 'HiPayPayments.config.privateLoginStage',
+        'PRIVATE_PASSWORD_STAGE' => 'HiPayPayments.config.privatePasswordStage',
+        'PUBLIC_LOGIN_STAGE' => 'HiPayPayments.config.publicLoginStage',
+        'PUBLIC_PASSWORD_STAGE' => 'HiPayPayments.config.publicPasswordStage',
+        'PASSPHRASE_STAGE' => 'HiPayPayments.config.passphraseStage',
+        'HASH_STAGE' => 'HiPayPayments.config.hashStage',
         // STAGE APPLE PAY
-        'PUBLIC_APPLEPAY_LOGIN_STAGE' => 'HiPayPaymentPlugin.config.publicApplePayLoginStage',
-        'PUBLIC_APPLEPAY_PASSWORD_STAGE' => 'HiPayPaymentPlugin.config.publicApplePayPasswordStage',
-        'PRIVATE_APPLEPAY_LOGIN_STAGE' => 'HiPayPaymentPlugin.config.privateApplePayLoginStage',
-        'PRIVATE_APPLEPAY_PASSWORD_STAGE' => 'HiPayPaymentPlugin.config.privateApplePayPasswordStage',
-        'APPLEPAY_PASSPHRASE_STAGE' => 'HiPayPaymentPlugin.config.applePayPassphraseStage',
-        'HASH_STAGE_APPLEPAY' => 'HiPayPaymentPlugin.config.hashStageApplePay',
+        'PUBLIC_APPLEPAY_LOGIN_STAGE' => 'HiPayPayments.config.publicApplePayLoginStage',
+        'PUBLIC_APPLEPAY_PASSWORD_STAGE' => 'HiPayPayments.config.publicApplePayPasswordStage',
+        'PRIVATE_APPLEPAY_LOGIN_STAGE' => 'HiPayPayments.config.privateApplePayLoginStage',
+        'PRIVATE_APPLEPAY_PASSWORD_STAGE' => 'HiPayPayments.config.privateApplePayPasswordStage',
+        'APPLEPAY_PASSPHRASE_STAGE' => 'HiPayPayments.config.applePayPassphraseStage',
+        'HASH_STAGE_APPLEPAY' => 'HiPayPayments.config.hashStageApplePay',
     ];
 
     private const PAYMENT_METHODS = [

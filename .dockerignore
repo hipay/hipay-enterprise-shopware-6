@@ -8,6 +8,7 @@
 bin/
 !bin/docker/images/shopware/entrypoint.sh
 !bin/docker/conf/nginx/proxy_helm.conf
+!bin/docker/conf/well-known/apple-developer-merchantid-domain-association
 tests/
 web/
 reports/

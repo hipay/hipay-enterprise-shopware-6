@@ -36,9 +36,13 @@ HASH_STAGE_APPLEPAY=$HASH_STAGE_APPLEPAY \n\
 LOG_DEBUG=$LOG_DEBUG \
 ' >>.env
 
-COPY . /var/www/html/custom/plugins/HiPayPaymentPlugin/
+COPY . /var/www/html/custom/plugins/HiPayPayments/
 
-ADD --chown=root:root bin/docker/images/shopware/entrypoint.sh /post-entrypoint.sh
+# Apple Pay domain verification (served at /.well-known/...)
+COPY --chown=www-data:www-data bin/docker/conf/well-known/apple-developer-merchantid-domain-association \
+    /var/www/html/public/.well-known/apple-developer-merchantid-domain-association
+
+COPY --chown=root:root bin/docker/images/shopware/entrypoint.sh /post-entrypoint.sh
 RUN sudo chmod a+x /post-entrypoint.sh
 
 CMD [ "/post-entrypoint.sh" ]

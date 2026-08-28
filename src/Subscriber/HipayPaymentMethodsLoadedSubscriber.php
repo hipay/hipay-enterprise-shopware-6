@@ -2,7 +2,7 @@
 
 namespace HiPay\Payment\Subscriber;
 
-use HiPay\Payment\HiPayPaymentPlugin;
+use HiPay\Payment\HiPayPayments;
 use HiPay\Payment\PaymentMethod\Alma3X;
 use HiPay\Payment\PaymentMethod\Alma4X;
 use HiPay\Payment\PaymentMethod\ApplePay;
@@ -67,7 +67,7 @@ class HipayPaymentMethodsLoadedSubscriber implements EventSubscriberInterface
      */
     public function onHipayPaymentMethodsLoaded(EntitySearchResultLoadedEvent $event): void
     {
-        $pluginData = $this->kernelPluginLoader->getPluginInstance('HiPay\Payment\HiPayPaymentPlugin');
+        $pluginData = $this->kernelPluginLoader->getPluginInstance('HiPay\Payment\HiPayPayments');
 
         if($pluginData === null) {
             return;
@@ -87,25 +87,25 @@ class HipayPaymentMethodsLoadedSubscriber implements EventSubscriberInterface
             }
         }
 
-        $env = $this->systemConfigService->get("HiPayPaymentPlugin.config.environment");
+        $env = $this->systemConfigService->get("HiPayPayments.config.environment");
         $removeHiPayPaymentMethods = $env === null;
 
         if($env === self::HIPAY_LIVE_ENVIRONMENT) {
-            $privateLogin = $this->systemConfigService->get('HiPayPaymentPlugin.config.privateLoginProduction');
-            $privatePassword = $this->systemConfigService->get('HiPayPaymentPlugin.config.privatePasswordProduction');
-            $publicLogin = $this->systemConfigService->get('HiPayPaymentPlugin.config.publicLoginProduction');
-            $publicPassword = $this->systemConfigService->get('HiPayPaymentPlugin.config.publicPasswordProduction');
-            $passphrase = $this->systemConfigService->get('HiPayPaymentPlugin.config.passphraseProduction');
-            $hash = $this->systemConfigService->get('HiPayPaymentPlugin.config.hashProduction');
+            $privateLogin = $this->systemConfigService->get('HiPayPayments.config.privateLoginProduction');
+            $privatePassword = $this->systemConfigService->get('HiPayPayments.config.privatePasswordProduction');
+            $publicLogin = $this->systemConfigService->get('HiPayPayments.config.publicLoginProduction');
+            $publicPassword = $this->systemConfigService->get('HiPayPayments.config.publicPasswordProduction');
+            $passphrase = $this->systemConfigService->get('HiPayPayments.config.passphraseProduction');
+            $hash = $this->systemConfigService->get('HiPayPayments.config.hashProduction');
         }
 
         if($env === self::HIPAY_TEST_ENVIRONMENT) {
-            $privateLogin = $this->systemConfigService->get('HiPayPaymentPlugin.config.privateLoginStage');
-            $privatePassword = $this->systemConfigService->get('HiPayPaymentPlugin.config.privatePasswordStage');
-            $publicLogin = $this->systemConfigService->get('HiPayPaymentPlugin.config.publicLoginStage');
-            $publicPassword = $this->systemConfigService->get('HiPayPaymentPlugin.config.publicPasswordStage');
-            $passphrase = $this->systemConfigService->get('HiPayPaymentPlugin.config.passphraseStage');
-            $hash = $this->systemConfigService->get('HiPayPaymentPlugin.config.hashStage');
+            $privateLogin = $this->systemConfigService->get('HiPayPayments.config.privateLoginStage');
+            $privatePassword = $this->systemConfigService->get('HiPayPayments.config.privatePasswordStage');
+            $publicLogin = $this->systemConfigService->get('HiPayPayments.config.publicLoginStage');
+            $publicPassword = $this->systemConfigService->get('HiPayPayments.config.publicPasswordStage');
+            $passphrase = $this->systemConfigService->get('HiPayPayments.config.passphraseStage');
+            $hash = $this->systemConfigService->get('HiPayPayments.config.hashStage');
         }
 
         $removeHiPayPaymentMethods = $removeHiPayPaymentMethods ||

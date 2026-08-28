@@ -84,9 +84,9 @@ Shopware.Component.register('hipay-settings-paypal', {
   },
   methods: {
     fetchConfig() {
-      this.systemConfigApiService.getValues('HiPayPaymentPlugin').then(async (config) => {
+      this.systemConfigApiService.getValues('HiPayPayments').then(async (config) => {
         this.config = config;
-        this.environment = config['HiPayPaymentPlugin.config.environment'];
+        this.environment = config['HiPayPayments.config.environment'];
         this.setApiCredentials();
         this.generateAuthorizationHeader();
         const products = await this.fetchAvailablePaymentProducts();
@@ -98,8 +98,8 @@ Shopware.Component.register('hipay-settings-paypal', {
     setApiCredentials() {
       const loginKey = this.environment === 'Stage' ? 'publicLoginStage' : 'publicLoginProduction';
       const passwordKey = this.environment === 'Stage' ? 'publicPasswordStage' : 'publicPasswordProduction';
-      this.apiUsername = this.config[`HiPayPaymentPlugin.config.${loginKey}`];
-      this.apiPassword = this.config[`HiPayPaymentPlugin.config.${passwordKey}`];
+      this.apiUsername = this.config[`HiPayPayments.config.${loginKey}`];
+      this.apiPassword = this.config[`HiPayPayments.config.${passwordKey}`];
     },
     generateAuthorizationHeader() {
       const credentials = `${this.apiUsername}:${this.apiPassword}`;

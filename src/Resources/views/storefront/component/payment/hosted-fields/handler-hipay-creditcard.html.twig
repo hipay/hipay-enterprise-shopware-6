@@ -7,7 +7,7 @@
 
 <div {{ componentName }}-plugin data-{{ componentName }}-plugin-options="{{ hipayConfig|json_encode }}">
   {% block hipay_creditcard_html %}
-    {% if config('HiPayPaymentPlugin.config.oneClickPayment') && page.extensions.card_tokens.elements %}      
+    {% if config('HiPayPayments.config.oneClickPayment') && page.extensions.card_tokens.elements %}      
         {% for cardToken in page.extensions.card_tokens %}
         <div class="form-group hipay-token">
           <div class="flex {{ formRadioWrapperClass }}">
@@ -21,7 +21,7 @@
             />
             <label for="token-{{ cardToken.id }}" class="{{ formCheckLabelClass }} hipay-token-label">
               <span class="hipay-card-image">
-                 {% sw_include '@HiPayPaymentPlugin/storefront/component/payment/creditcards/'~ cardToken.brand|lower ~'.svg' %}
+                 {% sw_include '@HiPayPayments/storefront/component/payment/creditcards/'~ cardToken.brand|lower ~'.svg' %}
               </span>
               <span class="hipay-card-content">
                 <span class="hipay-card-pan">{{ cardToken.pan }}</span>

@@ -17,7 +17,7 @@ yarn.lock
 package-lock.json
 reports/
 .php-cs-fixer.cache
-hipay_enterprise
+HiPayPayments
 
 src/Resources/public/administration/
 src/Resources/app/storefront/dist/

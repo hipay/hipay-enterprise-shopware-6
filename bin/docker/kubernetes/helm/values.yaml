@@ -15,3 +15,6 @@ private_applepay_password_stage: ''
 public_applepay_login_stage: ''
 public_applepay_password_stage: ''
 applepay_passphrase_stage: ''
+
+# Apple Pay domain verification file content (pass via --set-file)
+apple_pay_domain_association: ''
