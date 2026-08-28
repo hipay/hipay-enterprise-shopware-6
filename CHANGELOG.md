@@ -4,7 +4,7 @@
 
 ## 3.4.0
 
-- **Fix** : Renamed plugin base class from `HiPayPaymentPlugin` to `HiPayPayments` to match the technical name required by the Shopware Store
+- **Add** : Renamed plugin base class from `HiPayPaymentPlugin` to `HiPayPayments` to match the technical name required by the Shopware Store
 
 ## 3.3.2
 
