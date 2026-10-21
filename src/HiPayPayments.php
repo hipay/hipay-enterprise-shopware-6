@@ -35,6 +35,7 @@ use Shopware\Core\Framework\Plugin\Context\ActivateContext;
 use Shopware\Core\Framework\Plugin\Context\DeactivateContext;
 use Shopware\Core\Framework\Plugin\Context\InstallContext;
 use Shopware\Core\Framework\Plugin\Context\UninstallContext;
+use Shopware\Core\Framework\Plugin\Context\UpdateContext;
 use Shopware\Core\Content\Rule\RuleEntity;
 use Shopware\Core\Framework\Plugin\Util\PluginIdProvider;
 use Shopware\Core\Framework\Rule\Rule;
@@ -167,6 +168,15 @@ class HiPayPayments extends Plugin
         }
     }
 
+    public function update(UpdateContext $context): void
+    {
+        if (version_compare($context->getCurrentPluginVersion(), '3.5.0', '<')) {
+            $this->refreshPaymentMethodImage(Przelewy24::class, $context->getContext());
+        }
+
+        parent::update($context);
+    }
+
     public function activate(ActivateContext $context): void
     {
         foreach (self::PAYMENT_METHODS as $paymentMethod) {
@@ -225,8 +235,8 @@ class HiPayPayments extends Plugin
         foreach ($this->getLanguages($context) as $lang) {
             $translations[] = [
                 'languageId' => $lang['id'],
-                'name' => $classname::getName($lang['code']),
-                'description' => $classname::getDescription($lang['code']),
+                'name' => $classname::getName($lang['code']) ?? $classname::getName('en-GB'),
+                'description' => $classname::getDescription($lang['code']) ?? $classname::getDescription('en-GB'),
                 'customFields' => $classname::addDefaultCustomFields(),
             ];
         }
@@ -348,6 +358,31 @@ class HiPayPayments extends Plugin
         }
 
         return $langMap;
+    }
+
+    /**
+     * Replace the image of an existing payment method by the one shipped with the plugin.
+     */
+    private function refreshPaymentMethodImage(string $classname, Context $context, string $directory = 'media'): void
+    {
+        $filename = $classname::getImage();
+        $paymentMethodId = $this->getPaymentMethodId($classname, $context);
+
+        if (!$filename || !$paymentMethodId) {
+            return;
+        }
+
+        /** @var EntityRepository $paymentRepository */
+        $paymentRepository = $this->container->get($this->paymentMethodRepoName);
+
+        /** @var ImageImportService $imageImportService */
+        $imageImportService = $this->container->get(ImageImportService::class);
+
+        $imageImportService->removeImage($filename, 'payment_method', $context);
+
+        if ($mediaId = $this->addImageToPaymentMethod($filename, $directory, $context)) {
+            $paymentRepository->update([['id' => $paymentMethodId, 'mediaId' => $mediaId]], $context);
+        }
     }
 
     private function addImageToPaymentMethod(string $filename, string $directory, Context $context): ?string

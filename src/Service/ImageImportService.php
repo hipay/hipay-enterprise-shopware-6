@@ -48,6 +48,18 @@ class ImageImportService
         return $this->createMediaFromFile($filePath, $fileName, $fileExtension, $mediaFolder, $context);
     }
 
+    /**
+     * Delete a previously imported image so that the next import creates it again from the file.
+     */
+    public function removeImage(string $fileName, string $mediaFolder, Context $context): void
+    {
+        [$name, $extension] = explode('.', $fileName);
+
+        if ($mediaId = $this->isMediaExisting($name, $extension, $mediaFolder, $context)) {
+            $this->mediaRepository->delete([['id' => $mediaId]], $context);
+        }
+    }
+
     private function createMediaFromFile(string $filePath, string $fileName, string $fileExtension, string $folder, Context $context): ?string
     {
         $mediaId = null;

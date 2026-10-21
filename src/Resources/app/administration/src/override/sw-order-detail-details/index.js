@@ -9,7 +9,7 @@ Shopware.Component.override('sw-order-detail-details', {
   inject: ['hipayService'],
   computed: {
     datasource() {
-      return this.order.extensions.hipayOrder.statusFlows
+      return [...(this.order.extensions?.hipayOrder?.statusFlows ?? [])]
         .sort(
           // antechronological sorting
           (a, b) =>
@@ -38,7 +38,7 @@ Shopware.Component.override('sw-order-detail-details', {
     },
     getTitle() {
       return `${this.$t('hipay.transaction.title')} #${
-        this.order.extensions.hipayOrder.transactionReference
+        this.order.extensions?.hipayOrder?.transactionReference
       }`;
     }
   }

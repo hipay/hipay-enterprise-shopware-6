@@ -69,8 +69,8 @@ class Przelewy24Test extends TestCase
 
         $this->assertSame(
             [
-                'en-GB' => 'Przelewy24',
-                'de-DE' => 'Przelewy24',
+                'en-GB' => 'Blik / Przelewy24',
+                'de-DE' => 'Blik / Przelewy24',
                 'fo-FO' => null,
             ],
             [

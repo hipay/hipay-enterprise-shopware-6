@@ -77,8 +77,11 @@ Shopware.Component.override('sw-order-detail', {
       return criteria;
     },
     showOnHipayMethod() {
-      return /hipay/.test(
-        this.lastTransaction?.paymentMethod?.formattedHandlerIdentifier
+      return (
+        !!this.hipayOrderData &&
+        /hipay/.test(
+          this.lastTransaction?.paymentMethod?.formattedHandlerIdentifier
+        )
       );
     },
     canCancel() {
@@ -129,10 +132,10 @@ Shopware.Component.override('sw-order-detail', {
       return this.order.amountTotal;
     },
     capturedAmount() {
-      return this.hipayOrderData.capturedAmount;
+      return this.hipayOrderData?.capturedAmount ?? 0;
     },
     capturedAmountInProgress() {
-      return this.hipayOrderData.capturedAmountInProgress;
+      return this.hipayOrderData?.capturedAmountInProgress ?? 0;
     },
     remainingCaptureAmount() {
       return Number(
@@ -140,7 +143,7 @@ Shopware.Component.override('sw-order-detail', {
       );
     },
     refundedAmountInProgress() {
-      return this.hipayOrderData.refundedAmountInProgress;
+      return this.hipayOrderData?.refundedAmountInProgress ?? 0;
     },
     remainingRefundAmount() {
       return Number(

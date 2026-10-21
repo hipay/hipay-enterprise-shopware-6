@@ -2,6 +2,10 @@
 
 ## UNRELEASE
 
+## 3.5.0
+
+- **Fix** : Change `Przelewy24` to `Blik / Przelewy24`
+
 ## 3.4.0
 
 - **Add** : Renamed plugin base class from `HiPayPaymentPlugin` to `HiPayPayments` to match the technical name required by the Shopware Store
