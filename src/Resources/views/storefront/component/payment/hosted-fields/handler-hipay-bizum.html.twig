@@ -1,0 +1,17 @@
+<div {{componentName}}-plugin data-{{componentName}}-plugin-options="{{ hipayConfig|json_encode }}">
+    {% block hipay_bizum_html %}
+    <div class="alert alert-warning d-none" id="hipay-bizum-tos" hidden>
+        {{ 'hipay.hosted-fields.bizum.tos'|trans }}
+    </div>
+    <div class="form-group d-none" id="hipay-bizum-phone-group" hidden>
+        <label class="form-label" for="hipay-bizum-phone">
+            {{ 'hipay.hosted-fields.bizum.phone'|trans }}
+        </label>
+        <div class="hostedfield form-control" id="hipay-bizum-phone"></div>
+        <div class="invalid-feedback" id="error-hipay-bizum-phone"></div>
+    </div>
+    <p class="hipay-bizum-info text-muted" id="hipay-bizum-info" data-hipay-tos-keep>
+        {{ 'hipay.hosted-fields.bizum.info'|trans }}
+    </p>
+    {% endblock %}
+</div>
