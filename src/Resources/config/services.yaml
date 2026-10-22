@@ -73,6 +73,9 @@ services:
             $hipayOrderRefundRepository: '@hipay_order_refund.repository'
         tags: ['controller.service_arguments']
 
+    HiPay\Payment\Controller\HipayPendingController:
+        $orderTransactionRepository: '@order_transaction.repository'
+
     HiPay\Payment\Controller\HipayStorefrontController:
         $hipayCardTokenRepository: '@hipay_card_token.repository'
 

@@ -29,6 +29,7 @@ class Bizum extends AbstractPaymentMethod
         $names = [
             'en-GB' => 'Bizum',
             'de-DE' => 'Bizum',
+            'es-ES' => 'Bizum',
         ];
 
         return $names[$lang] ?? null;
@@ -39,6 +40,7 @@ class Bizum extends AbstractPaymentMethod
         $descriptions = [
             'en-GB' => 'Pay your order with the Bizum application',
             'de-DE' => 'Bezahlen Sie Ihre Bestellung mit der Bizum Anwendung',
+            'es-ES' => 'Paga tu pedido con la aplicación Bizum',
         ];
 
         return $descriptions[$lang] ?? null;

@@ -1,0 +1,17 @@
+<div {{componentName}}-plugin data-{{componentName}}-plugin-options="{{ hipayConfig|json_encode }}">
+    {% block hipay_bancomatpay_html %}
+    <div class="alert alert-warning d-none" id="hipay-bancomatpay-tos" hidden>
+        {{ 'hipay.hosted-fields.bancomatpay.tos'|trans }}
+    </div>
+    <div class="form-group d-none" id="hipay-bancomatpay-phone-group" hidden>
+        <label class="form-label" for="hipay-bancomatpay-phone">
+            {{ 'hipay.hosted-fields.bancomatpay.phone'|trans }}
+        </label>
+        <div class="hostedfield form-control" id="hipay-bancomatpay-phone"></div>
+        <div class="invalid-feedback" id="error-hipay-bancomatpay-phone"></div>
+    </div>
+    <p class="hipay-bancomatpay-info text-muted" id="hipay-bancomatpay-info" data-hipay-tos-keep>
+        {{ 'hipay.hosted-fields.bancomatpay.info'|trans }}
+    </p>
+    {% endblock %}
+</div>

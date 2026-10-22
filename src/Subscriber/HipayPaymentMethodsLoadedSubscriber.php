@@ -6,7 +6,9 @@ use HiPay\Payment\HiPayPayments;
 use HiPay\Payment\PaymentMethod\Alma3X;
 use HiPay\Payment\PaymentMethod\Alma4X;
 use HiPay\Payment\PaymentMethod\ApplePay;
+use HiPay\Payment\PaymentMethod\BancomatPay;
 use HiPay\Payment\PaymentMethod\Bancontact;
+use HiPay\Payment\PaymentMethod\Bizum;
 use HiPay\Payment\PaymentMethod\CreditCard;
 use HiPay\Payment\PaymentMethod\Giropay;
 use HiPay\Payment\PaymentMethod\Ideal;
@@ -34,7 +36,9 @@ class HipayPaymentMethodsLoadedSubscriber implements EventSubscriberInterface
         Alma3X::class,
         Alma4X::class,
         ApplePay::class,
+        BancomatPay::class,
         Bancontact::class,
+        Bizum::class,
         CreditCard::class,
         Giropay::class,
         Ideal::class,

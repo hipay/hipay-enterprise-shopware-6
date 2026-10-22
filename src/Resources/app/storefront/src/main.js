@@ -38,6 +38,24 @@ PluginManager.register(
 );
 
 PluginManager.register(
+  'HipayPendingPollingPlugin',
+  () => import('./pending-polling/hipay-pending-polling.plugin'),
+  '[data-hipay-pending-polling]'
+);
+
+PluginManager.register(
+  'HandlerHipayBizumPlugin',
+  () => import('./payment/hipay-hosted-fields/handler-hipay-bizum/handler-hipay-bizum.plugin'),
+  '[handler-hipay-bizum-plugin]'
+);
+
+PluginManager.register(
+  'HandlerHipayBancomatpayPlugin',
+  () => import('./payment/hipay-hosted-fields/handler-hipay-bancomatpay/handler-hipay-bancomatpay.plugin'),
+  '[handler-hipay-bancomatpay-plugin]'
+);
+
+PluginManager.register(
   'HandlerHipaySepadirectdebitPlugin',
   () => import('./payment/hipay-hosted-fields/handler-hipay-sepa-direct-debit/handler-hipay-sepadirectdebit.plugin'),
   '[handler-hipay-sepadirectdebit-plugin]'

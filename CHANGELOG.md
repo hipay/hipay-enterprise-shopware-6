@@ -5,6 +5,8 @@
 ## 3.5.0
 
 - **Fix** : Change `Przelewy24` to `Blik / Przelewy24`
+- **Add** : Added Bizum payment method
+- **Add** : Added Bancomat Pay payment method
 
 ## 3.4.0
 

@@ -70,11 +70,13 @@ class BizumTest extends TestCase
             [
                 'en-GB' => 'Pay your order with the Bizum application',
                 'de-DE' => 'Bezahlen Sie Ihre Bestellung mit der Bizum Anwendung',
+                'es-ES' => 'Paga tu pedido con la aplicación Bizum',
                 'fo-FO' => null,
             ],
             [
                 'en-GB' => Bizum::getDescription('en-GB'),
                 'de-DE' => Bizum::getDescription('de-DE'),
+                'es-ES' => Bizum::getDescription('es-ES'),
                 'fo-FO' => Bizum::getDescription('fo-FO'),
             ]
         );
@@ -83,11 +85,13 @@ class BizumTest extends TestCase
             [
                 'en-GB' => 'Bizum',
                 'de-DE' => 'Bizum',
+                'es-ES' => 'Bizum',
                 'fo-FO' => null,
             ],
             [
                 'en-GB' => Bizum::getName('en-GB'),
                 'de-DE' => Bizum::getName('de-DE'),
+                'es-ES' => Bizum::getName('es-ES'),
                 'fo-FO' => Bizum::getName('fo-FO'),
             ]
         );
