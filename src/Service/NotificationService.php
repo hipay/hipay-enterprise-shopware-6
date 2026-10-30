@@ -733,7 +733,17 @@ class NotificationService
      */
     private function savePaymentToken(array $paymentMethod, string $customerId, Context $context): void
     {
-        $this->hipayCardTokenRepository->upsert([[
+        $existingCriteria = (new Criteria())
+            ->addFilter(new EqualsFilter('customerId', $customerId))
+            ->addFilter(new EqualsFilter('brand', $paymentMethod['brand']))
+            ->addFilter(new EqualsFilter('pan', $paymentMethod['pan']))
+            ->addFilter(new EqualsFilter('cardExpiryMonth', $paymentMethod['card_expiry_month']))
+            ->addFilter(new EqualsFilter('cardExpiryYear', $paymentMethod['card_expiry_year']))
+            ->setLimit(1)
+        ;
+        $existingId = $this->hipayCardTokenRepository->searchIds($existingCriteria, $context)->firstId();
+
+        $data = [
             'token' => $paymentMethod['token'],
             'brand' => $paymentMethod['brand'],
             'pan' => $paymentMethod['pan'],
@@ -743,6 +753,12 @@ class NotificationService
             'issuer' => $paymentMethod['issuer'],
             'country' => $paymentMethod['country'],
             'customerId' => $customerId,
-        ]], $context);
+        ];
+
+        if ($existingId) {
+            $data['id'] = $existingId;
+        }
+
+        $this->hipayCardTokenRepository->upsert([$data], $context);
     }
 }

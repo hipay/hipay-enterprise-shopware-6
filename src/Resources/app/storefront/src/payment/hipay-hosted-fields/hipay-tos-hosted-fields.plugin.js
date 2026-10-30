@@ -44,18 +44,8 @@ export default class HipayTosHostedFieldsPlugin extends HipayHostedFieldsPlugin 
     });
   }
 
-  _getTos() {
-    return document.querySelector('input[name=tos]');
-  }
-
   _getSubmitButton() {
     return document.querySelector('#confirmFormSubmit');
-  }
-
-  _isTosAccepted() {
-    const tos = this._getTos();
-
-    return !tos || tos.checked;
   }
 
   _toggleFields() {
@@ -111,7 +101,7 @@ export default class HipayTosHostedFieldsPlugin extends HipayHostedFieldsPlugin 
     const button = this._getSubmitButton();
 
     if (button) {
-      button.disabled = !(this._isTosAccepted() && this._valid);
+      button.disabled = this._isTosAccepted() && !this._valid;
     }
   }
 

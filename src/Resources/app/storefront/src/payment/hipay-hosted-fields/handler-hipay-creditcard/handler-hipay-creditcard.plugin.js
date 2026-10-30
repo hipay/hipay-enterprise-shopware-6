@@ -37,6 +37,15 @@ export default class HandlerHipayCreditcardPlugin extends HipayHostedFieldsPlugi
     );
   }
 
+  hasPaymentData() {
+    const savedCard = document.querySelector(
+      'input[name="hipay-token"][value]:checked'
+    );
+    const inputResponse = document.querySelector(`#${this.options.idResponse}`);
+
+    return !!savedCard && !!inputResponse?.getAttribute('value');
+  }
+
   getPaymentDefaultOption() {
     return {
       idCardHolder: 'hipay-card-holder',
