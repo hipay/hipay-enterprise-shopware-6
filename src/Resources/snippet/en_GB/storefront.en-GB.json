@@ -3,6 +3,10 @@
     "hosted-page": {
       "redirect-message": "You will be redirected to an external payment page. Please do not refresh the page during the process"
     },
+    "pending": {
+      "title": "Waiting for your payment",
+      "message": "Please validate the payment in your banking application. Do not close or refresh this page."
+    },
     "hosted-fields": {
       "creditcard": {
         "fullname": "Fullname",
@@ -21,6 +25,16 @@
       },
       "mbway": {
         "phone": "Phone"
+      },
+      "bizum": {
+        "phone": "Phone",
+        "tos": "Please accept the terms of service.",
+        "info": "The payment must be validated in your Bizum application."
+      },
+      "bancomatpay": {
+        "phone": "Phone",
+        "tos": "Please accept the terms of service.",
+        "info": "The payment must be validated in your Bancomat Pay application."
       },
       "sdd": {
         "gender": "Gender",

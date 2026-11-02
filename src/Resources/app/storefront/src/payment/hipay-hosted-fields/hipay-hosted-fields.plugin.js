@@ -42,6 +42,47 @@ export default class HipayHostedFieldsPlugin extends window.PluginBaseClass {
     );
 
     this._registerEvents();
+    this._registerTosGuard();
+  }
+
+  destroy() {
+    document.removeEventListener('submit', this._onTosSubmit, true);
+    super.destroy();
+  }
+
+  _getTos() {
+    return document.querySelector('input[name=tos]');
+  }
+
+  _isTosAccepted() {
+    const tos = this._getTos();
+
+    return !tos || tos.checked;
+  }
+
+  _registerTosGuard() {
+    this._onTosSubmit = (event) => {
+      if (event.target !== this._form || this._isTosAccepted()) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      this._scrollToTos();
+    };
+    document.addEventListener('submit', this._onTosSubmit, true);
+  }
+
+  _scrollToTos() {
+    const tos = this._getTos();
+    if (!tos) {
+      return;
+    }
+
+    tos.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (tos.reportValidity) {
+      tos.reportValidity();
+    }
   }
 
   _registerEvents() {
@@ -91,6 +132,10 @@ export default class HipayHostedFieldsPlugin extends window.PluginBaseClass {
       });
 
       this._form.addEventListener('submit', (e) => {
+        if (this.hasPaymentData()) {
+          return;
+        }
+
         e.preventDefault();
         const target = e.currentTarget;
 
@@ -134,6 +179,10 @@ export default class HipayHostedFieldsPlugin extends window.PluginBaseClass {
     if (errorNode) {
       errorNode.innerHTML = errorMessage;
     }
+  }
+
+  hasPaymentData() {
+    return false;
   }
 
   getPaymentName() {

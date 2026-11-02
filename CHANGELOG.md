@@ -1,10 +1,15 @@
 # CHANGELOG
 
-## UNRELEASE
+## 3.5.0
+
+- **Fix** : Change `Przelewy24` to `Blik / Przelewy24`
+- **Fix** : Fixed One Click issue
+- **Add** : Added Bizum payment method
+- **Add** : Added Bancomat Pay payment method
 
 ## 3.4.0
 
-- **Fix** : Renamed plugin base class from `HiPayPaymentPlugin` to `HiPayPayments` to match the technical name required by the Shopware Store
+- **Add** : Renamed plugin base class from `HiPayPaymentPlugin` to `HiPayPayments` to match the technical name required by the Shopware Store
 
 ## 3.3.2
 

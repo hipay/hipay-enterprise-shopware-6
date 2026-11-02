@@ -23,8 +23,8 @@ class Przelewy24 extends AbstractPaymentMethod
     public static function getName(string $lang): ?string
     {
         $names = [
-            'en-GB' => 'Przelewy24',
-            'de-DE' => 'Przelewy24',
+            'en-GB' => 'Blik / Przelewy24',
+            'de-DE' => 'Blik / Przelewy24',
         ];
 
         return $names[$lang] ?? null;

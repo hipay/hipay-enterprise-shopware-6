@@ -1,0 +1,19 @@
+{% sw_extends '@Storefront/storefront/base.html.twig' %}
+
+{% block base_header %}{% endblock %}
+{% block base_navigation %}{% endblock %}
+
+{% block base_content %}
+    <div class="container text-center py-5"
+         data-hipay-pending-polling="true"
+         data-hipay-pending-polling-plugin-options="{{ {
+             statusUrl: statusUrl,
+             finalizeUrl: finalizeUrl,
+             interval: 5000,
+             timeout: 600000
+         }|json_encode }}">
+        <div class="spinner-border mb-4" role="status"></div>
+        <h1 class="h3">{{ 'hipay.pending.title'|trans }}</h1>
+        <p>{{ 'hipay.pending.message'|trans }}</p>
+    </div>
+{% endblock %}

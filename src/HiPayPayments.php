@@ -9,7 +9,9 @@ use HiPay\Fullservice\Exception\UnexpectedValueException;
 use HiPay\Payment\PaymentMethod\Alma3X;
 use HiPay\Payment\PaymentMethod\Alma4X;
 use HiPay\Payment\PaymentMethod\ApplePay;
+use HiPay\Payment\PaymentMethod\BancomatPay;
 use HiPay\Payment\PaymentMethod\Bancontact;
+use HiPay\Payment\PaymentMethod\Bizum;
 use HiPay\Payment\PaymentMethod\CreditCard;
 use HiPay\Payment\PaymentMethod\Giropay;
 use HiPay\Payment\PaymentMethod\Ideal;
@@ -35,6 +37,7 @@ use Shopware\Core\Framework\Plugin\Context\ActivateContext;
 use Shopware\Core\Framework\Plugin\Context\DeactivateContext;
 use Shopware\Core\Framework\Plugin\Context\InstallContext;
 use Shopware\Core\Framework\Plugin\Context\UninstallContext;
+use Shopware\Core\Framework\Plugin\Context\UpdateContext;
 use Shopware\Core\Content\Rule\RuleEntity;
 use Shopware\Core\Framework\Plugin\Util\PluginIdProvider;
 use Shopware\Core\Framework\Rule\Rule;
@@ -92,7 +95,9 @@ class HiPayPayments extends Plugin
         Alma3X::class,
         Alma4X::class,
         ApplePay::class,
+        BancomatPay::class,
         Bancontact::class,
+        Bizum::class,
         CreditCard::class,
         Giropay::class,
         Ideal::class,
@@ -153,6 +158,19 @@ class HiPayPayments extends Plugin
         $this->addDefaultParameters($context->getContext());
     }
 
+    public function update(UpdateContext $context): void
+    {
+        if (version_compare($context->getCurrentPluginVersion(), '3.5.0', '<')) {
+            $this->refreshPaymentMethodImage(Przelewy24::class, $context->getContext());
+        }
+
+        foreach (self::PAYMENT_METHODS as $paymentMethod) {
+            if ($this->addPaymentMethod($paymentMethod, $context->getContext())) {
+                $this->setPaymentMethodIsActive(false, $paymentMethod, $context->getContext(), 'media', true);
+            }
+        }
+    }
+
     public function uninstall(UninstallContext $context): void
     {
         // Only set the payment method to inactive when uninstalling. Removing the payment method would
@@ -170,6 +188,7 @@ class HiPayPayments extends Plugin
     public function activate(ActivateContext $context): void
     {
         foreach (self::PAYMENT_METHODS as $paymentMethod) {
+            $this->addPaymentMethod($paymentMethod, $context->getContext());
             $this->setPaymentMethodIsActive(
                 true,
                 $paymentMethod,
@@ -201,7 +220,7 @@ class HiPayPayments extends Plugin
     private function addPaymentMethod(
         string $classname,
         Context $context
-    ): void {
+    ): bool {
         // Check implementation
         if (!is_subclass_of($classname, PaymentMethodInterface::class)) {
             throw new UnexpectedValueException('The payment method "' . $classname . '" must implement interface "' . PaymentMethodInterface::class . '"');
@@ -209,7 +228,7 @@ class HiPayPayments extends Plugin
 
         // Payment method exists already
         if ($this->getPaymentMethodId($classname, $context)) {
-            return;
+            return false;
         }
 
         if (!isset($this->pluginId)) {
@@ -225,8 +244,8 @@ class HiPayPayments extends Plugin
         foreach ($this->getLanguages($context) as $lang) {
             $translations[] = [
                 'languageId' => $lang['id'],
-                'name' => $classname::getName($lang['code']),
-                'description' => $classname::getDescription($lang['code']),
+                'name' => $classname::getName($lang['code']) ?? $classname::getName('en-GB'),
+                'description' => $classname::getDescription($lang['code']) ?? $classname::getDescription('en-GB'),
                 'customFields' => $classname::addDefaultCustomFields(),
             ];
         }
@@ -244,6 +263,8 @@ class HiPayPayments extends Plugin
         /** @var EntityRepository $paymentRepository */
         $paymentRepository = $this->container->get($this->paymentMethodRepoName);
         $paymentRepository->create([$paymentMethod], $context);
+
+        return true;
     }
 
     /**
@@ -256,7 +277,8 @@ class HiPayPayments extends Plugin
         bool $active,
         string $classname,
         Context $context,
-        string $directory = 'media'
+        string $directory = 'media',
+        bool $applyDefaults = false
     ): void {
         /** @var EntityRepository $paymentRepository */
         $paymentRepository = $this->container->get($this->paymentMethodRepoName);
@@ -273,7 +295,7 @@ class HiPayPayments extends Plugin
             'active' => $active,
         ];
 
-        if ($active) {
+        if ($active || $applyDefaults) {
             $filename = $classname::getImage();
             if ($filename && $mediaId = $this->addImageToPaymentMethod($filename, $directory, $context)) {
                 $paymentMethod['mediaId'] = $mediaId;
@@ -348,6 +370,31 @@ class HiPayPayments extends Plugin
         }
 
         return $langMap;
+    }
+
+    /**
+     * Replace the image of an existing payment method by the one shipped with the plugin.
+     */
+    private function refreshPaymentMethodImage(string $classname, Context $context, string $directory = 'media'): void
+    {
+        $filename = $classname::getImage();
+        $paymentMethodId = $this->getPaymentMethodId($classname, $context);
+
+        if (!$filename || !$paymentMethodId) {
+            return;
+        }
+
+        /** @var EntityRepository $paymentRepository */
+        $paymentRepository = $this->container->get($this->paymentMethodRepoName);
+
+        /** @var ImageImportService $imageImportService */
+        $imageImportService = $this->container->get(ImageImportService::class);
+
+        $imageImportService->removeImage($filename, 'payment_method', $context);
+
+        if ($mediaId = $this->addImageToPaymentMethod($filename, $directory, $context)) {
+            $paymentRepository->update([['id' => $paymentMethodId, 'mediaId' => $mediaId]], $context);
+        }
     }
 
     private function addImageToPaymentMethod(string $filename, string $directory, Context $context): ?string

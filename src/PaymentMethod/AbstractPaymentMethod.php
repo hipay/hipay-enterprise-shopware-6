@@ -43,6 +43,7 @@ use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionColl
 use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionEntity;
 use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStateHandler;
 use Shopware\Core\Checkout\Order\OrderEntity;
+use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStates;
 use Shopware\Core\Checkout\Payment\Cart\PaymentHandler\AbstractPaymentHandler;
 use Shopware\Core\Checkout\Payment\Cart\PaymentHandler\PaymentHandlerType;
 use Shopware\Core\Checkout\Payment\Cart\PaymentTransactionStruct;
@@ -186,6 +187,10 @@ abstract class AbstractPaymentMethod extends AbstractPaymentHandler implements P
             throw PaymentException::asyncFinalizeInterrupted($orderTransactionId, 'Payment ' . $return);
         }
 
+        if (static::usesPendingPage() && !$this->isTransactionOpen($orderTransactionId, $context)) {
+            return;
+        }
+
         $this->transactionStateHandler->process($orderTransactionId, $context);
     }
 
@@ -226,6 +231,39 @@ abstract class AbstractPaymentMethod extends AbstractPaymentHandler implements P
             'allowPartialRefund' => (bool) static::$paymentConfig->getCanRefundPartially(),
             'forceHostedFields' => static::forceHostedFields(),
         ];
+    }
+
+    /**
+     * Send the customer to the HiPay pending page
+     */
+    protected static function usesPendingPage(): bool
+    {
+        return false;
+    }
+
+    private function isTransactionOpen(string $orderTransactionId, Context $context): bool
+    {
+        $criteria = (new Criteria([$orderTransactionId]))->addAssociation('stateMachineState');
+        $orderTransaction = $this->orderTransactionRepository->search($criteria, $context)->first();
+
+        return !$orderTransaction instanceof OrderTransactionEntity
+            || $orderTransaction->getStateMachineState()?->getTechnicalName() === OrderTransactionStates::STATE_OPEN;
+    }
+
+    private function getPendingUrl(string $returnUrl, string $orderTransactionId): string
+    {
+        $pendingUrl = str_replace('/payment/finalize-transaction', '/hipay/pending', $returnUrl);
+
+        if ($pendingUrl === $returnUrl) {
+            return $returnUrl;
+        }
+
+        return $pendingUrl . (str_contains($pendingUrl, '?') ? '&' : '?') . 'transactionId=' . $orderTransactionId;
+    }
+
+    protected static function forceCaptureAuto(): bool
+    {
+        return false;
     }
 
     protected static function forceHostedFields(): bool
@@ -456,7 +494,7 @@ abstract class AbstractPaymentMethod extends AbstractPaymentHandler implements P
         string $locale,
         Context $context
     ): OrderRequest {
-        $isCaptureAuto = $this->config->isCaptureAuto();
+        $isCaptureAuto = static::forceCaptureAuto() || $this->config->isCaptureAuto();
         $order = $orderTransaction->getOrder();
         $operationId = Uuid::randomHex();
         $orderRequest->orderid = $order->getOrderNumber() . '-' . dechex(crc32($orderTransaction->getId()));
@@ -499,7 +537,9 @@ abstract class AbstractPaymentMethod extends AbstractPaymentHandler implements P
         $orderRequest->account_info = $this->generateAccountInfo($order, $context);
 
         $orderRequest->accept_url = $returnUrl;
-        $orderRequest->pending_url = $returnUrl;
+        $orderRequest->pending_url = static::usesPendingPage()
+            ? $this->getPendingUrl($returnUrl, $orderTransaction->getId())
+            : $returnUrl;
         $orderRequest->decline_url = $returnUrl . '&return=' . TransactionState::ERROR;
         $orderRequest->exception_url = $returnUrl . '&return=' . TransactionState::ERROR;
         $orderRequest->cancel_url = $returnUrl . '&return=' . TransactionState::ERROR;
@@ -907,7 +947,9 @@ abstract class AbstractPaymentMethod extends AbstractPaymentHandler implements P
                 break;
             case TransactionState::COMPLETED:
             case TransactionState::PENDING:
-                $redirect = $returnUrl;
+                $redirect = static::usesPendingPage()
+                    ? $this->getPendingUrl($returnUrl, $orderTransaction->getId())
+                    : $returnUrl;
                 break;
 
             case TransactionState::DECLINED:
