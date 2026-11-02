@@ -1,7 +1,5 @@
 # CHANGELOG
 
-## UNRELEASE
-
 ## 3.5.0
 
 - **Fix** : Change `Przelewy24` to `Blik / Przelewy24`
