@@ -14,6 +14,7 @@ use HiPay\Payment\PaymentMethod\Bancontact;
 use HiPay\Payment\PaymentMethod\Bizum;
 use HiPay\Payment\PaymentMethod\CreditCard;
 use HiPay\Payment\PaymentMethod\Giropay;
+use HiPay\Payment\PaymentMethod\GooglePay;
 use HiPay\Payment\PaymentMethod\Ideal;
 use HiPay\Payment\PaymentMethod\Klarna;
 use HiPay\Payment\PaymentMethod\Mbway;
@@ -100,6 +101,7 @@ class HiPayPayments extends Plugin
         Bizum::class,
         CreditCard::class,
         Giropay::class,
+        GooglePay::class,
         Ideal::class,
         Paypal::class,
         Mbway::class,

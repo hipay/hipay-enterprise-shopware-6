@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## UNRELEASE
+
+## 3.6.0
+
+- **Add** : Added Google Pay payment method
+
 ## 3.5.0
 
 - **Fix** : Change `Przelewy24` to `Blik / Przelewy24`

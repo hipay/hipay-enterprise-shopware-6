@@ -79,6 +79,11 @@
       "title": "HiPay-Transaktionslebenszyklus"
     },
     "settings": {
+      "googlepay": {
+        "title": "Konfiguration",
+        "displayName": "Google Pay Anzeigename",
+        "displayNameHelp": "Name, der im Google Pay-Fenster angezeigt wird. Wenn leer, wird der Name des Verkaufskanals verwendet."
+      },
       "applepay": {
         "title": "Konfiguration",
         "merchantName": "Händlername",

@@ -25,6 +25,38 @@
   {% endblock %}
   {{ parent() }}
 
+  {% if 'handler_hipay_googlepay' in payment.formattedHandlerIdentifier
+      and activeRoute in ['frontend.account.edit-order.page', 'frontend.checkout.confirm.page']
+  %}
+    {% set environment = config('HiPayPayments.config.environment') %}
+    {% set env = environment|lower|default('stage') %}
+    {% set billingAddress = page.order is defined and page.order ? page.order.billingAddress : context.customer.activeBillingAddress %}
+    {% set decimals = context.itemRounding.decimals|default(2) %}
+    {% set googlePayConfig = {
+      username: config('HiPayPayments.config.publicLogin' ~ environment),
+      password: config('HiPayPayments.config.publicPassword' ~ environment),
+      environment: env,
+      lang: localeCode|slice(0, 2) == 'fr' ? 'fr' : 'en',
+      debug: config('HiPayPayments.config.debugMode') ? true : false,
+      displayName: payment.customFields.displayName|default(context.salesChannel.translated.name),
+      amount: summary.price.totalPrice|number_format(decimals, '.', ''),
+      currency: currency,
+      countryCode: billingAddress.country.iso|default(localeCode|slice(3, 2)),
+      supportedNetworks: ['visa', 'mastercard', 'maestro', 'cb']
+    } %}
+
+    {# Eligibility is only known once the SDK ran: probe it on page load so an ineligible Google Pay is never shown #}
+    {% if payment.id is not same as(selectedPaymentMethodId)
+        and (config('HiPayPayments.config.operationMode') == 'hostedFields' or payment.extensions.hipayConfig.forceHostedFields)
+    %}
+      <style>.payment-method:has([handler-hipay-google-pay-probe-plugin]:not([data-hipay-googlepay-checked])) { display: none; }</style>
+      <script src={{config('HiPayPayments.config.sdkjsUrl')}}></script>
+      <div handler-hipay-google-pay-probe-plugin data-handler-hipay-google-pay-probe-plugin-options="{{ googlePayConfig|json_encode }}" aria-hidden="true" style="position: absolute; left: -9999px; width: 320px; height: 48px; overflow: hidden;">
+        <div id="hipay-googlepay-probe" style="width: 320px; height: 48px;"></div>
+      </div>
+    {% endif %}
+  {% endif %}
+
   {% if payment.id is same as(selectedPaymentMethodId)
       and 'handler_hipay_' in payment.formattedHandlerIdentifier
       and activeRoute in ['frontend.account.edit-order.page', 'frontend.checkout.confirm.page']
@@ -65,6 +97,8 @@
             }
           }
         %}
+      {% elseif componentName == 'handler-hipay-googlepay' %}
+        {% set hipayConfig = googlePayConfig %}
       {% elseif isPayPalV2Enabled %}
         {% set shippingAddress = null %}
         {% set addr = null %}
