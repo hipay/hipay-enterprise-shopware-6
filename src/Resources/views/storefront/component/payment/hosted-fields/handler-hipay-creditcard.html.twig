@@ -88,7 +88,7 @@
             <div class="invalid-feedback" id="error-hipay-cvc"></div>
           </div>
 
-          {% if context.customer.guest == 0 %}
+          {% if config('HiPayPayments.config.oneClickPayment') and context.customer.guest == 0 %}
             <div class="{{ formCheckboxWrapperClass }} force-checkbox" >
               <input type="checkbox"
                 class="{{ formCheckInputClass }}"
