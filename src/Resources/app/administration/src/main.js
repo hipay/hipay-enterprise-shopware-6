@@ -11,6 +11,7 @@ import './settings/hipay-settings-cards-selector';
 import './settings/hipay-settings-multibanco';
 import './settings/hipay-settings-applepay';
 import './settings/hipay-settings-paypal';
+import './settings/hipay-settings-googlepay';
 
 import './component/hipay-basket-grid';
 import './override/sw-order-detail-details';

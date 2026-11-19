@@ -43,6 +43,10 @@
         "bank-name": "Bank name",
         "iban": "IBAN"
       },
+      "googlepay": {
+        "tos": "Please accept the terms of service.",
+        "error": "Google Pay payment failed. Please try again or use another payment method."
+      },
       "applepay": {
         "tos": "Please accept the terms of service.",
         "infoMessage": "This browser does not handle Apple Pay. Please use another payment method.",

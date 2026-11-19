@@ -8,6 +8,18 @@ PluginManager.register(
 );
 
 PluginManager.register(
+  'HandlerHipayGooglePayPlugin',
+  () => import('./payment/hipay-hosted-fields/handler-hipay-googlepay/handler-hipay-googlepay.plugin'),
+  '[handler-hipay-google-pay-plugin]'
+);
+
+PluginManager.register(
+  'HandlerHipayGooglePayProbePlugin',
+  () => import('./payment/hipay-hosted-fields/handler-hipay-googlepay/handler-hipay-googlepay-probe.plugin'),
+  '[handler-hipay-google-pay-probe-plugin]'
+);
+
+PluginManager.register(
   'HandlerHipayPaypalPlugin',
   () => import('./payment/hipay-hosted-fields/handler-hipay-paypal/handler-hipay-paypal.plugin'),
   '[handler-hipay-paypal-plugin]'

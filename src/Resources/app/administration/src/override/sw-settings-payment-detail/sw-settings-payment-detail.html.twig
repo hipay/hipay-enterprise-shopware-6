@@ -5,6 +5,11 @@
       :paymentMethod="paymentMethod">
     </hipay-settings-applepay>
   </template>
+  <template v-if="paymentMethod.formattedHandlerIdentifier == 'handler_hipay_googlepay'">
+    <hipay-settings-googlepay :is-loading="isLoading"
+      :paymentMethod="paymentMethod">
+    </hipay-settings-googlepay>
+  </template>
   <template v-if="paymentMethod.formattedHandlerIdentifier == 'handler_hipay_creditcard'">
     <hipay-settings-cards-selector :is-loading="isLoading"
       :paymentMethod="paymentMethod"></hipay-settings-cards-selector>

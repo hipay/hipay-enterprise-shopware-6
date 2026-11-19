@@ -1,0 +1,17 @@
+<div handler-hipay-google-pay-plugin data-handler-hipay-google-pay-plugin-options="{{ hipayConfig|json_encode }}">
+  {% block hipay_googlepay_html %}
+    <div class="form-group row">
+      <div class="col-md-9">
+        {# The SDK requires an empty container with an explicit height (min 240x40) #}
+        <div id="hipay-googlepay" style="width: 100%; max-width: 320px; height: 48px;"></div>
+        <span class="error-text-hp" id="hipay-googlepay-error-message"></span>
+        <p id="hipay-googlepay-tos-message" style="display: none">
+          {{ 'hipay.hosted-fields.googlepay.tos'|trans }}
+        </p>
+        <p id="hipay-googlepay-failed-message" style="display: none">
+          {{ 'hipay.hosted-fields.googlepay.error'|trans }}
+        </p>
+      </div>
+    </div>
+  {% endblock %}
+</div>

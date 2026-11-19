@@ -43,6 +43,10 @@
         "bank-name": "Nombre del banco",
         "iban": "IBAN"
       },
+      "googlepay": {
+        "tos": "Por favor, acepte los términos del servicio.",
+        "error": "El pago con Google Pay ha fallado. Inténtelo de nuevo o utilice otro método de pago."
+      },
       "applepay": {
         "tos": "Por favor, acepte los términos de servicio.",
         "infoMessage": "Este navegador no admite Apple Pay. Por favor, utilice otro método de pago.",

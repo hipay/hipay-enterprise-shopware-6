@@ -1,0 +1,11 @@
+<sw-card position-identifier="sw-settings-payment-detail-content"
+  :title="$tc('hipay.settings.googlepay.title')"
+  :is-loading="isLoading">
+
+  <sw-text-field :label="$tc('hipay.settings.googlepay.displayName')"
+          :help-text="$tc('hipay.settings.googlepay.displayNameHelp')"
+          :value="paymentMethod.customFields?.displayName"
+          :disabled="false"
+          @update:value="updateDisplayName">
+  </sw-text-field>
+</sw-card>

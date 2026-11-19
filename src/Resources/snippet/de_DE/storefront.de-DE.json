@@ -43,6 +43,10 @@
         "bank-name": "Bank Name",
         "iban": "IBAN"
       },
+      "googlepay": {
+        "tos": "Bitte akzeptieren Sie die Nutzungsbedingungen.",
+        "error": "Die Zahlung mit Google Pay ist fehlgeschlagen. Bitte versuchen Sie es erneut oder wählen Sie eine andere Zahlungsart."
+      },
       "applepay": {
         "tos": "Bitte akzeptieren Sie die Nutzungsbedingungen.",
         "infoMessage": "Dieser Browser unterstützt kein Apple Pay. Bitte verwenden Sie eine andere Zahlungsmethode.",

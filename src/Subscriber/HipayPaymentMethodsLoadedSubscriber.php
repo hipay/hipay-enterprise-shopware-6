@@ -11,6 +11,7 @@ use HiPay\Payment\PaymentMethod\Bancontact;
 use HiPay\Payment\PaymentMethod\Bizum;
 use HiPay\Payment\PaymentMethod\CreditCard;
 use HiPay\Payment\PaymentMethod\Giropay;
+use HiPay\Payment\PaymentMethod\GooglePay;
 use HiPay\Payment\PaymentMethod\Ideal;
 use HiPay\Payment\PaymentMethod\Klarna;
 use HiPay\Payment\PaymentMethod\Mbway;
@@ -41,6 +42,7 @@ class HipayPaymentMethodsLoadedSubscriber implements EventSubscriberInterface
         Bizum::class,
         CreditCard::class,
         Giropay::class,
+        GooglePay::class,
         Ideal::class,
         Klarna::class,
         Paypal::class,
